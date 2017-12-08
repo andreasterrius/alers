@@ -1,0 +1,10 @@
+[package]
+name = "Alexyt"
+version = "0.1.0"
+authors = ["Alether <gotenwinz99@gmail.com>"]
+
+[dependencies]
+cgmath = "0.14.1"
+gl = "0.6.2"
+glfw = "0.15.0"
+image = "0.14.0"

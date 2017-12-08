@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_3" default="true">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+  <component name="RustProjectSettings">
+    <option name="explicitPathToStdlib" value="C:\Users\Alether\.rustup\toolchains\nightly-x86_64-pc-windows-msvc\lib\rustlib\src\rust\src" />
+    <option name="toolchainHomeDirectory" value="C:\Users\Alether\.cargo\bin" />
+  </component>
+</project>
