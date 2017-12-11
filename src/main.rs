@@ -121,17 +121,20 @@ pub fn main() {
 
         process_events(&mut window, &events);
 
-        let accumulator = ticker.fisika_tick(|dt| {
-
+        let accumulator = ticker.fisika_tick(&mut | dt | {
+            game.fisika_tick(dt);
+            world_state.save_state();
         });
 
-        //TODO: world_state.interpolate(accumulator)
+        world_state.interpolate_state();
 
         renderer.clear();
         renderer.render_sprites(game.get_renderables_2d());
 
         window.swap_buffers();
         glfw.poll_events();
+
+        world_state.clear_all_state();
     }
 
     renderer.delete_buffers();
