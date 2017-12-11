@@ -1,9 +1,22 @@
 use std::time::Instant;
+use cgmath::Vector2;
 
 pub trait FisikaObject {
     fn fisika_tick(&mut self, fixed_dt : f32);
 
     fn on_collision(&mut self, fixed_dt : f32, other : &FisikaObject);
+}
+
+pub trait BoxCollider2D {
+    fn get_world_position(&self) -> Vector2<f32>;
+
+    fn get_size(&self) -> Vector2<f32>;
+}
+
+pub trait CircleCollider2D {
+    fn get_world_position(&self) -> Vector2<f32>;
+
+    fn get_radius(&self) -> f32;
 }
 
 pub struct FixedFisikaTicker {
@@ -23,8 +36,10 @@ impl FixedFisikaTicker {
         }
     }
 
-    pub fn fisika_tick(&mut self,
-                       on_fixed_tick : &Fn(f32)) -> f32 {
+    pub fn fisika_tick<F>(&mut self,
+                       on_fixed_tick : &mut F) -> f32
+        where F : FnMut(f32)
+    {
 
         self.delta_time = (Instant::now().duration_since(
             self.previous_time).subsec_nanos() as f64
@@ -40,4 +55,16 @@ impl FixedFisikaTicker {
 
         accumulator
     }
+}
+
+fn aabb_collission_box_box(box_collider1: &T, box_collider2: &T) -> bool
+    where T : BoxCollider2D
+{
+
+}
+
+fn aabb_collission_box_circle(box_collider1: &T, circle_collider: &U) -> bool
+    where T : BoxCollider2D, U : CircleCollider2D
+{
+
 }

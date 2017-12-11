@@ -3,11 +3,10 @@
   <component name="CargoProjects">
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_3" default="true">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_7" project-jdk-name="1.7" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="RustProjectSettings">
-    <option name="explicitPathToStdlib" value="C:\Users\Alether\.rustup\toolchains\nightly-x86_64-pc-windows-msvc\lib\rustlib\src\rust\src" />
-    <option name="toolchainHomeDirectory" value="C:\Users\Alether\.cargo\bin" />
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
   </component>
 </project>

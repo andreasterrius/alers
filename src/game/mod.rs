@@ -114,16 +114,14 @@ impl Game  {
         renderables
     }
 
-    pub fn get_fisika_objects(&mut self) -> Vec<&mut FisikaObject> {
-        let mut objects : Vec<&mut FisikaObject> = vec!();
-        for block in &mut self.blocks {
-            objects.push(block);
-        }
+    pub fn fisika_tick(&mut self, dt : f32) {
+        self.ball.fisika_tick(dt);
 
-        objects.push(&mut self.paddle);
-        objects.push(&mut self.ball);
+        self.collision_check();
+    }
 
-        objects
+    pub fn collision_check(&mut self, dt : f32){
+
     }
 }
 
