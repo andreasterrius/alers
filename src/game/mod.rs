@@ -1,11 +1,14 @@
 use cgmath::{Vector2, Vector3, Matrix4};
 use renderer::Renderable2D;
-use fisika::FisikaObject;
 use {Transform2D};
+use fisika::{self, BoxCollider2D, CircleCollider2D};
+use ale::input::Input;
+use glfw::{Key, Action};
 
 pub struct Block {
     transform2d : Transform2D,
-    renderable : Renderable2D
+    renderable : Renderable2D,
+    is_alive : bool //should render, and fisika tick
 }
 
 impl Block {
@@ -19,33 +22,52 @@ impl Block {
                 color,
                 shader_key,
                 texture_keys
-            )
+            ),
+            is_alive : true
         }
+    }
+
+    pub fn destroy(&mut self) {
+        self.is_alive = false;
+    }
+
+    pub fn is_alive(&self) -> bool {
+        self.is_alive
     }
 }
 
-impl FisikaObject for Block {
-    fn fisika_tick(&mut self, fixed_dt: f32) {
-        //do nothing
+impl BoxCollider2D for Block {
+    fn get_world_position(&self) -> Vector2<f32> {
+        self.transform2d.position
     }
 
-    fn on_collision(&mut self, fixed_dt: f32, other: &FisikaObject) {
-        //TODO: destroy self
+    fn get_size(&self) -> Vector2<f32> {
+        self.transform2d.size
     }
 }
 
 pub struct Paddle  {
     transform2d : Transform2D,
-    renderable : Renderable2D
+    renderable : Renderable2D,
+
+    speed : f32,
+    moving_right : f32
 }
 
-impl FisikaObject for Paddle {
-    fn fisika_tick(&mut self, fixed_dt: f32) {
-        //do nothing
+impl Paddle {
+
+    fn do_move(&mut self, dt : f32, input : f32){
+        self.transform2d.position += input * self.speed * dt;
+    }
+}
+
+impl BoxCollider2D for Paddle {
+    fn get_world_position(&self) -> Vector2<f32> {
+        self.transform2d.position
     }
 
-    fn on_collision(&mut self, fixed_dt: f32, other: &FisikaObject) {
-        //do nothing
+    fn get_size(&self) -> Vector2<f32> {
+        self.transform2d.size
     }
 }
 
@@ -56,10 +78,10 @@ pub struct Ball  {
     is_on_paddle : bool
 }
 
-impl FisikaObject for Ball {
-    fn fisika_tick(&mut self, fixed_dt : f32) {
+impl Ball {
+    fn do_move(&mut self, dt : f32) {
 
-        self.transform2d.position += self.velocity * fixed_dt;
+        self.transform2d.position += self.velocity * dt;
 
         if self.transform2d.position.x <= 0.0 {
             self.velocity.x = -self.velocity.x;
@@ -77,9 +99,15 @@ impl FisikaObject for Ball {
             self.transform2d.position.y = 0.0;
         }
     }
+}
 
-    fn on_collision(&mut self, fixed_dt: f32, other: &FisikaObject) {
-        //do nothing
+impl BoxCollider2D for Ball {
+    fn get_world_position(&self) -> Vector2<f32> {
+        self.transform2d.position
+    }
+
+    fn get_size(&self) -> Vector2<f32> {
+        self.transform2d.size
     }
 }
 
@@ -105,6 +133,7 @@ impl Game  {
     pub fn get_renderables_2d(&self) -> Vec<(Matrix4<f32>, Renderable2D)> {
         let mut renderables = vec!();
         for block in &self.blocks {
+            if !block.is_alive { continue; }
             renderables.push((block.transform2d.get_matrix(), block.renderable.clone()));
         }
 
@@ -114,15 +143,35 @@ impl Game  {
         renderables
     }
 
-    pub fn fisika_tick(&mut self, dt : f32) {
-        self.ball.fisika_tick(dt);
+    pub fn fixed_tick(&mut self, dt : f32, input : &Input) {
+        self.ball.do_move(dt);
 
-        self.collision_check();
+        let move_right = {
+            let mut kk = 0.0;
+            if input.get_key(&Key::Left).is_some() {
+                kk -= 1.0;
+            }
+            if input.get_key(&Key::Right).is_some() {
+                kk += 1.0;
+            }
+
+            kk
+        };
+
+        self.paddle.do_move(dt, 0.0);
+
+        for block in &mut self.blocks {
+            if !block.is_alive() { continue }
+            if fisika::aabb_collission_box_box(&self.ball, block) {
+                block.destroy();
+            }
+        }
+
+        if fisika::aabb_collission_box_box(&self.ball, &self.paddle) {
+            //bounce the ball here
+        }
     }
 
-    pub fn collision_check(&mut self, dt : f32){
-
-    }
 }
 
 fn create_blocks(arena_width : u32, arena_height : u32) -> Vec<Block> {
@@ -186,7 +235,9 @@ fn create_paddle(arena_width : u32, arena_height : u32) -> Paddle  {
             Vector3::new(1.0, 1.0, 1.0),
             String::from("sprite"),
             vec!(String::from("paddle")),
-        )
+        ),
+        speed : 10.0,
+        moving_right: 0.0,
     }
 }
 

@@ -9,7 +9,6 @@ extern crate cgmath;
 mod game;
 mod renderer;
 mod fisika;
-mod input;
 mod ale;
 
 use cgmath::prelude::*;
@@ -18,9 +17,10 @@ use std::sync::mpsc::Receiver;
 use std::str;
 use std::path::Path;
 use std::time::Instant;
-use fisika::{FixedFisikaTicker};
 use renderer::opengl::OpenGLRenderer;
-use ale::WorldStateManager;
+use ale::world_state::WorldStateManager;
+use ale::input::Input;
+use ale::fixed_step_tick::FixedStepTick;
 
 // settings
 const SCR_WIDTH: u32 = 800;
@@ -114,15 +114,16 @@ pub fn main() {
     renderer.create_texture( "paddle", paddle_img);
 
     let mut world_state = WorldStateManager::new();
-    let mut ticker = FixedFisikaTicker::new(0.01);
+    let mut ticker = FixedStepTick::new(0.01);
     let mut game = game::Game::new(SCR_WIDTH, SCR_HEIGHT);
+    let mut input = Input::new();
 
     while !window.should_close() {
 
-        process_events(&mut window, &events);
+        process_events(&mut window, &events, &mut input);
 
-        let accumulator = ticker.fisika_tick(&mut | dt | {
-            game.fisika_tick(dt);
+        let accumulator = ticker.tick(&mut |dt | {
+            game.fixed_tick(dt, &input);
             world_state.save_state();
         });
 
@@ -141,7 +142,7 @@ pub fn main() {
 }
 
 // NOTE: not the same version as in common.rs!
-fn process_events(window: &mut glfw::Window, events: &Receiver<(f64, glfw::WindowEvent)>) {
+fn process_events(window: &mut glfw::Window, events: &Receiver<(f64, glfw::WindowEvent)>, input : &mut Input){
     for (_, event) in glfw::flush_messages(events) {
         match event {
             glfw::WindowEvent::FramebufferSize(width, height) => {
@@ -150,6 +151,7 @@ fn process_events(window: &mut glfw::Window, events: &Receiver<(f64, glfw::Windo
                 unsafe { gl::Viewport(0, 0, width, height) }
             }
             glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.set_should_close(true),
+            glfw::WindowEvent::Key(key, _, action, _) => input.mutate_key(key, action),
             _ => {}
         }
     }
