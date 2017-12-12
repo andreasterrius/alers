@@ -18,11 +18,15 @@ impl Input {
     }
 
     pub fn mutate_key(&mut self, key : Key, action : Action){
+        //println!("Mutate: {:?} {:?}", key, action);
         self.keys.insert(key, action);
     }
 
-    pub fn get_key(&self, key : &Key) -> Option<Action> {
-        self.keys[key]
+    pub fn get_key(&self, key : &Key) -> Option<&Action> {
+        let action = self.keys.get(key);
+        //println!("Get: {:?} {:?}", key, action);
+
+        action
     }
 
 }
