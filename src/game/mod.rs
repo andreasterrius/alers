@@ -55,9 +55,8 @@ pub struct Paddle  {
 }
 
 impl Paddle {
-
     fn do_move(&mut self, dt : f32, input : f32){
-        self.transform2d.position += input * self.speed * dt;
+        self.transform2d.position += Vector2::new(input * self.speed, 0.0);
     }
 }
 
@@ -75,7 +74,8 @@ pub struct Ball  {
     transform2d : Transform2D,
     renderable : Renderable2D,
     velocity : Vector2<f32>,
-    is_on_paddle : bool
+    is_on_paddle : bool,
+    has_just_bounced : bool
 }
 
 impl Ball {
@@ -98,6 +98,11 @@ impl Ball {
             self.velocity.y = -self.velocity.y;
             self.transform2d.position.y = 0.0;
         }
+    }
+
+    fn bounce(&mut self, flip_x : bool, flip_y : bool){
+        if flip_x { self.velocity.x *= -1.0 }
+        if flip_y { self.velocity.y *= -1.0 }
     }
 }
 
@@ -148,27 +153,35 @@ impl Game  {
 
         let move_right = {
             let mut kk = 0.0;
-            if input.get_key(&Key::Left).is_some() {
-                kk -= 1.0;
-            }
-            if input.get_key(&Key::Right).is_some() {
-                kk += 1.0;
-            }
+
+            kk += input.get_key(&Key::Right)
+                .map_or(0.0, | action | {
+                    match *action {
+                        Action::Press => 1.0,
+                        _ => 0.0
+                    }
+                });
+            kk += input.get_key(&Key::Left)
+                .map_or(0.0, | action | {
+                    match *action {
+                        Action::Press => -1.0,
+                        _ => 0.0
+                    }
+                });
 
             kk
         };
-
-        self.paddle.do_move(dt, 0.0);
+        self.paddle.do_move(dt, move_right);
 
         for block in &mut self.blocks {
             if !block.is_alive() { continue }
-            if fisika::aabb_collission_box_box(&self.ball, block) {
+            if fisika::aabb_collision_box_box(&self.ball, block) {
                 block.destroy();
             }
         }
 
-        if fisika::aabb_collission_box_box(&self.ball, &self.paddle) {
-            //bounce the ball here
+        if fisika::aabb_collision_box_box(&self.ball, &self.paddle) {
+            self.ball.bounce(false, true);
         }
     }
 
@@ -261,6 +274,7 @@ fn create_ball(arena_width : u32, arena_height : u32, paddle : &Paddle) -> Ball 
             vec!(String::from("ball")),
         ),
         velocity: Vector2::new(500.0, -500.0),
-        is_on_paddle : false
+        is_on_paddle : false,
+        has_just_bounced : false
     }
 }
