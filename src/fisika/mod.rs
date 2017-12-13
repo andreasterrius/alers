@@ -13,9 +13,12 @@ pub trait CircleCollider2D {
 }
 
 
-fn aabb_axis_overlap( pos1 : f32, size1 : f32, pos2 : f32, size2: f32) -> bool {
-    pos1 < pos2 + size2 &&
-    pos1 + size1 > pos2
+fn aabb_axis_overlap( pos1 : f32, size1 : f32, pos2 : f32, size2: f32)
+    -> bool
+{
+    let end1 = pos1 + size1;
+    let end2 = pos2 + size2;
+    pos1 < end2 && end1 > pos2
 }
 
 pub fn aabb_collision_box_box<Box1, Box2>(box_collider1: &Box1, box_collider2: &Box2) -> bool
