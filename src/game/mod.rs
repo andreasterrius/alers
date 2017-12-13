@@ -75,7 +75,7 @@ pub struct Ball  {
     renderable : Renderable2D,
     velocity : Vector2<f32>,
     is_on_paddle : bool,
-    has_just_bounced : bool
+    is_colliding : bool
 }
 
 impl Ball {
@@ -88,7 +88,6 @@ impl Ball {
             self.transform2d.position.x = 0.0
         }
         else if self.transform2d.position.x + self.transform2d.size.x >= 800.0 {
-            //TODO find a way to get arena height here
             self.velocity.x = - self.velocity.x;
             self.transform2d.position.x = 800.0 - self.transform2d.size.x;
         }
@@ -101,6 +100,7 @@ impl Ball {
     }
 
     fn bounce(&mut self, flip_x : bool, flip_y : bool){
+
         if flip_x { self.velocity.x *= -1.0 }
         if flip_y { self.velocity.y *= -1.0 }
     }
@@ -158,6 +158,7 @@ impl Game  {
                 .map_or(0.0, | action | {
                     match *action {
                         Action::Press => 1.0,
+                        Action::Repeat => 1.0,
                         _ => 0.0
                     }
                 });
@@ -165,6 +166,7 @@ impl Game  {
                 .map_or(0.0, | action | {
                     match *action {
                         Action::Press => -1.0,
+                        Action::Repeat => -1.0,
                         _ => 0.0
                     }
                 });
@@ -175,13 +177,45 @@ impl Game  {
 
         for block in &mut self.blocks {
             if !block.is_alive() { continue }
-            if fisika::aabb_collision_box_box(&self.ball, block) {
+
+            if fisika::aabb_collision_box_box(&self.ball, block)
+            {
                 block.destroy();
             }
         }
 
         if fisika::aabb_collision_box_box(&self.ball, &self.paddle) {
-            self.ball.bounce(false, true);
+
+            //On the first first collision tick
+            if !self.ball.is_colliding {
+
+                //evaluate the position
+                let ball_position = self.ball.get_world_position();
+                let top = self.paddle.get_world_position().y;
+                let bottom = self.paddle.get_world_position().y + self.paddle.get_size().y;
+                let left = self.paddle.get_world_position().x;
+                let right = self.paddle.get_world_position().x + self.paddle.get_size().x;
+
+                //Upper right
+                if ball_position.x > right {
+                    println!("upper right");
+                    self.ball.bounce(true, false);
+                }
+                else if ball_position.x < left {
+                    println!("upper left");
+                    self.ball.bounce(true, false);
+                }
+                else {
+                    println!("upper");
+                    self.ball.bounce(false, false);
+                }
+
+                self.ball.bounce(false, true);
+                self.ball.is_colliding = true;
+            }
+        }
+        else {
+            self.ball.is_colliding = false;
         }
     }
 
@@ -275,6 +309,6 @@ fn create_ball(arena_width : u32, arena_height : u32, paddle : &Paddle) -> Ball 
         ),
         velocity: Vector2::new(500.0, -500.0),
         is_on_paddle : false,
-        has_just_bounced : false
+        is_colliding : false
     }
 }
