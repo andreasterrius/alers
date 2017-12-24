@@ -4,117 +4,8 @@ use {Transform2D};
 use fisika::{self, BoxCollider2D, CircleCollider2D};
 use ale::input::Input;
 use glfw::{Key, Action};
-
-pub struct Block {
-    transform2d : Transform2D,
-    renderable : Renderable2D,
-    is_alive : bool //should render, and fisika tick
-}
-
-impl Block {
-    pub fn new (transform2d : Transform2D,
-                shader_key : String,
-                texture_keys : Vec<String>,
-                color : Vector3<f32>) -> Block {
-        Block {
-            transform2d,
-            renderable : Renderable2D::new(
-                color,
-                shader_key,
-                texture_keys
-            ),
-            is_alive : true
-        }
-    }
-
-    pub fn destroy(&mut self) {
-        self.is_alive = false;
-    }
-
-    pub fn is_alive(&self) -> bool {
-        self.is_alive
-    }
-}
-
-impl BoxCollider2D for Block {
-    fn get_world_position(&self) -> Vector2<f32> {
-        self.transform2d.position
-    }
-
-    fn get_size(&self) -> Vector2<f32> {
-        self.transform2d.size
-    }
-}
-
-pub struct Paddle  {
-    transform2d : Transform2D,
-    renderable : Renderable2D,
-
-    speed : f32,
-    moving_right : f32
-}
-
-impl Paddle {
-    fn do_move(&mut self, dt : f32, input : f32){
-        self.transform2d.position += Vector2::new(input * self.speed, 0.0);
-    }
-}
-
-impl BoxCollider2D for Paddle {
-    fn get_world_position(&self) -> Vector2<f32> {
-        self.transform2d.position
-    }
-
-    fn get_size(&self) -> Vector2<f32> {
-        self.transform2d.size
-    }
-}
-
-pub struct Ball  {
-    transform2d : Transform2D,
-    renderable : Renderable2D,
-    velocity : Vector2<f32>,
-    is_on_paddle : bool,
-    is_colliding : bool
-}
-
-impl Ball {
-    fn do_move(&mut self, dt : f32) {
-
-        self.transform2d.position += self.velocity * dt;
-
-        if self.transform2d.position.x <= 0.0 {
-            self.velocity.x = -self.velocity.x;
-            self.transform2d.position.x = 0.0
-        }
-        else if self.transform2d.position.x + self.transform2d.size.x >= 800.0 {
-            self.velocity.x = - self.velocity.x;
-            self.transform2d.position.x = 800.0 - self.transform2d.size.x;
-        }
-
-        if self.transform2d.position.y <= 0.0
-        {
-            self.velocity.y = -self.velocity.y;
-            self.transform2d.position.y = 0.0;
-        }
-    }
-
-    fn bounce(&mut self, flip_x : bool, flip_y : bool){
-
-        if flip_x { self.velocity.x *= -1.0 }
-        if flip_y { self.velocity.y *= -1.0 }
-    }
-}
-
-impl BoxCollider2D for Ball {
-    fn get_world_position(&self) -> Vector2<f32> {
-        self.transform2d.position
-    }
-
-    fn get_size(&self) -> Vector2<f32> {
-        self.transform2d.size
-    }
-}
+use resource::*;
+use renderer::opengl::*;
 
 pub struct Game {
     blocks : Vec<Block>,
@@ -133,6 +24,29 @@ impl Game  {
             paddle,
             ball
         }
+    }
+
+    pub fn load_resources(&self, resources : &mut ResourceManager) {
+        resources.load_glsl(
+            "sprite",
+            "shaders/sprite.vs",
+            "shaders/sprite.fs"
+        );
+        resources.load_image("ball", "resources/ball.png");
+        resources.load_image("block", "resources/block.png");
+        resources.load_image("paddle", "resources/paddle.png");
+    }
+
+    pub fn configure_renderer(&self, resources : &ResourceManager, renderer: &mut OpenGLRenderer){
+        let sprite_shader = resources.get_glsl("sprite").unwrap();
+        renderer.register_shader(
+            "sprite",
+            &sprite_shader.vertex_shader,
+            &sprite_shader.fragment_shader
+        );
+        renderer.register_image("ball", &resources.get_image("ball").unwrap().image);
+        renderer.register_image("block", &resources.get_image("block").unwrap().image);
+        renderer.register_image("paddle", &resources.get_image("paddle").unwrap().image);
     }
 
     pub fn get_renderables_2d(&self) -> Vec<(Matrix4<f32>, Renderable2D)> {
@@ -262,7 +176,6 @@ fn create_blocks(arena_width : u32, arena_height : u32) -> Vec<Block> {
 
     blocks
 }
-
 fn create_paddle(arena_width : u32, arena_height : u32) -> Paddle  {
 
     let size = Vector2::new(95.0, 25.0);
@@ -287,7 +200,6 @@ fn create_paddle(arena_width : u32, arena_height : u32) -> Paddle  {
         moving_right: 0.0,
     }
 }
-
 fn create_ball(arena_width : u32, arena_height : u32, paddle : &Paddle) -> Ball  {
     let size = Vector2::new(30.0, 30.0);
     let position = Vector2::new(

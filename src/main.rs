@@ -10,6 +10,7 @@ mod game;
 mod renderer;
 mod fisika;
 mod ale;
+mod resource;
 
 use cgmath::prelude::*;
 use cgmath::{Matrix4, Vector3, Vector2};
@@ -21,6 +22,7 @@ use renderer::opengl::OpenGLRenderer;
 use ale::world_state::WorldStateManager;
 use ale::input::Input;
 use ale::fixed_step_tick::FixedStepTick;
+use resource::ResourceManager;
 
 // settings
 const SCR_WIDTH: u32 = 800;
@@ -51,36 +53,6 @@ pub fn main() {
     #[cfg(target_os = "macos")]
     glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
 
-    let vertexShaderSource: &str = r#"
-        #version 330 core
-        layout (location = 0) in vec3 aPos;
-        layout (location = 1) in vec2 aTexCoord;
-
-        uniform mat4 projection;
-        uniform mat4 model;
-
-        out vec2 TexCoord;
-
-        void main() {
-           gl_Position = projection * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
-           TexCoord = vec2(aTexCoord.x, aTexCoord.y);
-        }
-    "#;
-
-    let fragmentShaderSource: &str = r#"
-        #version 330 core
-        out vec4 FragColor;
-        in vec2 TexCoord;
-
-        uniform vec3 color;
-        uniform sampler2D texture0;
-        uniform sampler2D texture1;
-
-        void main() {
-           FragColor = vec4(color, 1.0) * texture(texture0, TexCoord);
-        }
-    "#;
-
     // glfw window creation
     // --------------------
     let (mut window, events) = glfw.create_window(SCR_WIDTH,
@@ -97,25 +69,16 @@ pub fn main() {
     // ---------------------------------------
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    let mut renderer= OpenGLRenderer::new(SCR_WIDTH, SCR_HEIGHT);
-
-    renderer.create_shader("sprite", vertexShaderSource,
-        fragmentShaderSource);
-
-    let ball_img = image::open(&Path::new("resources/ball.png"))
-        .expect("Failed to load ball image");
-    let block_img = image::open(&Path::new("resources/block.png"))
-        .expect("Failed to load block image");
-    let paddle_img = image::open(&Path::new("resources/paddle.png"))
-        .expect("Failed to load block image");
-
-    renderer.create_texture( "ball", ball_img);
-    renderer.create_texture( "block", block_img);
-    renderer.create_texture( "paddle", paddle_img);
+    let mut resources = ResourceManager::new();
+    let mut renderer = OpenGLRenderer::new(SCR_WIDTH, SCR_HEIGHT);
 
     let mut world_state = WorldStateManager::new();
     let mut ticker = FixedStepTick::new(0.01);
+
     let mut game = game::Game::new(SCR_WIDTH, SCR_HEIGHT);
+    game.load_resources(&mut resources);
+    game.configure_renderer(&resources, &mut renderer);
+
     let mut input = Input::new();
 
     while !window.should_close() {
