@@ -46,7 +46,7 @@ impl OpenGLRenderer {
         }
     }
 
-    pub fn create_shader(&mut self, key : &str, vertex_shader_source : &str, fragment_shader_source : &str) {
+    pub fn register_shader(&mut self, key : &str, vertex_shader_source : &str, fragment_shader_source : &str) {
 
         unsafe {
             // vertex shader
@@ -95,7 +95,7 @@ impl OpenGLRenderer {
         }
     }
 
-    pub fn create_texture(&mut self, key: &str, img : DynamicImage){
+    pub fn register_image(&mut self, key: &str, img : &DynamicImage){
         unsafe {
             let mut texture = 0;
             gl::GenTextures(1, &mut texture);
@@ -109,9 +109,9 @@ impl OpenGLRenderer {
             let data = img.raw_pixels();
 
             match img {
-                image::ImageLuma8(_) => unimplemented!(),
-                image::ImageLumaA8(_) => unimplemented!(),
-                image::ImageRgb8(img) => {
+                &image::ImageLuma8(_) => unimplemented!(),
+                &image::ImageLumaA8(_) => unimplemented!(),
+                &image::ImageRgb8(ref img) => {
                     gl::TexImage2D(gl::TEXTURE_2D,
                                    0,
                                    gl::RGB as i32,
@@ -125,7 +125,7 @@ impl OpenGLRenderer {
 
                     self.textures.insert(String::from(key), texture);
                 },
-                image::ImageRgba8(img) => {
+                &image::ImageRgba8(ref img) => {
                     gl::TexImage2D(gl::TEXTURE_2D,
                                    0,
                                    gl::RGBA as i32,
