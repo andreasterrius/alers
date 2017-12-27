@@ -5,12 +5,15 @@ use self::glfw::{Context, Key, Action};
 extern crate gl;
 extern crate image;
 extern crate cgmath;
+extern crate time;
+extern crate rand;
 
 mod game;
 mod renderer;
 mod fisika;
 mod ale;
 mod resource;
+mod math;
 
 use cgmath::prelude::*;
 use cgmath::{Matrix4, Vector3, Vector2};
@@ -19,29 +22,14 @@ use std::str;
 use std::path::Path;
 use std::time::Instant;
 use renderer::opengl::OpenGLRenderer;
-use ale::world_state::WorldStateManager;
 use ale::input::Input;
-use ale::fixed_step_tick::FixedStepTick;
+use ale::ticker::FixedStepTick;
 use resource::ResourceManager;
+use renderer::state::RenderState;
 
 // settings
 const SCR_WIDTH: u32 = 800;
 const SCR_HEIGHT: u32 = 600;
-
-pub struct Transform2D {
-    position : Vector2<f32>,
-    size : Vector2<f32>
-}
-
-impl Transform2D {
-    fn get_matrix(&self) -> Matrix4<f32> {
-        let mut transform : Matrix4<f32> = Matrix4::identity();
-        transform = transform * Matrix4::from_translation(Vector3::<f32>::new(self.position.x, self.position.y, 0.0));
-        transform = transform * Matrix4::from_nonuniform_scale(self.size.x, self.size.y, 1.0);
-
-        return transform;
-    }
-}
 
 #[allow(non_snake_case)]
 pub fn main() {
@@ -71,8 +59,8 @@ pub fn main() {
 
     let mut resources = ResourceManager::new();
     let mut renderer = OpenGLRenderer::new(SCR_WIDTH, SCR_HEIGHT);
+    let mut render_state = RenderState::new();
 
-    let mut world_state = WorldStateManager::new();
     let mut ticker = FixedStepTick::new(0.01);
 
     let mut game = game::Game::new(SCR_WIDTH, SCR_HEIGHT);
@@ -84,21 +72,21 @@ pub fn main() {
     while !window.should_close() {
 
         process_events(&mut window, &events, &mut input);
-
-        let accumulator = ticker.tick(&mut |dt | {
+        
+        let accumulator = ticker.tick(&mut | dt, is_last_tick | {
             game.fixed_tick(dt, &input);
-            world_state.save_state();
-        });
 
-        world_state.interpolate_state();
+            if is_last_tick {
+                render_state.last_frame = game.get_renderables();
+            }
+        });
+        render_state.current_frame = game.get_renderables();
 
         renderer.clear();
-        renderer.render_sprites(game.get_renderables_2d());
+        renderer.render(render_state.interpolate_frame(accumulator));
 
         window.swap_buffers();
         glfw.poll_events();
-
-        world_state.clear_all_state();
     }
 
     renderer.delete_buffers();
