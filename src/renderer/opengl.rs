@@ -5,9 +5,10 @@ use std::{ptr, mem};
 use std::os::raw::c_void;
 use std::collections::HashMap;
 use image::{self, DynamicImage};
+use math::Transform2D;
 use cgmath::prelude::*;
-use cgmath::{self, Matrix4};
-use renderer::Renderable2D;
+use cgmath::{self, Vector2, Vector3, Vector4, Matrix4};
+use renderer::job::{RenderJob, SpriteRenderable};
 use std::str;
 
 #[allow(non_snake_case)]
@@ -25,13 +26,12 @@ pub struct OpenGLRenderer {
 impl OpenGLRenderer {
     pub fn new(screen_width : u32, screen_height : u32) -> OpenGLRenderer {
         unsafe {
-            let (sprite_vao, sprite_vbo, sprite_ebo)
-            = OpenGLRenderer::create_sprite_buffer();
+            let (sprite_vao, sprite_vbo, sprite_ebo) = OpenGLRenderer::create_sprite_buffer();
 
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
 
-            let projection_2d = cgmath::ortho(0.0, screen_width as f32, screen_height as f32, 0.0, -0.1, 0.1);
+            let projection_2d = cgmath::ortho(0.0, screen_width as f32,screen_height as f32, 0.0, -0.1, 0.1);
 
             OpenGLRenderer {
                 sprite_vao,
@@ -39,9 +39,8 @@ impl OpenGLRenderer {
                 sprite_ebo,
 
                 projection_2d,
-
                 shaders : HashMap::new(),
-                textures : HashMap::new()
+                textures : HashMap::new(),
             }
         }
     }
@@ -62,7 +61,7 @@ impl OpenGLRenderer {
             gl::GetShaderiv(vertex_shader, gl::COMPILE_STATUS, &mut success);
             if success != gl::TRUE as GLint {
                 gl::GetShaderInfoLog(vertex_shader, 512, ptr::null_mut(), info_log.as_mut_ptr() as *mut GLchar);
-                println!("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n{}", str::from_utf8(&info_log).unwrap());
+                println!("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n{}", String::from_utf8_lossy(&info_log));
             }
 
             // fragment shader
@@ -74,7 +73,7 @@ impl OpenGLRenderer {
             gl::GetShaderiv(fragment_shader, gl::COMPILE_STATUS, &mut success);
             if success != gl::TRUE as GLint {
                 gl::GetShaderInfoLog(fragment_shader, 512, ptr::null_mut(), info_log.as_mut_ptr() as *mut GLchar);
-                println!("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n{}", str::from_utf8(&info_log).unwrap());
+                println!("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n{}", String::from_utf8_lossy(&info_log));
             }
 
             // link shaders
@@ -86,7 +85,7 @@ impl OpenGLRenderer {
             gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut success);
             if success != gl::TRUE as GLint {
                 gl::GetProgramInfoLog(shader_program, 512, ptr::null_mut(), info_log.as_mut_ptr() as *mut GLchar);
-                println!("ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n{}", str::from_utf8(&info_log).unwrap());
+                println!("ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n{}", String::from_utf8_lossy(&info_log));
             }
             gl::DeleteShader(vertex_shader);
             gl::DeleteShader(fragment_shader);
@@ -158,13 +157,13 @@ impl OpenGLRenderer {
         }
     }
 
-    pub fn render_sprites(&mut self, render_objects : Vec<(Matrix4<f32>, Renderable2D)>){
+    pub fn render_sprite(&mut self, sprites : Vec<(Transform2D, SpriteRenderable)>){
         unsafe {
             gl::BindVertexArray(self.sprite_vao);
 
-            for render_object in render_objects {
+            for sprite in sprites {
 
-                let(model_mat, renderable_2d) = render_object;
+                let(transform2d, renderable_2d) = sprite;
                 let shader = self.shaders.get(renderable_2d.get_shader_key()).unwrap();
 
                 gl::UseProgram(*shader);
@@ -180,15 +179,73 @@ impl OpenGLRenderer {
                 gl::UniformMatrix4fv(transform_loc, 1, gl::FALSE, self.projection_2d.as_ptr());
 
                 let model_loc = gl::GetUniformLocation(*shader, CString::new("model").unwrap().as_ptr());
-                gl::UniformMatrix4fv(model_loc, 1, gl::FALSE, model_mat.as_ptr());
+                gl::UniformMatrix4fv(model_loc, 1, gl::FALSE, transform2d.get_matrix().as_ptr());
 
                 let color_loc = gl::GetUniformLocation(*shader, CString::new("color").unwrap().as_ptr());
                 let color = renderable_2d.get_sprite_color();
-                gl::Uniform3f(color_loc, color.x, color.y, color.z);
+                gl::Uniform4f(color_loc, color.x, color.y, color.z, color.w);
 
                 gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
             }
         }
+    }
+
+    pub fn render_particles(&mut self, particlejobs : Vec<(Transform2D, SpriteRenderable)>){
+        unsafe {
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE);
+            gl::BindVertexArray(self.sprite_vao);
+
+            for particlejob in particlejobs {
+
+                let(transform2d, particle) = particlejob;
+                let shader = self.shaders.get(particle.get_shader_key()).unwrap();
+
+                gl::UseProgram(*shader);
+
+                let textures_keys = particle.get_texture_keys();
+                for i in 0..textures_keys.len() {
+                    let texture = self.textures.get(&textures_keys[i]).unwrap();
+                    gl::ActiveTexture(gl::TEXTURE0 + i as u32);
+                    gl::BindTexture(gl::TEXTURE_2D, *texture);
+                }
+
+                let transform_loc = gl::GetUniformLocation(*shader, CString::new("projection").unwrap().as_ptr());
+                gl::UniformMatrix4fv(transform_loc, 1, gl::FALSE, self.projection_2d.as_ptr());
+
+                let model_loc = gl::GetUniformLocation(*shader, CString::new("model").unwrap().as_ptr());
+                gl::UniformMatrix4fv(model_loc, 1, gl::FALSE, transform2d.get_matrix().as_ptr());
+
+                let offset_loc = gl::GetUniformLocation(*shader, CString::new("offset").unwrap().as_ptr());
+                let offset = Vector2::from_value(0.0);
+                gl::Uniform2f(offset_loc, offset.x, offset.y);
+
+                let color_loc = gl::GetUniformLocation(*shader, CString::new("color").unwrap().as_ptr());
+                let color = particle.get_sprite_color();
+                gl::Uniform4f(color_loc, color.x, color.y, color.z, color.w);
+
+                gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+            }
+
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA)
+        }
+    }
+
+    pub fn render(&mut self, renderjobs : Vec<RenderJob>){
+
+        use renderer::job::RenderJob::*;
+
+        let mut sprites = vec!();
+        let mut particles = vec!();
+
+        for job in renderjobs {
+            match job {
+                Sprite(transform2d, sprite) => sprites.push((transform2d, sprite)),
+                Particle(transform2d, particle) => particles.push((transform2d, particle))
+            };
+        }
+        
+        self.render_sprite(sprites);
+        self.render_particles(particles);
     }
 
     unsafe fn create_sprite_buffer() -> (GLuint, GLuint, GLuint) {

@@ -62,6 +62,7 @@ impl ResourceManager {
     }
 }
 
+#[derive(Debug)]
 pub struct ResourceGlslFile {
     pub vertex_shader : String,
     pub fragment_shader : String

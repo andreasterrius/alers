@@ -19,7 +19,7 @@ impl FixedStepTick {
 
     pub fn tick<F>(&mut self,
                    on_fixed_tick : &mut F) -> f32
-        where F : FnMut(f32)
+        where F : FnMut(f32, bool)
     {
 
         self.delta_time = (Instant::now().duration_since(
@@ -28,10 +28,19 @@ impl FixedStepTick {
 
         self.previous_time = Instant::now();
 
+        let mut is_last_tick = false;
         let mut accumulator = self.delta_time;
         while accumulator >= self.frame_step {
-            on_fixed_tick(self.frame_step);
+
+            if accumulator >= self.frame_step &&
+                accumulator <= self.frame_step * 2.0
+            {
+                is_last_tick = true;
+            }
+
+            on_fixed_tick(self.frame_step, is_last_tick);
             accumulator -= self.frame_step;
+
         }
 
         accumulator

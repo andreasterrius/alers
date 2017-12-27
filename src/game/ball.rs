@@ -1,13 +1,48 @@
+use game::paddle::Paddle;
+use math::Transform2D;
+use renderer::job::{SpriteRenderable};
+use cgmath::prelude::*;
+use cgmath::{Vector2, Vector3, Vector4};
+use fisika::{CircleCollider2D, BoxGeneralArea};
+
 pub struct Ball  {
-    transform2d : Transform2D,
-    renderable : Renderable2D,
-    velocity : Vector2<f32>,
-    is_on_paddle : bool,
-    is_colliding : bool
+    pub id : i64,
+    pub transform2d : Transform2D,
+    pub sprite: SpriteRenderable,
+    pub velocity : Vector2<f32>,
+    pub is_on_paddle : bool,
+    pub is_clipping : bool
 }
 
 impl Ball {
-    fn do_move(&mut self, dt : f32) {
+
+    pub fn new(arena_width : u32, arena_height : u32, paddle : &Paddle, id : i64) -> Ball {
+        let size = Vector2::new(30.0, 30.0);
+        let position = Vector2::new(
+            arena_width as f32 / 2.0 - size.x / 2.0,
+            arena_height as f32 - size.y - paddle.transform2d.size.y
+        );
+
+        let transform2d = Transform2D {
+            position,
+            size
+        };
+
+        Ball {
+            id,
+            transform2d,
+            sprite: SpriteRenderable::new(
+                Vector4::from_value(1.0),
+                String::from("sprite"),
+                vec!(String::from("ball")),
+            ),
+            velocity: Vector2::new(0.0, -500.0),
+            is_on_paddle : false,
+            is_clipping : false,
+        }
+    }
+
+    pub fn do_move(&mut self, dt : f32) {
 
         self.transform2d.position += self.velocity * dt;
 
@@ -27,19 +62,74 @@ impl Ball {
             }
     }
 
-    fn bounce(&mut self, flip_x : bool, flip_y : bool){
+    pub fn bounce(&mut self, area : &BoxGeneralArea, external_velocity : Vector2<f32>){
+        match area {
+          &BoxGeneralArea::TopLeft => {
+              //heading right
+              if self.velocity.x > 0.0 {
+                self.velocity.x *= -1.0;
+              }
+              self.velocity.y *= -1.0;
+          },
+          &BoxGeneralArea::Left => {
+              if self.velocity.x > 0.0 {
+                  self.velocity.x *= -1.0;
+              }
+          },
+          &BoxGeneralArea::BotLeft => {
+              if self.velocity.x > 0.0 {
+                  self.velocity.x *= -1.0;
+              }
+              self.velocity.y *= -1.0;
+          },
+          &BoxGeneralArea::Top => {
+              if self.velocity.y < 0.0 {
+                  self.velocity.y *= -1.0;
+              }
+          },
+          &BoxGeneralArea::Bot => {
+              if self.velocity.y > 0.0 {
+                  self.velocity.y *= -1.0;
+              }
+          },
+          &BoxGeneralArea::TopRight => {
+              if self.velocity.x < 0.0 {
+                  self.velocity.x *= -1.0;
+              }
+              self.velocity.y *= -1.0;
+          },
+          &BoxGeneralArea::Right => {
+               if self.velocity.x < 0.0 {
+                   self.velocity.x *= -1.0;
+               }
+          },
+          &BoxGeneralArea::BotRight => {
+               if self.velocity.x < 0.0 {
+                   self.velocity.x *= -1.0;
+               }
+              self.velocity.y *= -1.0;
+          }
+        };
 
-        if flip_x { self.velocity.x *= -1.0 }
-        if flip_y { self.velocity.y *= -1.0 }
+        self.velocity += external_velocity;
+      }
+
+    pub fn multiply_speed(&mut self, x_mult : f32){
+        self.velocity.x = x_mult * 100.0;
+        if self.velocity.y < 0.0 {
+            self.velocity.y -= 12.0;
+        } else {
+            self.velocity.y += 12.0;
+        }
     }
 }
 
-impl BoxCollider2D for Ball {
-    fn get_world_position(&self) -> Vector2<f32> {
+impl CircleCollider2D for Ball {
+    fn worldpos(&self) -> Vector2<f32> {
         self.transform2d.position
     }
 
-    fn get_size(&self) -> Vector2<f32> {
-        self.transform2d.size
+    fn radius(&self) -> f32 {
+        self.transform2d.size.x/2.0
     }
 }
