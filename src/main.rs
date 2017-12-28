@@ -58,7 +58,7 @@ pub fn main() {
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
     let mut resources = ResourceManager::new();
-    let mut renderer = OpenGLRenderer::new(SCR_WIDTH, SCR_HEIGHT);
+    let mut renderer = OpenGLRenderer::new(SCR_WIDTH, SCR_HEIGHT, &mut resources);
     let mut render_state = RenderState::new();
 
     let mut ticker = FixedStepTick::new(0.01);
@@ -82,7 +82,6 @@ pub fn main() {
         });
         render_state.current_frame = game.get_renderables();
 
-        renderer.clear();
         renderer.render(render_state.interpolate_frame(accumulator));
 
         window.swap_buffers();

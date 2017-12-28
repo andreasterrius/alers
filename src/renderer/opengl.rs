@@ -8,40 +8,75 @@ use image::{self, DynamicImage};
 use math::Transform2D;
 use cgmath::prelude::*;
 use cgmath::{self, Vector2, Vector3, Vector4, Matrix4};
-use renderer::job::{RenderJob, SpriteRenderable};
+use renderer::job::{RenderJob, ParticleRenderable, SpriteRenderable};
+use resource::ResourceManager;
 use std::str;
 
 #[allow(non_snake_case)]
 pub struct OpenGLRenderer {
+
+    pub render_height : GLuint,
+    pub render_width : GLuint,
+
     pub sprite_vao : GLuint,
     pub sprite_vbo : GLuint,
     pub sprite_ebo : GLuint,
 
     pub projection_2d : Matrix4<f32>,
 
+    pub main_fbo : GLuint,
+    pub ms_fbo : GLuint,
+    pub render_texture : GLuint,
+
     pub shaders : HashMap<String, GLuint>,
     pub textures : HashMap<String, GLuint>
 }
 
 impl OpenGLRenderer {
-    pub fn new(screen_width : u32, screen_height : u32) -> OpenGLRenderer {
+
+    pub fn load_external_dep(&mut self, resources : &mut ResourceManager) {
+
+        //Load sprite shader
+        resources.load_glsl("sprite", "shaders/sprite.vs", "shaders/sprite.fs");
+        resources.load_glsl("postprocess", "shaders/postprocess.vs", "shaders/postprocess.fs");
+
+        let sprite_shader = resources.get_glsl("sprite").unwrap();
+        let postprocess_shader = resources.get_glsl("postprocess").unwrap();
+
+        self.register_shader("sprite", &sprite_shader.vertex_shader, &sprite_shader.fragment_shader);
+        self.register_shader("postprocess", &postprocess_shader.vertex_shader, &postprocess_shader.fragment_shader);
+    }
+
+    pub fn new(screen_width : u32, screen_height : u32, resources : &mut ResourceManager) -> OpenGLRenderer {
         unsafe {
             let (sprite_vao, sprite_vbo, sprite_ebo) = OpenGLRenderer::create_sprite_buffer();
+            let (render_texture, ms_fbo, main_fbo) = OpenGLRenderer::initialize_postprocessing(screen_width, screen_height);
 
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
 
             let projection_2d = cgmath::ortho(0.0, screen_width as f32,screen_height as f32, 0.0, -0.1, 0.1);
 
-            OpenGLRenderer {
+            let mut renderer = OpenGLRenderer {
+                render_height : screen_height,
+                render_width : screen_width,
+
                 sprite_vao,
                 sprite_vbo,
                 sprite_ebo,
 
+                main_fbo,
+                ms_fbo,
+                render_texture,
+
                 projection_2d,
                 shaders : HashMap::new(),
                 textures : HashMap::new(),
-            }
+            };
+
+            renderer.load_external_dep(resources);
+
+            return renderer;
         }
     }
 
@@ -142,13 +177,6 @@ impl OpenGLRenderer {
         }
     }
 
-    pub fn clear(&mut self){
-        unsafe {
-            gl::ClearColor(0.2, 0.3, 0.3, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-        }
-    }
-
     pub fn delete_buffers(&mut self){
         unsafe {
             gl::DeleteVertexArrays(1, &self.sprite_vao);
@@ -164,7 +192,7 @@ impl OpenGLRenderer {
             for sprite in sprites {
 
                 let(transform2d, renderable_2d) = sprite;
-                let shader = self.shaders.get(renderable_2d.get_shader_key()).unwrap();
+                let shader = self.shaders.get("sprite").unwrap();
 
                 gl::UseProgram(*shader);
 
@@ -190,19 +218,19 @@ impl OpenGLRenderer {
         }
     }
 
-    pub fn render_particles(&mut self, particlejobs : Vec<(Transform2D, SpriteRenderable)>){
+    pub fn render_particles(&mut self, particlejobs : Vec<(Transform2D, ParticleRenderable, SpriteRenderable)>){
         unsafe {
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE);
             gl::BindVertexArray(self.sprite_vao);
 
             for particlejob in particlejobs {
 
-                let(transform2d, particle) = particlejob;
-                let shader = self.shaders.get(particle.get_shader_key()).unwrap();
+                let(transform2d, particle, sprite) = particlejob;
+                let shader = self.shaders.get(sprite.get_shader_key()).unwrap();
 
                 gl::UseProgram(*shader);
 
-                let textures_keys = particle.get_texture_keys();
+                let textures_keys = sprite.get_texture_keys();
                 for i in 0..textures_keys.len() {
                     let texture = self.textures.get(&textures_keys[i]).unwrap();
                     gl::ActiveTexture(gl::TEXTURE0 + i as u32);
@@ -220,8 +248,8 @@ impl OpenGLRenderer {
                 gl::Uniform2f(offset_loc, offset.x, offset.y);
 
                 let color_loc = gl::GetUniformLocation(*shader, CString::new("color").unwrap().as_ptr());
-                let color = particle.get_sprite_color();
-                gl::Uniform4f(color_loc, color.x, color.y, color.z, color.w);
+                let color = sprite.get_sprite_color();
+                gl::Uniform4f(color_loc, color.x, color.y, color.z, particle.life);
 
                 gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
             }
@@ -231,8 +259,13 @@ impl OpenGLRenderer {
     }
 
     pub fn render(&mut self, renderjobs : Vec<RenderJob>){
-
         use renderer::job::RenderJob::*;
+
+        unsafe {
+            gl::BindFramebuffer(gl::FRAMEBUFFER, self.ms_fbo);
+            gl::ClearColor(0.2, 0.2, 0.0, 1.0);
+            gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
 
         let mut sprites = vec!();
         let mut particles = vec!();
@@ -240,12 +273,31 @@ impl OpenGLRenderer {
         for job in renderjobs {
             match job {
                 Sprite(transform2d, sprite) => sprites.push((transform2d, sprite)),
-                Particle(transform2d, particle) => particles.push((transform2d, particle))
+                Particle(transform2d, particle, sprite) => particles.push((transform2d, particle, sprite))
             };
         }
         
         self.render_sprite(sprites);
         self.render_particles(particles);
+
+        unsafe {
+            gl::BindFramebuffer(gl::READ_FRAMEBUFFER, self.ms_fbo);
+            gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, self.main_fbo);
+            gl::BlitFramebuffer(0, 0,
+                                self.render_width as i32, self.render_height as i32,
+                                0, 0,
+                                self.render_width as i32, self.render_height as i32,
+                                gl::COLOR_BUFFER_BIT, gl::NEAREST);
+
+            gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+
+            gl::UseProgram(*self.shaders.get("postprocess").unwrap());
+            gl::ActiveTexture(gl::TEXTURE0);
+            gl::BindTexture(gl::TEXTURE_2D, self.render_texture);
+
+            gl::BindVertexArray(self.sprite_vao);
+            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+        }
     }
 
     unsafe fn create_sprite_buffer() -> (GLuint, GLuint, GLuint) {
@@ -297,5 +349,48 @@ impl OpenGLRenderer {
         gl::BindVertexArray(0);
 
         (sprite_vao, sprite_vbo, sprite_ebo)
+    }
+
+    unsafe fn initialize_postprocessing(render_width : GLuint, render_height : GLuint) -> (GLuint, GLuint, GLuint) {
+
+        let mut fbo = 0;
+        let mut msfbo = 0;
+        let mut rbo = 0;
+
+        gl::GenFramebuffers(1, &mut msfbo);
+        gl::GenFramebuffers(1, &mut fbo);
+        gl::GenRenderbuffers(1, &mut rbo);
+
+        //Create a multisampled framebuffer with an attached renderbuffer
+        gl::BindFramebuffer(gl::FRAMEBUFFER, msfbo);
+        gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
+        gl::RenderbufferStorageMultisample(gl::RENDERBUFFER, 8, gl::RGB, render_width as i32, render_height as i32);
+        gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::RENDERBUFFER, rbo);
+
+        if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
+            println!("ERROR:POSTPROCESSOR: Failed to initialize MSFBO");
+        }
+
+        //Create texture to be attached to COLOR_ATTACHMENT_0
+        gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
+
+        let mut texture = 0;
+        gl::GenTextures(1, &mut texture);
+        gl::BindTexture(gl::TEXTURE_2D, texture);
+
+        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32, render_width as i32, render_height as i32, 0,
+                       gl::RGB, gl::UNSIGNED_BYTE, ptr::null());
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+        gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, texture, 0);
+
+        if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
+            println!("ERROR:POSTPROCESSOR: Failed to create a color FBO");
+        }
+        gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+
+
+        (texture, msfbo, fbo)
     }
 }

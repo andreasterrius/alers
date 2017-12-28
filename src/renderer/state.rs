@@ -42,7 +42,9 @@ impl RenderState {
 
         match(a, b){
             (&Sprite(ref at, ref ar), &Sprite(ref bt, ref br)) => Some(RenderJob::Sprite(at.lerp(&bt, dt), br.clone())),
-            (&Particle(ref at, ref ar), &Particle(ref bt, ref br)) => Some(RenderJob::Particle(at.lerp(&bt, dt), br.clone())),
+            (&Particle(ref at, ref ap, ref ar), &Particle(ref bt, ref bp, ref br)) => Some(
+                RenderJob::Particle(at.lerp(&bt, dt), bp.clone(), br.clone())
+            ),
             _ => None
         }
     }

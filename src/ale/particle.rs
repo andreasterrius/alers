@@ -1,9 +1,11 @@
 use cgmath::{Vector2, Vector3, Vector4};
 use cgmath::prelude::*;
-use renderer::job::{RenderJob, SpriteRenderable};
+use renderer::job::{RenderJob, ParticleRenderable, SpriteRenderable};
 use ale::idgen::TimestampIdGenerator;
 use std::collections::HashMap;
 use math::*;
+use rand;
+use rand::distributions::{IndependentSample, Range};
 
 pub struct ParticleEmitter {
     pub id : i64,
@@ -38,7 +40,7 @@ impl ParticleEmitter {
             id : idgen.next(),
             sprite_renderable: SpriteRenderable{
                 color: Vector4::from_value(1.0),
-                shader_key: String::from("particle"),
+                custom_shader_key: String::from("particle"),
                 texture_keys: vec![String::from("ballparticle")],
             }
         }
@@ -47,7 +49,9 @@ impl ParticleEmitter {
     pub fn get_renderables(&self) -> HashMap<i64, RenderJob> {
         let mut renderables = HashMap::new();
         for particle in &self.particles {
-            renderables.insert(particle.id, RenderJob::Particle(particle.transform2d.clone(), self.sprite_renderable.clone()));
+            renderables.insert(particle.id, RenderJob::Particle(particle.transform2d.clone(),
+                                                                particle.get_renderable(),
+                                                                self.sprite_renderable.clone()));
         }
 
         renderables
@@ -65,13 +69,17 @@ impl ParticleEmitter {
             };
 
         let id = self.particles[unused_particle_idx].id;
+
+        let mut rng = rand::thread_rng();
+        let between = Range::new(-50.0, 50.0);
+
         self.particles[unused_particle_idx] = Particle{
             id,
             transform2d : Transform2D {
-                position,
-                size: Vector2::from_value(100.0),
+                position : Vector2::new(position.x - 5.0, position.y - 5.0),
+                size: Vector2::from_value(10.0),
             },
-            velocity: Vector2::from_value(0.0),
+            velocity: Vector2::new(between.ind_sample(&mut rng), between.ind_sample(&mut rng)),
             life: 1.0,
             color: Vector4::from_value(1.0),
         };
@@ -93,4 +101,12 @@ pub struct Particle {
     pub velocity : Vector2<f32>,
     pub life : f32,
     pub color : Vector4<f32>
+}
+
+impl Particle {
+    fn get_renderable(&self) -> ParticleRenderable {
+        ParticleRenderable {
+            life : self.life
+        }
+    }
 }
