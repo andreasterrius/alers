@@ -49,7 +49,6 @@ impl Game  {
 
     pub fn load_resources(&self, resources : &mut ResourceManager) {
         resources.load_glsl("particle", "shaders/particle.vs", "shaders/particle.fs");
-        resources.load_glsl("sprite", "shaders/sprite.vs", "shaders/sprite.fs");
         resources.load_image("ball", "resources/ball.png");
         resources.load_image("block", "resources/block.png");
         resources.load_image("paddle", "resources/paddle.png");
@@ -58,10 +57,7 @@ impl Game  {
 
     pub fn configure_renderer(&self, resources : &ResourceManager, renderer: &mut OpenGLRenderer){
         let particle_shader = resources.get_glsl("particle").unwrap();
-        let sprite_shader = resources.get_glsl("sprite").unwrap();
-
         renderer.register_shader("particle", &particle_shader.vertex_shader, &particle_shader.fragment_shader);
-        renderer.register_shader("sprite", &sprite_shader.vertex_shader, &sprite_shader.fragment_shader );
 
         renderer.register_image("ball", &resources.get_image("ball").unwrap().image);
         renderer.register_image("block", &resources.get_image("block").unwrap().image);
@@ -111,7 +107,7 @@ impl Game  {
 
         /* Physics tick */
         self.ball.do_move(dt);
-        self.ball_particle.fixed_tick(self.ball.worldpos(), dt);
+        self.ball_particle.fixed_tick(fisika::get_center_pos_circle(&self.ball), dt);
         self.paddle.do_move(dt, move_right);
 
         for block in &mut self.blocks {
