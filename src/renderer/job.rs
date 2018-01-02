@@ -1,5 +1,7 @@
 use math::{Transform2D, Lerpable};
 use cgmath::{Vector3, Vector4};
+use renderer::shader::CustomShaderUniform;
+use std::collections::HashMap;
 
 pub enum RenderJob {
     Sprite(Transform2D, SpriteRenderable),
@@ -10,17 +12,20 @@ pub enum RenderJob {
 pub struct SpriteRenderable {
     pub color : Vector4<f32>,
     pub custom_shader_key: String,
-    pub texture_keys : Vec<String>
+    pub custom_shader_uniform: Option<CustomShaderUniform>,
+    pub texture_keys : Vec<String>,
 }
 
 impl SpriteRenderable {
 
     pub fn new (color : Vector4<f32>,
                 shader_key : String,
+                shader_uniforms : Option<CustomShaderUniform>,
                 texture_keys : Vec<String>) -> SpriteRenderable {
         SpriteRenderable {
             color,
             custom_shader_key: shader_key,
+            custom_shader_uniform: shader_uniforms,
             texture_keys
         }
     }
@@ -35,6 +40,10 @@ impl SpriteRenderable {
 
     pub fn get_texture_keys(&self) -> &Vec<String> {
         &self.texture_keys
+    }
+
+    pub fn get_shader_uniforms(&self) -> &Option<CustomShaderUniform> {
+        &self.custom_shader_uniform
     }
 }
 

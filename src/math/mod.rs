@@ -25,13 +25,14 @@ impl Lerpable for Vector2<f32> {
 #[derive(Debug, Clone)]
 pub struct Transform2D {
     pub position : Vector2<f32>,
-    pub size : Vector2<f32>
+    pub size : Vector2<f32>,
+    pub depth : f32
 }
 
 impl Transform2D {
     pub fn get_matrix(&self) -> Matrix4<f32> {
         let mut transform : Matrix4<f32> = Matrix4::identity();
-        transform = transform * Matrix4::from_translation(Vector3::<f32>::new(self.position.x, self.position.y, 0.0));
+        transform = transform * Matrix4::from_translation(Vector3::<f32>::new(self.position.x, self.position.y, self.depth));
         transform = transform * Matrix4::from_nonuniform_scale(self.size.x, self.size.y, 1.0);
 
         return transform;
@@ -43,6 +44,7 @@ impl Lerpable for Transform2D {
         Transform2D {
             position: self.position.lerp(other.position, t),
             size: self.size.lerp(other.size, t),
+            depth: 0.0,
         }
 
     }

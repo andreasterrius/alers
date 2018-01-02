@@ -10,8 +10,8 @@ pub struct Ball  {
     pub transform2d : Transform2D,
     pub sprite: SpriteRenderable,
     pub velocity : Vector2<f32>,
-    pub is_on_paddle : bool,
-    pub is_clipping : bool
+
+    pub is_sticky : bool
 }
 
 impl Ball {
@@ -25,7 +25,8 @@ impl Ball {
 
         let transform2d = Transform2D {
             position,
-            size
+            size,
+            depth: 0.0,
         };
 
         Ball {
@@ -34,11 +35,11 @@ impl Ball {
             sprite: SpriteRenderable::new(
                 Vector4::from_value(1.0),
                 String::from("sprite"),
+                None,
                 vec!(String::from("ball")),
             ),
             velocity: Vector2::new(0.0, -500.0),
-            is_on_paddle : false,
-            is_clipping : false,
+            is_sticky : true,
         }
     }
 
@@ -62,57 +63,6 @@ impl Ball {
             }
     }
 
-    pub fn bounce(&mut self, area : &BoxGeneralArea, external_velocity : Vector2<f32>){
-        match area {
-          &BoxGeneralArea::TopLeft => {
-              //heading right
-              if self.velocity.x > 0.0 {
-                self.velocity.x *= -1.0;
-              }
-              self.velocity.y *= -1.0;
-          },
-          &BoxGeneralArea::Left => {
-              if self.velocity.x > 0.0 {
-                  self.velocity.x *= -1.0;
-              }
-          },
-          &BoxGeneralArea::BotLeft => {
-              if self.velocity.x > 0.0 {
-                  self.velocity.x *= -1.0;
-              }
-              self.velocity.y *= -1.0;
-          },
-          &BoxGeneralArea::Top => {
-              if self.velocity.y < 0.0 {
-                  self.velocity.y *= -1.0;
-              }
-          },
-          &BoxGeneralArea::Bot => {
-              if self.velocity.y > 0.0 {
-                  self.velocity.y *= -1.0;
-              }
-          },
-          &BoxGeneralArea::TopRight => {
-              if self.velocity.x < 0.0 {
-                  self.velocity.x *= -1.0;
-              }
-              self.velocity.y *= -1.0;
-          },
-          &BoxGeneralArea::Right => {
-               if self.velocity.x < 0.0 {
-                   self.velocity.x *= -1.0;
-               }
-          },
-          &BoxGeneralArea::BotRight => {
-               if self.velocity.x < 0.0 {
-                   self.velocity.x *= -1.0;
-               }
-              self.velocity.y *= -1.0;
-          }
-        };
-
-        self.velocity += external_velocity;
-      }
 
     pub fn multiply_speed(&mut self, x_mult : f32){
         self.velocity.x = x_mult * 100.0;

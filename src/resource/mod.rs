@@ -2,12 +2,14 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::prelude::*;
-use std::fmt;
+use std::io::{BufReader, Cursor};
+use std::{self, fmt};
 use image;
 
 pub struct ResourceManager {
     images : HashMap<String, ResourceImageFile>,
-    glsl : HashMap<String, ResourceGlslFile>
+    glsl : HashMap<String, ResourceGlslFile>,
+    audios : HashMap<String, ResourceAudioFile>
 }
 
 impl ResourceManager {
@@ -15,7 +17,8 @@ impl ResourceManager {
     pub fn new() -> ResourceManager {
         ResourceManager{
             images: HashMap::new(),
-            glsl: HashMap::new()
+            glsl: HashMap::new(),
+            audios : HashMap::new()
         }
     }
 
@@ -60,6 +63,25 @@ impl ResourceManager {
     pub fn get_glsl(&self, key : &str) -> Option<&ResourceGlslFile> {
         self.glsl.get(key)
     }
+
+    pub fn load_audio(&mut self, key : &str, path : &str) {
+        let audio_path = PathBuf::from(path);
+        let audio_file = File::open(path)
+            .expect(&format!("Audio file not found, {:?}", path));
+        let audio_data = ResourceManager::load_binary_file(audio_file);
+
+        self.audios.insert(String::from(key), ResourceAudioFile{ audio : audio_data } );
+    }
+
+    pub fn get_audio(&self, key : &str) -> Option<&ResourceAudioFile> {
+        self.audios.get(key)
+    }
+
+    fn load_binary_file( file : File ) -> Vec<u8> {
+        let mut vec = vec!();
+        let _ = BufReader::new(file).read_to_end(&mut vec);
+        vec
+    }
 }
 
 #[derive(Debug)]
@@ -70,4 +92,9 @@ pub struct ResourceGlslFile {
 
 pub struct ResourceImageFile {
     pub image : image::DynamicImage
+}
+
+#[derive(Debug)]
+pub struct ResourceAudioFile {
+    pub audio : Vec<u8>
 }
