@@ -24,7 +24,8 @@ impl Paddle {
 
         let transform2d = Transform2D {
             position,
-            size
+            size,
+            depth: 0.0,
         };
 
         Paddle {
@@ -33,6 +34,7 @@ impl Paddle {
             sprite: SpriteRenderable::new(
                 Vector4::from_value(1.0),
                 String::from("sprite"),
+                None,
                 vec!(String::from("paddle")),
             ),
             speed : 10.0,

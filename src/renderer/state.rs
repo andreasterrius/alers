@@ -1,22 +1,22 @@
 use renderer::job::RenderJob;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use math::*;
 
 pub struct RenderState {
-    pub last_frame : HashMap<i64, RenderJob>,
-    pub current_frame : HashMap<i64, RenderJob>
+    pub last_frame : BTreeMap<i64, RenderJob>,
+    pub current_frame : BTreeMap<i64, RenderJob>
 }
 
 impl RenderState {
 
     pub fn new() -> RenderState{
         RenderState{
-            last_frame : HashMap::new(),
-            current_frame : HashMap::new()
+            last_frame : BTreeMap::new(),
+            current_frame : BTreeMap::new()
         }
     }
 
-    pub fn interpolate_frame(&self, dt : f32) -> Vec<RenderJob>
+    pub fn lerp_frame(&self, dt : f32) -> Vec<RenderJob>
     {
         use renderer::job::RenderJob::*;
         let mut renderjobs = vec!();

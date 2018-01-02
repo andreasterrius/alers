@@ -1,13 +1,14 @@
 use gl;
 use gl::types::*;
-use std::ffi::CString;
+use std::ffi::{CString, CStr};
 use std::{ptr, mem};
 use std::os::raw::c_void;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use image::{self, DynamicImage};
 use math::Transform2D;
 use cgmath::prelude::*;
 use cgmath::{self, Vector2, Vector3, Vector4, Matrix4};
+use renderer::shader::CustomShaderUniform;
 use renderer::job::{RenderJob, ParticleRenderable, SpriteRenderable};
 use resource::ResourceManager;
 use std::str;
@@ -24,6 +25,7 @@ pub struct OpenGLRenderer {
 
     pub projection_2d : Matrix4<f32>,
 
+    pub preprocess_shader_key : Option<String>,
     pub main_fbo : GLuint,
     pub ms_fbo : GLuint,
     pub render_texture : GLuint,
@@ -34,20 +36,7 @@ pub struct OpenGLRenderer {
 
 impl OpenGLRenderer {
 
-    pub fn load_external_dep(&mut self, resources : &mut ResourceManager) {
-
-        //Load sprite shader
-        resources.load_glsl("sprite", "shaders/sprite.vs", "shaders/sprite.fs");
-        resources.load_glsl("postprocess", "shaders/postprocess.vs", "shaders/postprocess.fs");
-
-        let sprite_shader = resources.get_glsl("sprite").unwrap();
-        let postprocess_shader = resources.get_glsl("postprocess").unwrap();
-
-        self.register_shader("sprite", &sprite_shader.vertex_shader, &sprite_shader.fragment_shader);
-        self.register_shader("postprocess", &postprocess_shader.vertex_shader, &postprocess_shader.fragment_shader);
-    }
-
-    pub fn new(screen_width : u32, screen_height : u32, resources : &mut ResourceManager) -> OpenGLRenderer {
+    pub fn new(screen_width : u32, screen_height : u32) -> OpenGLRenderer {
         unsafe {
             let (sprite_vao, sprite_vbo, sprite_ebo) = OpenGLRenderer::create_sprite_buffer();
             let (render_texture, ms_fbo, main_fbo) = OpenGLRenderer::initialize_postprocessing(screen_width, screen_height);
@@ -68,13 +57,12 @@ impl OpenGLRenderer {
                 main_fbo,
                 ms_fbo,
                 render_texture,
+                preprocess_shader_key: None,
 
                 projection_2d,
                 shaders : HashMap::new(),
                 textures : HashMap::new(),
             };
-
-            renderer.load_external_dep(resources);
 
             return renderer;
         }
@@ -127,6 +115,52 @@ impl OpenGLRenderer {
 
             self.shaders.insert(String::from(key), shader_program);
         }
+    }
+
+    pub fn register_uniforms(&self, shader_key: &str, custom_uniforms : &CustomShaderUniform){
+        let shader_id = self.shaders.get(shader_key).unwrap();
+
+        unsafe {
+            gl::UseProgram(*shader_id);
+            self.pass_uniforms(*shader_id, custom_uniforms);
+        }
+    }
+
+    unsafe fn pass_uniforms(&self, shader_id : GLuint, custom_uniforms : &CustomShaderUniform) {
+        use renderer::shader::ShaderUniform::*;
+
+        for (key, uniform) in &custom_uniforms.uniforms {
+            match uniform {
+                &Float1vArray(ref floats) => {
+                    gl::Uniform1fv(gl::GetUniformLocation(shader_id, CString::new(key.as_str()).unwrap().as_ptr()),
+                                   floats.len() as i32, floats.as_ptr());
+                },
+                &Float2vArray(ref floats) => {
+                    gl::Uniform2fv(gl::GetUniformLocation(shader_id, CString::new(key.as_str()).unwrap().as_ptr()),
+                                   floats.len() as i32, floats.as_ptr() as *const f32);
+                },
+                &Integer1vArray(ref integers) => {
+                    gl::Uniform1iv(gl::GetUniformLocation(shader_id, CString::new(key.as_str()).unwrap().as_ptr()),
+                                   integers.len() as i32, integers.as_ptr());
+                }
+                &Boolean(ref boolean) => {
+                    gl::Uniform1i(gl::GetUniformLocation(shader_id, CString::new(key.as_str()).unwrap().as_ptr()),
+                                    if *boolean { 1 } else { 0 });
+                }
+                &Double(ref double) => {
+                    gl::Uniform1d(gl::GetUniformLocation(shader_id, CString::new(key.as_str()).unwrap().as_ptr()),
+                                    *double);
+                }
+                &Float(ref float) => {
+                    gl::Uniform1f(gl::GetUniformLocation(shader_id, CString::new(key.as_str()).unwrap().as_ptr()),
+                                  *float);
+                }
+            }
+        }
+    }
+
+    pub fn register_preprocessor(&mut self, key : &str){
+        self.preprocess_shader_key = Some(String::from(key));
     }
 
     pub fn register_image(&mut self, key: &str, img : &DynamicImage){
@@ -189,14 +223,13 @@ impl OpenGLRenderer {
         unsafe {
             gl::BindVertexArray(self.sprite_vao);
 
-            for sprite in sprites {
+            for (transform2d, sprite) in sprites {
 
-                let(transform2d, renderable_2d) = sprite;
                 let shader = self.shaders.get("sprite").unwrap();
 
                 gl::UseProgram(*shader);
 
-                let textures_keys = renderable_2d.get_texture_keys();
+                let textures_keys = sprite.get_texture_keys();
                 for i in 0..textures_keys.len() {
                     let texture = self.textures.get(&textures_keys[i]).unwrap();
                     gl::ActiveTexture(gl::TEXTURE0 + i as u32);
@@ -210,8 +243,12 @@ impl OpenGLRenderer {
                 gl::UniformMatrix4fv(model_loc, 1, gl::FALSE, transform2d.get_matrix().as_ptr());
 
                 let color_loc = gl::GetUniformLocation(*shader, CString::new("color").unwrap().as_ptr());
-                let color = renderable_2d.get_sprite_color();
+                let color = sprite.get_sprite_color();
                 gl::Uniform4f(color_loc, color.x, color.y, color.z, color.w);
+
+                if let &Some(ref uniforms) = sprite.get_shader_uniforms() {
+                    self.pass_uniforms(*shader, &uniforms);
+                }
 
                 gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
             }
@@ -258,13 +295,19 @@ impl OpenGLRenderer {
         }
     }
 
-    pub fn render(&mut self, renderjobs : Vec<RenderJob>){
+    pub fn render(&mut self, renderjobs : Vec<RenderJob>, postproces_shader_uniforms : &CustomShaderUniform){
         use renderer::job::RenderJob::*;
 
-        unsafe {
-            gl::BindFramebuffer(gl::FRAMEBUFFER, self.ms_fbo);
-            gl::ClearColor(0.2, 0.2, 0.0, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+        if self.preprocess_shader_key.is_some() {
+            unsafe {
+                gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+                gl::ClearColor(0.2, 0.2, 0.0, 1.0);
+                gl::Clear(gl::COLOR_BUFFER_BIT);
+
+                gl::BindFramebuffer(gl::FRAMEBUFFER, self.ms_fbo);
+                gl::ClearColor(0.2, 0.2, 0.0, 1.0);
+                gl::Clear(gl::COLOR_BUFFER_BIT);
+            }
         }
 
         let mut sprites = vec!();
@@ -280,23 +323,28 @@ impl OpenGLRenderer {
         self.render_sprite(sprites);
         self.render_particles(particles);
 
-        unsafe {
-            gl::BindFramebuffer(gl::READ_FRAMEBUFFER, self.ms_fbo);
-            gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, self.main_fbo);
-            gl::BlitFramebuffer(0, 0,
-                                self.render_width as i32, self.render_height as i32,
-                                0, 0,
-                                self.render_width as i32, self.render_height as i32,
-                                gl::COLOR_BUFFER_BIT, gl::NEAREST);
+        if let Some(ref postprocess_shader_key) = self.preprocess_shader_key {
+            unsafe {
+                gl::BindFramebuffer(gl::READ_FRAMEBUFFER, self.ms_fbo);
+                gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, self.main_fbo);
+                gl::BlitFramebuffer(0, 0,
+                                    self.render_width as i32, self.render_height as i32,
+                                    0, 0,
+                                    self.render_width as i32, self.render_height as i32,
+                                    gl::COLOR_BUFFER_BIT, gl::NEAREST);
 
-            gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+                gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
 
-            gl::UseProgram(*self.shaders.get("postprocess").unwrap());
-            gl::ActiveTexture(gl::TEXTURE0);
-            gl::BindTexture(gl::TEXTURE_2D, self.render_texture);
+                let postprocess_shader = self.shaders.get(postprocess_shader_key).unwrap();
+                gl::UseProgram(*postprocess_shader);
+                self.pass_uniforms(*postprocess_shader, postproces_shader_uniforms);
 
-            gl::BindVertexArray(self.sprite_vao);
-            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+                gl::ActiveTexture(gl::TEXTURE0);
+                gl::BindTexture(gl::TEXTURE_2D, self.render_texture);
+
+                gl::BindVertexArray(self.sprite_vao);
+                gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+            }
         }
     }
 
@@ -393,4 +441,6 @@ impl OpenGLRenderer {
 
         (texture, msfbo, fbo)
     }
+
+
 }

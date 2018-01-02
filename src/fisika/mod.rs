@@ -34,7 +34,7 @@ pub fn aabb_collision_box_box<Box1, Box2>(box_collider1: &Box1, box_collider2: &
 }
 
 pub fn aabb_collision_box_circle<Box, Circle>(box_collider: &Box,
-                                              circle_collider: &Circle) -> Option<Vector2<f32>>
+                                              circle_collider: &Circle) -> Option<(Vector2<f32>, f32)>
     where Box : BoxCollider2D, Circle : CircleCollider2D
 {
     //find difference vector
@@ -47,79 +47,51 @@ pub fn aabb_collision_box_circle<Box, Circle>(box_collider: &Box,
     );
 
     let circle_to_box_closest_point_magnitude = (diff_vec - box_closest_point_to_circle).magnitude();
+    let diff = circle_collider.radius() - circle_to_box_closest_point_magnitude;
 
     if circle_to_box_closest_point_magnitude < circle_collider.radius() {
-        return Some(box_closest_point_to_circle + box_collider.size()/2.0); //convert center to top left
+        return Some((box_closest_point_to_circle, diff));
     }
 
     None
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BoxGeneralArea {
-    TopLeft,
-    Left,
-    BotLeft,
-
     Top,
-    Bot,
-
-    TopRight,
     Right,
-    BotRight
+    Bottom,
+    Left,
 }
 
 
-pub fn determine_point_in_box_general<Box>(box_collider: &Box, point_in_box : Vector2<f32>) -> Option<BoxGeneralArea>
+pub fn determine_point_in_box_general<Box>(box_collider: &Box, point_in_box : Vector2<f32>) -> BoxGeneralArea
     where Box : BoxCollider2D
 {
-    let slice_size = 8.0;
-    let slice_x = box_collider.size().x / slice_size;
-    let slice_y = box_collider.size().y / 4.0;
+    let k_eps = 0.001;
 
-    //left
-    if point_in_box.x > 0.0 && point_in_box.x < slice_x {
-        //top left
-        if point_in_box.y > 0.0 && point_in_box.y < slice_y {
-            return Some(BoxGeneralArea::TopLeft);
-        }
-        //bot left
-        else if point_in_box.y > box_collider.size().y - slice_y
-            && point_in_box.y < box_collider.size().y
-        {
-            return Some(BoxGeneralArea::BotLeft);
-        }
-        else {
-            return Some(BoxGeneralArea::Left);
+    let directions : [(Vector2<f32>, BoxGeneralArea); 4] = [
+        (Vector2::new(0.0, 1.0), BoxGeneralArea::Top),
+        (Vector2::new(1.0, 0.0), BoxGeneralArea::Right),
+        (Vector2::new(0.0, -1.0), BoxGeneralArea::Bottom),
+        (Vector2::new(-1.0, 0.0), BoxGeneralArea::Left)
+    ];
+
+    let mut max = 0.0;
+    let mut best_match = BoxGeneralArea::Left;
+    for &(ref direction, ref label) in directions.iter() {
+        let norm_point = Vector2::new(point_in_box.x / (box_collider.size().x + 5.0) / 2.0,
+            point_in_box.y / box_collider.size().y / 2.0);
+        let dot_product = direction.dot(norm_point);
+        //println!("{:?} {:?}", direction, point_in_box.normalize());
+        if dot_product > max {
+            max = dot_product;
+            best_match = label.clone();
+           // println!("{:?} {:?}", dot_product, best_match);
         }
     }
 
-    //right
-    if point_in_box.x > box_collider.size().x - slice_x &&
-        point_in_box.x < box_collider.size().x
-    {
-        //top left
-        if point_in_box.y > 0.0 && point_in_box.y < slice_y {
-           return Some(BoxGeneralArea::TopRight);
-        }
-        //bot left
-        else if point_in_box.y > box_collider.size().y - slice_y
-            && point_in_box.y < box_collider.size().y
-        {
-            return Some(BoxGeneralArea::BotRight);
-        }
-        else {
-            return Some(BoxGeneralArea::Right);
-        }
-    }
-
-    if point_in_box.y > box_collider.size().y / 2.0 {
-        return Some(BoxGeneralArea::Top);
-    } else if point_in_box.y < box_collider.size(). y / 2.0 {
-        return Some(BoxGeneralArea::Bot);
-    }
-
-    None
+    best_match
 }
 
 pub fn get_center_pos_box<Box>(box_collider1: &Box) -> Vector2<f32>

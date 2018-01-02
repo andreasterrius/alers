@@ -9,7 +9,8 @@ pub struct Block {
     pub id : i64,
     pub transform2d : Transform2D,
     pub sprite: SpriteRenderable,
-    pub is_alive : bool //should render, and fisika tick
+    pub is_alive : bool, //should render, and fisika tick
+    pub is_solid : bool
 }
 
 impl Block {
@@ -18,16 +19,19 @@ impl Block {
                 transform2d : Transform2D,
                 shader_key : String,
                 texture_keys : Vec<String>,
-                color : Vector4<f32>) -> Block {
+                color : Vector4<f32>,
+                is_solid : bool) -> Block {
         Block {
             id,
             transform2d,
             sprite: SpriteRenderable::new(
                 color,
                 shader_key,
-                texture_keys
+                None,
+                texture_keys,
             ),
-            is_alive : true
+            is_alive : true,
+            is_solid,
         }
     }
 
@@ -58,15 +62,33 @@ impl Block {
                     arena_height as f32 / arena_data.len() as f32 / 2.0
                 );
 
-                blocks.push(Block::new(
-                    idgen.next(),
-                    Transform2D {
-                        position, size
-                    },
-                    String::from("sprite"),
-                    vec!(String::from("block")),
-                    Vector4::new(1.0, 1.0, 1.0, 1.0)
-                ));
+                if *index == 1 {
+                    blocks.push(Block::new(
+                        idgen.next(),
+                        Transform2D {
+                            position,
+                            size,
+                            depth: 0.0,
+                        },
+                        String::from("sprite"),
+                        vec!(String::from("block")),
+                        Vector4::new(1.0, 1.0, 1.0, 1.0),
+                        false
+                    ));
+                } else {
+                    blocks.push(Block::new(
+                        idgen.next(),
+                        Transform2D {
+                            position,
+                            size,
+                            depth: 0.0,
+                        },
+                        String::from("sprite"),
+                        vec!(String::from("block_solid")),
+                        Vector4::new(1.0, 1.0, 1.0, 1.0),
+                        true
+                    ));
+                }
             }
         }
 

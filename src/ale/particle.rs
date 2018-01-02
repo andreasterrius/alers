@@ -2,7 +2,7 @@ use cgmath::{Vector2, Vector3, Vector4};
 use cgmath::prelude::*;
 use renderer::job::{RenderJob, ParticleRenderable, SpriteRenderable};
 use ale::idgen::TimestampIdGenerator;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use math::*;
 use rand;
 use rand::distributions::{IndependentSample, Range};
@@ -25,7 +25,8 @@ impl ParticleEmitter {
                 id: idgen.next(),
                 transform2d: Transform2D {
                     position : Vector2::from_value(0.0),
-                    size : Vector2::from_value(10.0)
+                    size : Vector2::from_value(10.0),
+                    depth: 0.0,
                 },
                 velocity: Vector2::from_value(0.0),
                 life: 0.0,
@@ -41,13 +42,14 @@ impl ParticleEmitter {
             sprite_renderable: SpriteRenderable{
                 color: Vector4::from_value(1.0),
                 custom_shader_key: String::from("particle"),
+                custom_shader_uniform : None,
                 texture_keys: vec![String::from("ballparticle")],
             }
         }
     }
 
-    pub fn get_renderables(&self) -> HashMap<i64, RenderJob> {
-        let mut renderables = HashMap::new();
+    pub fn get_renderables(&self) -> BTreeMap<i64, RenderJob> {
+        let mut renderables = BTreeMap::new();
         for particle in &self.particles {
             renderables.insert(particle.id, RenderJob::Particle(particle.transform2d.clone(),
                                                                 particle.get_renderable(),
@@ -78,6 +80,7 @@ impl ParticleEmitter {
             transform2d : Transform2D {
                 position : Vector2::new(position.x - 5.0, position.y - 5.0),
                 size: Vector2::from_value(10.0),
+                depth: 0.0,
             },
             velocity: Vector2::new(between.ind_sample(&mut rng), between.ind_sample(&mut rng)),
             life: 1.0,
