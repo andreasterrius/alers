@@ -5,13 +5,13 @@ use std::io::prelude::*;
 use std::collections::HashMap;
 use rodio::source::Buffered;
 
-pub struct AudioPlayer   {
+pub struct AudioManager {
     audios : HashMap<String, Vec<u8>>
 }
 
-impl AudioPlayer {
-    pub fn new() -> AudioPlayer {
-        AudioPlayer{
+impl AudioManager {
+    pub fn new() -> AudioManager {
+        AudioManager {
             audios : HashMap::new()
         }
     }
@@ -21,10 +21,12 @@ impl AudioPlayer {
 
     }
 
+    //TODO: Make this more efficient since currnetly, this thing clones each time it wants to play a sound
     pub fn play_audio_simple(&self, key : &str, should_loop : bool){
-        let slice = self.audios.get(key).unwrap().as_slice();
+        let audio = self.audios.get(key).unwrap().clone();
+        //let slice = audio.as_slice();
         let endpoint = rodio::get_default_endpoint().unwrap();
-        let mut sink = rodio::play_once(&endpoint, Cursor::new(slice)).unwrap();
+        let sink = rodio::play_once(&endpoint, Cursor::new(audio)).unwrap();
         sink.detach();
     }
 }
