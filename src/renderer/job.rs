@@ -3,9 +3,11 @@ use cgmath::{Vector3, Vector4};
 use renderer::shader::CustomShaderUniform;
 use std::collections::HashMap;
 
+#[derive(Clone, Debug)]
 pub enum RenderJob {
     Sprite(Transform2D, SpriteRenderable),
-    Particle(Transform2D, ParticleRenderable, SpriteRenderable)
+    Particle(Transform2D, ParticleRenderable, SpriteRenderable),
+    Text(Transform2D, TextRenderable)
 }
 
 #[derive(Clone, Debug)]
@@ -50,4 +52,9 @@ impl SpriteRenderable {
 #[derive(Clone,Debug)]
 pub struct ParticleRenderable {
     pub life : f32
+}
+
+pub struct TextRenderable {
+    pub font_key : String,
+    pub font_size : String,
 }

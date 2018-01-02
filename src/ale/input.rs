@@ -2,17 +2,17 @@ use glfw::{self, Key, Action};
 use cgmath::Vector2;
 use std::collections::HashMap;
 
-pub struct Input {
+pub struct InputManager {
 
     //Keyboard
     keys : HashMap<Key, Action>
 
 }
 
-impl Input {
+impl InputManager {
 
-    pub fn new() -> Input {
-        Input {
+    pub fn new() -> InputManager {
+        InputManager {
             keys : HashMap::new()
         }
     }
