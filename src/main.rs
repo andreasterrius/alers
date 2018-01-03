@@ -83,15 +83,20 @@ pub fn main() {
         //Deterministic physics with 0.01 dt
         let accumulator = ticker.tick(&mut | dt, is_last_tick | {
             timer_manager.fixed_tick(dt);
-            game.fixed_tick(dt, &input, &mut timer_manager, &audio_manager, &mut idgen);
+            scene_loader.get_active_scene().fixed_tick(dt,
+                                                        &input,
+                                                        &audio_manager,
+                                                        &mut timer_manager,
+                                                        &mut idgen);
 
             if is_last_tick {
-                render_state.last_frame = game.get_renderables();
+                render_state.last_frame = scene_loader.get_active_scene().get_renderables();
             }
         });
-        render_state.current_frame = game.get_renderables();
+        render_state.current_frame = scene_loader.get_active_scene().get_renderables();
 
-        renderer.render(render_state.lerp_frame(accumulator), &game.get_postprocess());
+        renderer.render(render_state.lerp_frame(accumulator),
+                        &scene_loader.get_active_scene().get_postprocess_tick());
 
         window.swap_buffers();
         glfw.poll_events();
