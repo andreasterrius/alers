@@ -1,27 +1,27 @@
-use cgmath::{Vector2, Vector3, Matrix4};
-use cgmath::prelude::*;
-use math::Transform2D;
-use fisika::{self, BoxCollider2D, CircleCollider2D};
-use ale::input::InputManager;
-use glfw::{Key, Action};
-use resource::*;
-use renderer::job::RenderJob;
-use renderer::opengl::*;
-use renderer::shader::{CustomShaderUniform, ShaderUniform};
+use alexyt::cgmath::{Vector2, Vector3, Matrix4};
+use alexyt::cgmath::prelude::*;
+use alexyt::math::Transform2D;
+use alexyt::fisika::{self, BoxCollider2D, CircleCollider2D};
+use alexyt::ale::input::InputManager;
+use alexyt::glfw::{Key, Action};
+use alexyt::resource::*;
+use alexyt::renderer::job::RenderJob;
+use alexyt::renderer::opengl::*;
+use alexyt::renderer::shader::{CustomShaderUniform, ShaderUniform};
+use alexyt::fisika::BoxGeneralArea;
+use alexyt::ale::particle::{ParticleEmitter, Particle};
+use alexyt::ale::time::{self, TimerManager, Timer};
+use alexyt::ale::idgen::TimestampIdGenerator;
+use alexyt::audio::AudioManager;
+use alexyt::ale::scene::{Scene, SceneId};
 use std::collections::{HashMap, BTreeMap};
-use fisika::BoxGeneralArea;
-use ale::particle::{ParticleEmitter, Particle};
-use game::postprocess::PostProcess;
-use ale::time::{self, TimerManager, Timer};
-use ale::idgen::TimestampIdGenerator;
-use game::powerup::Powerup;
-use audio::AudioManager;
-use ale::scene::{Scene, SceneId};
 
-use game::*;
-use game::block::Block;
-use game::ball::Ball;
-use game::paddle::Paddle;
+use breakout::powerup::Powerup;
+use breakout::postprocess::PostProcess;
+use breakout::*;
+use breakout::block::Block;
+use breakout::ball::Ball;
+use breakout::paddle::Paddle;
 
 pub struct BreakoutScene {
     blocks : Vec<Block>,
