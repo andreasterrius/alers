@@ -54,6 +54,7 @@ pub struct ParticleRenderable {
     pub life : f32
 }
 
+#[derive(Clone,Debug)]
 pub struct TextRenderable {
     pub font_key : String,
     pub font_size : String,

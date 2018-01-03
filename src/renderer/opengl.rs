@@ -312,11 +312,13 @@ impl OpenGLRenderer {
 
         let mut sprites = vec!();
         let mut particles = vec!();
+        let mut texts = vec!();
 
         for job in renderjobs {
             match job {
                 Sprite(transform2d, sprite) => sprites.push((transform2d, sprite)),
-                Particle(transform2d, particle, sprite) => particles.push((transform2d, particle, sprite))
+                Particle(transform2d, particle, sprite) => particles.push((transform2d, particle, sprite)),
+                Text(transform2d, text) => texts.push((transform2d, text))
             };
         }
         

@@ -1,29 +1,36 @@
 use renderer::job::RenderJob;
 use ale::input::InputManager;
 use ale::time::TimerManager;
+use audio::AudioManager;
+use renderer::shader::CustomShaderUniform;
+use resource::ResourceManager;
 use std::collections::{HashMap, BTreeMap};
+use renderer::opengl::OpenGLRenderer;
+use ale::idgen::TimestampIdGenerator;
 
-type SceneId = String;
+pub type SceneId = String;
 
-trait Scene {
+pub trait Scene {
     fn get_scene_id(&self) -> SceneId;
 
     fn get_renderables(&self) -> BTreeMap<i64, RenderJob>;
 
-    fn fixed_tick(dt : f32,
+    fn fixed_tick(&mut self,
+                  dt : f32,
                   input_manager: &InputManager,
                   audio_manager : &AudioManager,
-                  timer_manager : &mut TimerManager);
+                  timer_manager : &mut TimerManager,
+                  idgen : &mut TimestampIdGenerator);
 
     fn get_postprocess_uniforms(&self) -> CustomShaderUniform;
 
     fn get_postprocess_tick(&self) -> CustomShaderUniform;
 
-    fn load_resources(resources : &mut ResourceManager);
+    fn load_resources(&self, resources : &mut ResourceManager);
 
-    fn configure_renderer(resources : &ResourceManager, renderer: &mut OpenGLRenderer);
+    fn configure_renderer(&self, resources : &ResourceManager, renderer: &mut OpenGLRenderer);
 
-    fn configure_audio(resources : &ResourceManager, audio_manager : &mut AudioManager);
+    fn configure_audio(&self, resources : &ResourceManager, audio_manager : &mut AudioManager);
 }
 
 pub struct SceneLoader {
@@ -39,11 +46,16 @@ impl SceneLoader {
         }
     }
 
-    pub fn register_scene(&mut self, scene : Scene){
-        self.scenes.insert(scene.get_scene_id(), Box::new(scene));
+    pub fn register_scene(&mut self, scene : Box<Scene>){
+        self.scenes.insert(scene.get_scene_id(), scene);
     }
 
     pub fn switch_to_scene(&mut self, key : SceneId) {
         self.active_scene = key;
     }
+
+    pub fn get_active_scene(&mut self) -> &mut Box<Scene> {
+        self.scenes.get_mut(&self.active_scene).unwrap()
+    }
 }
+
