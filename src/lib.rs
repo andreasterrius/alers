@@ -9,13 +9,12 @@ extern crate time;
 extern crate rand;
 extern crate rodio;
 
-mod game;
-mod renderer;
-mod fisika;
-mod ale;
-mod resource;
-mod math;
-mod audio;
+pub mod renderer;
+pub mod fisika;
+pub mod ale;
+pub mod resource;
+pub mod math;
+pub mod audio;
 
 use cgmath::prelude::*;
 use cgmath::{Matrix4, Vector3, Vector2};
@@ -38,7 +37,7 @@ const SCR_WIDTH: u32 = 800;
 const SCR_HEIGHT: u32 = 600;
 
 #[allow(non_snake_case)]
-pub fn main() {
+pub fn start_engine(mut scene_loader : SceneLoader) {
 
     // glfw: initialize and configure
     // ------------------------------
@@ -70,7 +69,6 @@ pub fn main() {
     let mut renderer = OpenGLRenderer::new(SCR_WIDTH, SCR_HEIGHT);
     let mut render_state = RenderState::new();
     let mut timer_manager = TimerManager::new();
-    let mut scene_loader = SceneLoader::new();
 
     let mut ticker = FixedStepTick::new(0.01);
 
