@@ -11,6 +11,7 @@ use ale::idgen::TimestampIdGenerator;
 pub type SceneId = String;
 
 pub trait Scene {
+
     fn get_scene_id(&self) -> SceneId;
 
     fn get_renderables(&self) -> BTreeMap<i64, RenderJob>;
