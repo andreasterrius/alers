@@ -1,6 +1,6 @@
 //Scene modules
-mod breakout;
-mod breakoutmenu;
+pub mod breakout;
+pub mod breakoutmenu;
 
 //Game object modules
 mod ball;

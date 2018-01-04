@@ -1,13 +1,11 @@
 #![allow(non_upper_case_globals)]
-extern crate glfw;
-use self::glfw::{Context, Key, Action};
-
-extern crate gl;
-extern crate image;
-extern crate cgmath;
-extern crate time;
-extern crate rand;
-extern crate rodio;
+pub extern crate glfw;
+pub extern crate gl;
+pub extern crate image;
+pub extern crate cgmath;
+pub extern crate time;
+pub extern crate rand;
+pub extern crate rodio;
 
 pub mod renderer;
 pub mod fisika;
@@ -16,6 +14,7 @@ pub mod resource;
 pub mod math;
 pub mod audio;
 
+use self::glfw::{Context, Key, Action};
 use cgmath::prelude::*;
 use cgmath::{Matrix4, Vector3, Vector2};
 use std::sync::mpsc::Receiver;
@@ -37,7 +36,11 @@ const SCR_WIDTH: u32 = 800;
 const SCR_HEIGHT: u32 = 600;
 
 #[allow(non_snake_case)]
-pub fn start_engine(mut scene_loader : SceneLoader) {
+pub fn start_engine<SetupFn>(mut setup : SetupFn)
+    where SetupFn: FnMut (&mut SceneLoader,
+                          &mut TimestampIdGenerator,
+                          u32,  u32)
+{
 
     // glfw: initialize and configure
     // ------------------------------
@@ -69,9 +72,11 @@ pub fn start_engine(mut scene_loader : SceneLoader) {
     let mut renderer = OpenGLRenderer::new(SCR_WIDTH, SCR_HEIGHT);
     let mut render_state = RenderState::new();
     let mut timer_manager = TimerManager::new();
+    let mut scene_loader = SceneLoader::new();
+
+    setup(&mut scene_loader, &mut idgen, SCR_WIDTH, SCR_HEIGHT);
 
     let mut ticker = FixedStepTick::new(0.01);
-
     let mut input = InputManager::new();
 
     while !window.should_close() {
@@ -86,13 +91,13 @@ pub fn start_engine(mut scene_loader : SceneLoader) {
                                                         &audio_manager,
                                                         &mut timer_manager,
                                                         &mut idgen);
-
+                
             if is_last_tick {
                 render_state.last_frame = scene_loader.get_active_scene().get_renderables();
             }
         });
         render_state.current_frame = scene_loader.get_active_scene().get_renderables();
-
+        
         renderer.render(render_state.lerp_frame(accumulator),
                         &scene_loader.get_active_scene().get_postprocess_tick());
 

@@ -1,10 +1,10 @@
-use renderer::job::RenderJob;
-use math::Transform2D;
-use cgmath::{Vector2, Vector4};
-use cgmath::prelude::*;
-use renderer::job::SpriteRenderable;
-use rand::{self, Rng};
-use fisika::BoxCollider2D;
+use alexyt::renderer::job::RenderJob;
+use alexyt::math::Transform2D;
+use alexyt::cgmath::{Vector2, Vector4};
+use alexyt::cgmath::prelude::*;
+use alexyt::renderer::job::SpriteRenderable;
+use alexyt::rand::{self, Rng};
+use alexyt::fisika::BoxCollider2D;
 
 pub struct Powerup {
     pub id : i64,

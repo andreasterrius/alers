@@ -21,7 +21,7 @@ impl AudioManager {
 
     }
 
-    //TODO: Make this more efficient since currnetly, this thing clones each time it wants to play a sound
+    //TODO: Make this more efficient since currently this thing clones each time it wants to play a sound
     pub fn play_audio_simple(&self, key : &str, should_loop : bool){
         let audio = self.audios.get(key).unwrap().clone();
         //let slice = audio.as_slice();

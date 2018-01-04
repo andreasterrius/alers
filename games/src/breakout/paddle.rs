@@ -1,8 +1,8 @@
-use math::Transform2D;
-use renderer::job::{SpriteRenderable};
-use cgmath::prelude::*;
-use cgmath::{Vector2, Vector3, Vector4};
-use fisika::BoxCollider2D;
+use alexyt::math::Transform2D;
+use alexyt::renderer::job::{SpriteRenderable};
+use alexyt::cgmath::prelude::*;
+use alexyt::cgmath::{Vector2, Vector3, Vector4};
+use alexyt::fisika::BoxCollider2D;
 
 pub struct Paddle  {
     pub id : i64,

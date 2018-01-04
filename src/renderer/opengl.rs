@@ -226,7 +226,6 @@ impl OpenGLRenderer {
             for (transform2d, sprite) in sprites {
 
                 let shader = self.shaders.get("sprite").unwrap();
-
                 gl::UseProgram(*shader);
 
                 let textures_keys = sprite.get_texture_keys();
