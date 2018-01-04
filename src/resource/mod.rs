@@ -9,7 +9,8 @@ use image;
 pub struct ResourceManager {
     images : HashMap<String, ResourceImageFile>,
     glsl : HashMap<String, ResourceGlslFile>,
-    audios : HashMap<String, ResourceAudioFile>
+    audios : HashMap<String, ResourceAudioFile>,
+    fonts : HashMap<String, ResourceFontFile>
 }
 
 impl ResourceManager {
@@ -65,7 +66,6 @@ impl ResourceManager {
     }
 
     pub fn load_audio(&mut self, key : &str, path : &str) {
-        let audio_path = PathBuf::from(path);
         let audio_file = File::open(path)
             .expect(&format!("Audio file not found, {:?}", path));
         let audio_data = ResourceManager::load_binary_file(audio_file);
@@ -75,6 +75,18 @@ impl ResourceManager {
 
     pub fn get_audio(&self, key : &str) -> Option<&ResourceAudioFile> {
         self.audios.get(key)
+    }
+
+    pub fn load_font(&mut self, key: &str, path : &str){
+        let font_file = File::open(path)
+            .expect(&format!("Font file not found, {:?}", path));
+        let font_data = ResourceManager::load_binary_file(font_file);
+
+        self.fonts.insert(String::from(key), ResourceFontFile{ font: font_data });
+    }
+
+    pub fn get_font(&self, key : &str) -> Option<&ResourceFontFile> {
+        self.fonts.get(key)
     }
 
     fn load_binary_file( file : File ) -> Vec<u8> {
@@ -97,4 +109,8 @@ pub struct ResourceImageFile {
 #[derive(Debug)]
 pub struct ResourceAudioFile {
     pub audio : Vec<u8>
+}
+
+pub struct ResourceFontFile {
+    pub font : Vec<u8>
 }

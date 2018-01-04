@@ -101,6 +101,12 @@ impl Scene for BreakoutScene  {
         resources.load_audio("solid", "resources/solid.wav");
         resources.load_audio("powerup", "resources/powerup.wav");
 
+        use alexyt::rusttype::{FontCollection, Scale, point, PositionedGlyph};
+        use std::io::Write;
+
+        resources.load_font("arial", "resources/arial.ttf");
+        let collection = FontCollection::from_bytes(font_data);
+        let font = collection.into_font().unwrap();
     }
 
     fn configure_renderer(&self, resources : &ResourceManager, renderer: &mut OpenGLRenderer){

@@ -6,6 +6,7 @@ pub extern crate cgmath;
 pub extern crate time;
 pub extern crate rand;
 pub extern crate rodio;
+pub extern crate rusttype;
 
 pub mod renderer;
 pub mod fisika;
@@ -75,6 +76,9 @@ pub fn start_engine<SetupFn>(mut setup : SetupFn)
     let mut scene_loader = SceneLoader::new();
 
     setup(&mut scene_loader, &mut idgen, SCR_WIDTH, SCR_HEIGHT);
+    scene_loader.get_active_scene().load_resources(&mut resources);
+    scene_loader.get_active_scene().configure_renderer(&resources, &mut renderer);
+    scene_loader.get_active_scene().configure_audio(&resources, &mut audio_manager);
 
     let mut ticker = FixedStepTick::new(0.01);
     let mut input = InputManager::new();
