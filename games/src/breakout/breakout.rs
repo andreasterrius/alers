@@ -101,12 +101,7 @@ impl Scene for BreakoutScene  {
         resources.load_audio("solid", "resources/solid.wav");
         resources.load_audio("powerup", "resources/powerup.wav");
 
-        use alexyt::rusttype::{FontCollection, Scale, point, PositionedGlyph};
-        use std::io::Write;
-
         resources.load_font("arial", "resources/arial.ttf");
-        let collection = FontCollection::from_bytes(font_data);
-        let font = collection.into_font().unwrap();
     }
 
     fn configure_renderer(&self, resources : &ResourceManager, renderer: &mut OpenGLRenderer){
@@ -130,6 +125,8 @@ impl Scene for BreakoutScene  {
         renderer.register_image("powerup_passthrough", &resources.get_image("powerup_passthrough").unwrap().image);
         renderer.register_image("powerup_speed", &resources.get_image("powerup_speed").unwrap().image);
         renderer.register_image("powerup_sticky", &resources.get_image("powerup_sticky").unwrap().image);
+
+        renderer.register_glyphs("arial", )
 
         renderer.register_preprocessor("postprocess");
         renderer.register_uniforms("postprocess", &self.get_postprocess_uniforms());

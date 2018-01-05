@@ -117,6 +117,10 @@ impl OpenGLRenderer {
         }
     }
 
+    pub fn register_glyphs(&mut self, glyph_key : &str, PositionedGlyphs : glyphs){
+
+    }
+
     pub fn register_uniforms(&self, shader_key: &str, custom_uniforms : &CustomShaderUniform){
         let shader_id = self.shaders.get(shader_key).unwrap();
 
