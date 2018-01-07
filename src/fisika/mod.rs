@@ -83,11 +83,9 @@ pub fn determine_point_in_box_general<Box>(box_collider: &Box, point_in_box : Ve
         let norm_point = Vector2::new(point_in_box.x / (box_collider.size().x + 5.0) / 2.0,
             point_in_box.y / box_collider.size().y / 2.0);
         let dot_product = direction.dot(norm_point);
-        //println!("{:?} {:?}", direction, point_in_box.normalize());
         if dot_product > max {
             max = dot_product;
             best_match = label.clone();
-           // println!("{:?} {:?}", dot_product, best_match);
         }
     }
 

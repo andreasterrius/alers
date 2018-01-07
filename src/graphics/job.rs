@@ -7,7 +7,7 @@ use std::collections::HashMap;
 pub enum RenderJob {
     Sprite(Transform2D, SpriteRenderable),
     Particle(Transform2D, ParticleRenderable, SpriteRenderable),
-    Text(Transform2D, TextRenderable)
+    Text(Transform2D, TextRenderable, String)
 }
 
 #[derive(Clone, Debug)]
@@ -56,6 +56,29 @@ pub struct ParticleRenderable {
 
 #[derive(Clone,Debug)]
 pub struct TextRenderable {
+    pub shader_key : String,
     pub font_key : String,
-    pub font_size : String,
+    pub font_size : u32,
+}
+
+impl TextRenderable {
+    pub fn new(shader_key : String, font_key : String, font_size : u32) -> TextRenderable {
+        TextRenderable {
+            shader_key,
+            font_key,
+            font_size
+        }
+    }
+
+    pub fn get_shader_key(&self) -> &str {
+        &self.shader_key
+    }
+
+    pub fn get_font_key(&self) -> &str {
+        &self.font_key
+    }
+
+    pub fn get_font_size(&self) -> u32 {
+        self.font_size
+    }
 }

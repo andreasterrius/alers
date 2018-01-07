@@ -70,6 +70,20 @@ impl BreakoutScene {
 
         timer_ticker.destroy_all_timer();
     }
+
+    fn get_flavor_text(&self) -> BTreeMap<i64, RenderJob> {
+        use alexyt::renderer::job::TextRenderable;
+
+        let mut result = BTreeMap::new();
+        let text = RenderJob::Text(
+            Transform2D::new(Vector2::from_value(0.0),
+                Vector2::from_value(1.0), 0.0),
+            TextRenderable::new(String::from("sprite"), String::from("arial"), 50),
+             String::from("abcdefghi")
+        );
+        result.insert(1234512345,text);
+        result
+    }
 }
 
 impl Scene for BreakoutScene  {
@@ -126,7 +140,7 @@ impl Scene for BreakoutScene  {
         renderer.register_image("powerup_speed", &resources.get_image("powerup_speed").unwrap().image);
         renderer.register_image("powerup_sticky", &resources.get_image("powerup_sticky").unwrap().image);
 
-        renderer.register_glyphs("arial", )
+        renderer.register_font("arial", resources.get_font("arial").unwrap().font.clone(), 50);
 
         renderer.register_preprocessor("postprocess");
         renderer.register_uniforms("postprocess", &self.get_postprocess_uniforms());
@@ -157,6 +171,8 @@ impl Scene for BreakoutScene  {
             if !powerup.is_alive { continue; }
             renderjobs.insert(powerup.id, powerup.get_renderable());
         }
+
+        renderjobs.extend(self.get_flavor_text());
 
         renderjobs
     }
