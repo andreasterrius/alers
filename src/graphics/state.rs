@@ -40,6 +40,8 @@ impl RenderState {
             (&Particle(ref at, ref ap, ref ar), &Particle(ref bt, ref bp, ref br)) => Some(
                 RenderJob::Particle(at.lerp(&bt, dt), bp.clone(), br.clone())
             ),
+            (&Text(ref at, ref ar, ref astr), &Text(ref bt, ref br, ref bstr)) => Some(
+                RenderJob::Text(at.lerp(&bt, dt), br.clone(), astr.clone())),
             _ => None
         }
     }

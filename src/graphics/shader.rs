@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-
 #[derive(Debug, Clone)]
 pub struct CustomShaderUniform {
     pub uniforms : HashMap<String, ShaderUniform>

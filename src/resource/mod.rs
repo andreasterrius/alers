@@ -87,7 +87,7 @@ impl ResourceManager {
         self.fonts.insert(String::from(key), ResourceFontFile{ font: font_data });
     }
 
-    pub fn get_glyph(&self, key : &str, size : usize) -> Option<&ResourceFontFile> {
+    pub fn get_font(&self, key : &str) -> Option<&ResourceFontFile> {
         self.fonts.get(key)
     }
 
@@ -115,8 +115,4 @@ pub struct ResourceAudioFile {
 
 pub struct ResourceFontFile {
     pub font : Vec<u8>
-}
-
-pub struct ResourceGlyphFile {
-    pub glyph : PositionedGlyph
 }

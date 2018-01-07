@@ -30,6 +30,14 @@ pub struct Transform2D {
 }
 
 impl Transform2D {
+    pub fn new(position : Vector2<f32>, size : Vector2<f32>, depth : f32) -> Transform2D {
+        Transform2D {
+            position,
+            size,
+            depth
+        }
+    }
+
     pub fn get_matrix(&self) -> Matrix4<f32> {
         let mut transform : Matrix4<f32> = Matrix4::identity();
         transform = transform * Matrix4::from_translation(Vector3::<f32>::new(self.position.x, self.position.y, self.depth));

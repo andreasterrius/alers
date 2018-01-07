@@ -9,13 +9,13 @@ use math::Transform2D;
 use cgmath::prelude::*;
 use cgmath::{self, Vector2, Vector3, Vector4, Matrix4};
 use renderer::shader::CustomShaderUniform;
-use renderer::job::{RenderJob, ParticleRenderable, SpriteRenderable};
+use renderer::job::{RenderJob, ParticleRenderable, SpriteRenderable, TextRenderable};
 use resource::ResourceManager;
 use std::str;
+use renderer::font::GlyphData;
 
 #[allow(non_snake_case)]
 pub struct OpenGLRenderer {
-
     pub render_height : GLuint,
     pub render_width : GLuint,
 
@@ -31,7 +31,8 @@ pub struct OpenGLRenderer {
     pub render_texture : GLuint,
 
     pub shaders : HashMap<String, GLuint>,
-    pub textures : HashMap<String, GLuint>
+    pub textures : HashMap<String, GLuint>,
+    pub font_data : HashMap<String, GlyphData>,
 }
 
 impl OpenGLRenderer {
@@ -62,6 +63,7 @@ impl OpenGLRenderer {
                 projection_2d,
                 shaders : HashMap::new(),
                 textures : HashMap::new(),
+                font_data: HashMap::new(),
             };
 
             return renderer;
@@ -117,8 +119,62 @@ impl OpenGLRenderer {
         }
     }
 
-    pub fn register_glyphs(&mut self, glyph_key : &str, PositionedGlyphs : glyphs){
+    pub fn register_font(&mut self, font_key : &str, font_data : Vec<u8>, font_size : u32){
+        use rusttype::{self, FontCollection, Scale, point, PositionedGlyph};
+        use rusttype::{GlyphId, Codepoint, CodepointOrGlyphId};
 
+        let font = FontCollection::from_bytes(font_data).into_font().unwrap();
+        let scale = Scale { x : font_size as f32, y : font_size as f32};
+        let v_metrics = font.v_metrics(scale);
+        let offset = point(0.0, v_metrics.ascent);
+        let generated_string = String::from("abcdefghijklmnopqrstuvwxyz123456789!:.,");
+        //let generated_string = String::from("abcdefghijklmnopqrstuvwxyz1234567890");
+        for c in generated_string.chars() {
+
+            let glyph = font.glyph(c).unwrap().scaled(scale).positioned(rusttype::Point{x: 0.0, y: 0.0});
+            let gid = match c.into() {
+                CodepointOrGlyphId::Codepoint(Codepoint(c)) => c,
+                CodepointOrGlyphId::GlyphId(GlyphId(gid)) => gid
+            };
+
+            let key = OpenGLRenderer::get_glyph_key(font_key, font_size, gid);
+
+            //rasterize glyph
+            if let Some(bb) = glyph.pixel_bounding_box(){
+                let mut pixels : Vec<u8> = vec![0; (bb.width() * bb.height()) as usize];
+                glyph.draw(|x, y, v| {
+                    let v = ((v * 255.0) + 0.5).floor().max(0.0).min(255.0) as u8;
+                    pixels[(x + y * bb.width() as u32) as usize] = v;
+                });
+
+                //uncomment for debug
+//                for i in 0..pixels.len() {
+//                    if pixels[i] <= 64 {
+//                        print!(" ");
+//                    }
+//                        else { print!("b"); }
+//                    if i != 0 && (i as i32 % bb.width() as i32) == 0 {
+//                        print!("\n");
+//                    }
+//                }
+
+                let glyph = glyph.into_unpositioned();
+                self.font_data.insert(key.clone(), GlyphData::new(
+                    gid,
+                    key.clone(),
+                    Vector2::new(bb.width() as f32, bb.height() as f32),
+                    Vector2::from_value(0.0),
+                    glyph.h_metrics().advance_width,
+                ));
+                unsafe { gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1); }
+                self.register_image_byte(&key, bb.width() as u32, bb.height() as u32, pixels.as_slice());
+            };
+
+        }
+    }
+
+    fn get_glyph_key(font_key : &str, font_size : u32, id : u32) -> String {
+        format!("__{}_{}_{}", font_key, font_size, id)
     }
 
     pub fn register_uniforms(&self, shader_key: &str, custom_uniforms : &CustomShaderUniform){
@@ -165,6 +221,32 @@ impl OpenGLRenderer {
 
     pub fn register_preprocessor(&mut self, key : &str){
         self.preprocess_shader_key = Some(String::from(key));
+    }
+
+    pub fn register_image_byte(&mut self, key : &str, width : u32, height : u32, data : &[u8]) {
+        unsafe {
+            let mut texture = 0;
+            gl::GenTextures(1, &mut texture);
+            gl::BindTexture(gl::TEXTURE_2D, texture);
+
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+            gl::TexImage2D(gl::TEXTURE_2D,
+                           0,
+                           gl::RED as i32,
+                           width as i32,
+                           height as i32,
+                           0,
+                           gl::RED,
+                           gl::UNSIGNED_BYTE,
+                           &data[0] as *const u8 as *const c_void);
+            gl::GenerateMipmap(gl::TEXTURE_2D);
+
+            self.textures.insert(String::from(key), texture);
+        }
     }
 
     pub fn register_image(&mut self, key: &str, img : &DynamicImage){
@@ -298,6 +380,61 @@ impl OpenGLRenderer {
         }
     }
 
+    pub fn render_text(&mut self, textjobs : Vec<(Transform2D, TextRenderable, String)>){
+        use rusttype::{CodepointOrGlyphId, Codepoint, GlyphId};
+
+        unsafe {
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE);
+            gl::BindVertexArray(self.sprite_vao);
+
+            for textjob in textjobs {
+
+                let(mut transform2d, textrenderable, string) = textjob;
+                let shader = self.shaders.get(textrenderable.get_shader_key()).unwrap();
+
+                gl::UseProgram(*shader);
+
+                let transform_loc = gl::GetUniformLocation(*shader, CString::new("projection").unwrap().as_ptr());
+                gl::UniformMatrix4fv(transform_loc, 1, gl::FALSE, self.projection_2d.as_ptr());
+
+                let color_loc = gl::GetUniformLocation(*shader, CString::new("color").unwrap().as_ptr());
+                let color = Vector4::from_value(1.0);
+                gl::Uniform4f(color_loc, color.x, color.y, color.z, color.w);
+
+//                for c in string.chars() {
+//                    //grab the glyph info first
+//
+//                    let gid = match c.into() {
+//                        CodepointOrGlyphId::Codepoint(Codepoint(c)) => c,
+//                        CodepointOrGlyphId::GlyphId(GlyphId(gid)) => gid
+//                    };
+//
+//                    let key = OpenGLRenderer::get_glyph_key(textrenderable.get_font_key(), textrenderable.get_font_size(), gid);
+//                    let glyph_data = self.font_data.get(&key).unwrap();
+//
+//                    let model_loc = gl::GetUniformLocation(*shader, CString::new("model").unwrap().as_ptr());
+//                    transform2d.size.x = glyph_data.get_size().x;
+//                    transform2d.size.y = glyph_data.get_size().y;
+//
+//
+//                    gl::UniformMatrix4fv(model_loc, 1, gl::FALSE, transform2d.get_matrix().as_ptr());
+//
+//                    //grab the texture
+//                    let texture = self.textures.get(glyph_data.get_texture_key()).unwrap();
+//                    //let texture = self.textures.get("ball").unwrap();
+//                    gl::ActiveTexture(gl::TEXTURE0);
+//                    gl::BindTexture(gl::TEXTURE_2D, *texture);
+//
+//                    gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+//
+//                    transform2d.position.x += glyph_data.get_advance();
+//                }
+            }
+
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA)
+        }
+    }
+
     pub fn render(&mut self, renderjobs : Vec<RenderJob>, postproces_shader_uniforms : &CustomShaderUniform){
         use renderer::job::RenderJob::*;
 
@@ -321,12 +458,13 @@ impl OpenGLRenderer {
             match job {
                 Sprite(transform2d, sprite) => sprites.push((transform2d, sprite)),
                 Particle(transform2d, particle, sprite) => particles.push((transform2d, particle, sprite)),
-                Text(transform2d, text) => texts.push((transform2d, text))
+                Text(transform2d, text, string) => texts.push((transform2d, text, string))
             };
         }
         
-        self.render_sprite(sprites);
-        self.render_particles(particles);
+        //self.render_sprite(sprites);
+        //self.render_particles(particles);
+        self.render_text(texts);
 
         if let Some(ref postprocess_shader_key) = self.preprocess_shader_key {
             unsafe {
@@ -446,6 +584,4 @@ impl OpenGLRenderer {
 
         (texture, msfbo, fbo)
     }
-
-
 }

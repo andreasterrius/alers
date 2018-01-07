@@ -7,6 +7,7 @@ pub extern crate time;
 pub extern crate rand;
 pub extern crate rodio;
 pub extern crate rusttype;
+pub extern crate unicode_normalization;
 
 pub mod renderer;
 pub mod fisika;
@@ -31,6 +32,7 @@ use ale::time::TimerManager;
 use ale::idgen::TimestampIdGenerator;
 use ale::scene::SceneLoader;
 use audio::AudioManager;
+use ale::font::FontManager;
 
 // settings
 const SCR_WIDTH: u32 = 800;
@@ -67,6 +69,7 @@ pub fn start_engine<SetupFn>(mut setup : SetupFn)
     // ---------------------------------------
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
+    let mut font_manager = FontManager::new();
     let mut audio_manager = AudioManager::new();
     let mut idgen = TimestampIdGenerator::new();
     let mut resources = ResourceManager::new();
