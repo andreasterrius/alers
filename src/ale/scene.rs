@@ -1,11 +1,11 @@
-use renderer::job::RenderJob;
+use graphics::job::RenderJob;
 use ale::input::InputManager;
 use ale::time::TimerManager;
 use audio::AudioManager;
-use renderer::shader::CustomShaderUniform;
+use graphics::shader::CustomShaderUniform;
 use resource::ResourceManager;
 use std::collections::{HashMap, BTreeMap};
-use renderer::opengl::OpenGLRenderer;
+use graphics::opengl::OpenGLRenderer;
 use ale::idgen::TimestampIdGenerator;
 
 pub type SceneId = String;

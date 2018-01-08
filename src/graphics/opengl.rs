@@ -8,34 +8,36 @@ use image::{self, DynamicImage};
 use math::Transform2D;
 use cgmath::prelude::*;
 use cgmath::{self, Vector2, Vector3, Vector4, Matrix4};
-use renderer::shader::CustomShaderUniform;
-use renderer::job::{RenderJob, ParticleRenderable, SpriteRenderable, TextRenderable};
+use graphics::shader::CustomShaderUniform;
+use graphics::job::{RenderJob, ParticleRenderable, SpriteRenderable, TextRenderable};
 use resource::ResourceManager;
 use std::str;
-use renderer::font::GlyphData;
+use graphics::font::{GlyphData, FontManager};
+use rusttype::{self, FontCollection, Font, Scale, point, PositionedGlyph};
+use rusttype::{GlyphId, Codepoint, CodepointOrGlyphId};
 
 #[allow(non_snake_case)]
 pub struct OpenGLRenderer {
-    pub render_height : GLuint,
-    pub render_width : GLuint,
+    render_height : GLuint,
+    render_width : GLuint,
 
-    pub sprite_vao : GLuint,
-    pub sprite_vbo : GLuint,
-    pub sprite_ebo : GLuint,
+    sprite_vao : GLuint,
+    sprite_vbo : GLuint,
+    sprite_ebo : GLuint,
 
-    pub projection_2d : Matrix4<f32>,
+    projection_2d : Matrix4<f32>,
 
-    pub preprocess_shader_key : Option<String>,
-    pub main_fbo : GLuint,
-    pub ms_fbo : GLuint,
-    pub render_texture : GLuint,
+    preprocess_shader_key : Option<String>,
+    main_fbo : GLuint,
+    ms_fbo : GLuint,
+    render_texture : GLuint,
 
-    pub shaders : HashMap<String, GLuint>,
-    pub textures : HashMap<String, GLuint>,
-    pub font_data : HashMap<String, GlyphData>,
+    shaders : HashMap<String, GLuint>,
+    textures : HashMap<String, GLuint>,
+    font : HashMap<String, Font<'static>>
 }
 
-impl OpenGLRenderer {
+impl OpenGLRenderer  {
 
     pub fn new(screen_width : u32, screen_height : u32) -> OpenGLRenderer {
         unsafe {
@@ -63,7 +65,7 @@ impl OpenGLRenderer {
                 projection_2d,
                 shaders : HashMap::new(),
                 textures : HashMap::new(),
-                font_data: HashMap::new(),
+                font : HashMap::new(),
             };
 
             return renderer;
@@ -119,11 +121,11 @@ impl OpenGLRenderer {
         }
     }
 
-    pub fn register_font(&mut self, font_key : &str, font_data : Vec<u8>, font_size : u32){
-        use rusttype::{self, FontCollection, Scale, point, PositionedGlyph};
-        use rusttype::{GlyphId, Codepoint, CodepointOrGlyphId};
+    pub fn register_font(&mut self, font_key : &str, font_size : u32, font : &Font<'static>){
 
-        let font = FontCollection::from_bytes(font_data).into_font().unwrap();
+        unsafe { gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1); }
+
+        self.font.insert(String::from(format!("{}{}", font_key, font_size)), font.clone());
         let scale = Scale { x : font_size as f32, y : font_size as f32};
         let v_metrics = font.v_metrics(scale);
         let offset = point(0.0, v_metrics.ascent);
@@ -132,12 +134,7 @@ impl OpenGLRenderer {
         for c in generated_string.chars() {
 
             let glyph = font.glyph(c).unwrap().scaled(scale).positioned(rusttype::Point{x: 0.0, y: 0.0});
-            let gid = match c.into() {
-                CodepointOrGlyphId::Codepoint(Codepoint(c)) => c,
-                CodepointOrGlyphId::GlyphId(GlyphId(gid)) => gid
-            };
-
-            let key = OpenGLRenderer::get_glyph_key(font_key, font_size, gid);
+            let key = OpenGLRenderer::get_glyph_texture_key(font_key, font_size, glyph.id().0);
 
             //rasterize glyph
             if let Some(bb) = glyph.pixel_bounding_box(){
@@ -158,22 +155,14 @@ impl OpenGLRenderer {
 //                    }
 //                }
 
-                let glyph = glyph.into_unpositioned();
-                self.font_data.insert(key.clone(), GlyphData::new(
-                    gid,
-                    key.clone(),
-                    Vector2::new(bb.width() as f32, bb.height() as f32),
-                    Vector2::from_value(0.0),
-                    glyph.h_metrics().advance_width,
-                ));
-                unsafe { gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1); }
                 self.register_image_byte(&key, bb.width() as u32, bb.height() as u32, pixels.as_slice());
             };
-
         }
+
+        unsafe { gl::PixelStorei(gl::PACK_ALIGNMENT, 1); }
     }
 
-    fn get_glyph_key(font_key : &str, font_size : u32, id : u32) -> String {
+    fn get_glyph_texture_key(font_key : &str, font_size : u32, id : u32) -> String {
         format!("__{}_{}_{}", font_key, font_size, id)
     }
 
@@ -187,7 +176,7 @@ impl OpenGLRenderer {
     }
 
     unsafe fn pass_uniforms(&self, shader_id : GLuint, custom_uniforms : &CustomShaderUniform) {
-        use renderer::shader::ShaderUniform::*;
+        use graphics::shader::ShaderUniform::*;
 
         for (key, uniform) in &custom_uniforms.uniforms {
             match uniform {
@@ -401,6 +390,50 @@ impl OpenGLRenderer {
                 let color = Vector4::from_value(1.0);
                 gl::Uniform4f(color_loc, color.x, color.y, color.z, color.w);
 
+                //get the font first
+                let font = self.font.get(&format!("{}{}",
+                    textrenderable.get_font_key(), textrenderable.get_font_size())).unwrap();
+
+                let glyphs = font.layout(
+                    "abc",
+                    Scale { x : textrenderable.get_font_size() as f32,
+                                 y : textrenderable.get_font_size() as f32},
+                    point(transform2d.position.x, transform2d.position.y)
+                );
+
+                for g in glyphs {
+                    let gid = g.id().0;
+                    let key = OpenGLRenderer::get_glyph_texture_key(
+                        textrenderable.get_font_key(),
+                        textrenderable.get_font_size(),
+                        gid
+                    );
+
+                    if let Some(bb) = g.pixel_bounding_box() {
+                        g.draw(|x, y, c| {
+                            let model_loc = gl::GetUniformLocation(*shader, CString::new("model").unwrap().as_ptr());
+
+                            let t = Transform2D::new(Vector2::new(
+                                transform2d.position.x + g.position().x as f32,
+                                transform2d.position.y + g.position().y as f32
+                            ), Vector2::new(
+                                bb.width() as f32,
+                                bb.height() as f32
+                            ), 0.0);
+                            gl::UniformMatrix4fv(model_loc, 1, gl::FALSE, t.get_matrix().as_ptr());
+
+                            //grab the texture
+                            let texture = self.textures.get(&key).unwrap();
+                            //let texture = self.textures.get("ball").unwrap();
+                            gl::ActiveTexture(gl::TEXTURE0);
+                            gl::BindTexture(gl::TEXTURE_2D, *texture);
+
+                            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
+                        });
+                    }
+                }
+
+
 //                for c in string.chars() {
 //                    //grab the glyph info first
 //
@@ -436,7 +469,7 @@ impl OpenGLRenderer {
     }
 
     pub fn render(&mut self, renderjobs : Vec<RenderJob>, postproces_shader_uniforms : &CustomShaderUniform){
-        use renderer::job::RenderJob::*;
+        use graphics::job::RenderJob::*;
 
         if self.preprocess_shader_key.is_some() {
             unsafe {

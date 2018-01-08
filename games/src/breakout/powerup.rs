@@ -1,8 +1,8 @@
-use alexyt::renderer::job::RenderJob;
+use alexyt::graphics::job::RenderJob;
 use alexyt::math::Transform2D;
 use alexyt::cgmath::{Vector2, Vector4};
 use alexyt::cgmath::prelude::*;
-use alexyt::renderer::job::SpriteRenderable;
+use alexyt::graphics::job::SpriteRenderable;
 use alexyt::rand::{self, Rng};
 use alexyt::fisika::BoxCollider2D;
 

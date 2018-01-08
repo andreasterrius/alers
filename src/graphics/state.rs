@@ -1,4 +1,4 @@
-use renderer::job::RenderJob;
+use graphics::job::RenderJob;
 use std::collections::{HashMap, BTreeMap};
 use math::*;
 
@@ -18,7 +18,7 @@ impl RenderState {
 
     pub fn lerp_frame(&self, dt : f32) -> Vec<RenderJob>
     {
-        use renderer::job::RenderJob::*;
+        use graphics::job::RenderJob::*;
         let mut renderjobs = vec!();
 
         //find everything in current frame that exists in last frame
@@ -34,7 +34,7 @@ impl RenderState {
     }
 
     fn lerp(&self, a : &RenderJob, b : &RenderJob, dt : f32) -> Option<RenderJob> {
-        use renderer::job::RenderJob::*;
+        use graphics::job::RenderJob::*;
         match(a, b){
             (&Sprite(ref at, ref ar), &Sprite(ref bt, ref br)) => Some(RenderJob::Sprite(at.lerp(&bt, dt), br.clone())),
             (&Particle(ref at, ref ap, ref ar), &Particle(ref bt, ref bp, ref br)) => Some(

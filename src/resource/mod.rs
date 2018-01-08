@@ -4,14 +4,14 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, Cursor};
 use std::{self, fmt};
-use rusttype::{FontCollection, Scale, point, PositionedGlyph};
+use rusttype::{FontCollection, Font, Scale, point, PositionedGlyph};
 use image;
 
-pub struct ResourceManager {
+pub struct ResourceManager  {
     images : HashMap<String, ResourceImageFile>,
     glsl : HashMap<String, ResourceGlslFile>,
     audios : HashMap<String, ResourceAudioFile>,
-    fonts : HashMap<String, ResourceFontFile>
+    fonts : HashMap<String, ResourceFontFile>,
 }
 
 impl ResourceManager {
@@ -83,8 +83,9 @@ impl ResourceManager {
         let font_file = File::open(path)
             .expect(&format!("Font file not found, {:?}", path));
         let font_data = ResourceManager::load_binary_file(font_file);
+        let font = FontCollection::from_bytes(font_data).into_font().unwrap();
 
-        self.fonts.insert(String::from(key), ResourceFontFile{ font: font_data });
+        self.fonts.insert(String::from(key), ResourceFontFile{ font });
     }
 
     pub fn get_font(&self, key : &str) -> Option<&ResourceFontFile> {
@@ -113,6 +114,6 @@ pub struct ResourceAudioFile {
     pub audio : Vec<u8>
 }
 
-pub struct ResourceFontFile {
-    pub font : Vec<u8>
+pub struct ResourceFontFile{
+    pub font : Font<'static>
 }
