@@ -1,6 +1,6 @@
 use math::{Transform2D, Lerpable};
 use cgmath::{Vector3, Vector4};
-use renderer::shader::CustomShaderUniform;
+use graphics::shader::CustomShaderUniform;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]

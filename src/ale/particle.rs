@@ -1,6 +1,6 @@
 use cgmath::{Vector2, Vector3, Vector4};
 use cgmath::prelude::*;
-use renderer::job::{RenderJob, ParticleRenderable, SpriteRenderable};
+use graphics::job::{RenderJob, ParticleRenderable, SpriteRenderable};
 use ale::idgen::TimestampIdGenerator;
 use std::collections::{HashMap, BTreeMap};
 use math::*;

@@ -4,4 +4,3 @@ pub mod idgen;
 pub mod particle;
 pub mod time;
 pub mod scene;
-pub mod font;

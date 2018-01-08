@@ -5,9 +5,9 @@ use alexyt::fisika::{self, BoxCollider2D, CircleCollider2D};
 use alexyt::ale::input::InputManager;
 use alexyt::glfw::{Key, Action};
 use alexyt::resource::*;
-use alexyt::renderer::job::RenderJob;
-use alexyt::renderer::opengl::*;
-use alexyt::renderer::shader::{CustomShaderUniform, ShaderUniform};
+use alexyt::graphics::job::RenderJob;
+use alexyt::graphics::opengl::*;
+use alexyt::graphics::shader::{CustomShaderUniform, ShaderUniform};
 use alexyt::fisika::BoxGeneralArea;
 use alexyt::ale::particle::{ParticleEmitter, Particle};
 use alexyt::ale::time::{self, TimerManager, Timer};
@@ -72,13 +72,13 @@ impl BreakoutScene {
     }
 
     fn get_flavor_text(&self) -> BTreeMap<i64, RenderJob> {
-        use alexyt::renderer::job::TextRenderable;
+        use alexyt::graphics::job::TextRenderable;
 
         let mut result = BTreeMap::new();
         let text = RenderJob::Text(
             Transform2D::new(Vector2::from_value(0.0),
                 Vector2::from_value(1.0), 0.0),
-            TextRenderable::new(String::from("sprite"), String::from("arial"), 50),
+            TextRenderable::new(String::from("sprite"), String::from("arial"), 24),
              String::from("abcdefghi")
         );
         result.insert(1234512345,text);
@@ -140,7 +140,7 @@ impl Scene for BreakoutScene  {
         renderer.register_image("powerup_speed", &resources.get_image("powerup_speed").unwrap().image);
         renderer.register_image("powerup_sticky", &resources.get_image("powerup_sticky").unwrap().image);
 
-        renderer.register_font("arial", resources.get_font("arial").unwrap().font.clone(), 50);
+        renderer.register_font("arial", 24,  &resources.get_font("arial").unwrap().font);
 
         renderer.register_preprocessor("postprocess");
         renderer.register_uniforms("postprocess", &self.get_postprocess_uniforms());

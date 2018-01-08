@@ -9,7 +9,7 @@ pub extern crate rodio;
 pub extern crate rusttype;
 pub extern crate unicode_normalization;
 
-pub mod renderer;
+pub mod graphics;
 pub mod fisika;
 pub mod ale;
 pub mod resource;
@@ -23,16 +23,15 @@ use std::sync::mpsc::Receiver;
 use std::str;
 use std::path::Path;
 use std::time::Instant;
-use renderer::opengl::OpenGLRenderer;
+use graphics::opengl::OpenGLRenderer;
 use ale::input::InputManager;
 use ale::ticker::FixedStepTick;
 use resource::ResourceManager;
-use renderer::state::RenderState;
+use graphics::state::RenderState;
 use ale::time::TimerManager;
 use ale::idgen::TimestampIdGenerator;
 use ale::scene::SceneLoader;
 use audio::AudioManager;
-use ale::font::FontManager;
 
 // settings
 const SCR_WIDTH: u32 = 800;
@@ -69,7 +68,6 @@ pub fn start_engine<SetupFn>(mut setup : SetupFn)
     // ---------------------------------------
     gl::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-    let mut font_manager = FontManager::new();
     let mut audio_manager = AudioManager::new();
     let mut idgen = TimestampIdGenerator::new();
     let mut resources = ResourceManager::new();

@@ -1,5 +1,5 @@
 use alexyt::math::Transform2D;
-use alexyt::renderer::job::SpriteRenderable;
+use alexyt::graphics::job::SpriteRenderable;
 use alexyt::cgmath::prelude::*;
 use alexyt::cgmath::{Vector2, Vector3, Vector4};
 use alexyt::fisika::BoxCollider2D;
