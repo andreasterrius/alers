@@ -79,7 +79,8 @@ impl BreakoutScene {
             Transform2D::new(Vector2::from_value(100.0),
                 Vector2::from_value(1.0), 0.0),
             TextRenderable::new(String::from("sprite"), String::from("arial"), 24),
-             String::from("This is sample text")
+            String::from(r#"ABCDEFGHIJKLMNOPQRSTUVWXYZ
+            abcdefghijklmnopqrstuvwxyz123456789!:., "#)
         );
         result.insert(1234512345,text);
         result
