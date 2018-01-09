@@ -76,10 +76,10 @@ impl BreakoutScene {
 
         let mut result = BTreeMap::new();
         let text = RenderJob::Text(
-            Transform2D::new(Vector2::from_value(0.0),
+            Transform2D::new(Vector2::from_value(100.0),
                 Vector2::from_value(1.0), 0.0),
             TextRenderable::new(String::from("sprite"), String::from("arial"), 24),
-             String::from("abcdefghi")
+             String::from("This is sample text")
         );
         result.insert(1234512345,text);
         result

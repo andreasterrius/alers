@@ -34,7 +34,7 @@ pub struct OpenGLRenderer {
 
     shaders : HashMap<String, GLuint>,
     textures : HashMap<String, GLuint>,
-    font : HashMap<String, Font<'static>>
+    glyphs : HashMap<String, GlyphData>
 }
 
 impl OpenGLRenderer  {
@@ -65,11 +65,77 @@ impl OpenGLRenderer  {
                 projection_2d,
                 shaders : HashMap::new(),
                 textures : HashMap::new(),
-                font : HashMap::new(),
+                glyphs : HashMap::new(),
             };
 
             return renderer;
         }
+    }
+
+    pub fn register_font(&mut self, font_key : &str, font_size : u32, font : &Font<'static>){
+
+        unsafe { gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1); }
+        let scale = Scale { x : font_size as f32, y : font_size as f32};
+        let v_metrics = font.v_metrics(scale);
+        let offset = point(0.0, v_metrics.ascent);
+        let generated_string = String::from(r#"ABCDEFGHIJKLMNOPQRSTUVWXYZ
+            abcdefghijklmnopqrstuvwxyz123456789!:., "#);
+        //let generated_string = String::from("This is");
+        for c in generated_string.chars() {
+
+            let glyph = font.glyph(c).unwrap().scaled(scale).positioned(rusttype::Point{x: 0.0, y: 0.0});
+            let gid = match c.into() {
+                CodepointOrGlyphId::Codepoint(Codepoint(c)) => c,
+                CodepointOrGlyphId::GlyphId(GlyphId(gid)) => gid
+            };
+
+            let key = OpenGLRenderer::get_glyph_texture_key(font_key, font_size, gid);
+
+            //rasterize glyph
+            if let Some(bb) = glyph.pixel_bounding_box(){
+                let mut pixels : Vec<u8> = vec![0; (bb.width() * bb.height()) as usize];
+                glyph.draw(|x, y, v| {
+                    let v = ((v * 255.0) + 0.5).floor().max(0.0).min(255.0) as u8;
+                    pixels[(x + y * bb.width() as u32) as usize] = v;
+                });
+
+
+                //uncomment for debug
+//                for i in 0..pixels.len() {
+//                    if pixels[i] <= 64 {
+//                        print!(" ");
+//                    }
+//                        else { print!("b"); }
+//                    if i != 0 && (i as i32 % bb.width() as i32) == 0 {
+//                        print!("\n");
+//                    }
+//                }
+
+                let glyph = glyph.unpositioned();
+                self.glyphs.insert(key.clone(), GlyphData::new(
+                    gid,
+                    Some(key.clone()),
+                    Vector2::new(bb.width() as f32, bb.height() as f32),
+                    Vector2::new(glyph.h_metrics().left_side_bearing,
+                                 v_metrics.ascent),
+                    glyph.h_metrics().advance_width,
+                ));
+                self.register_image_byte(&key, bb.width() as u32, bb.height() as u32, pixels.as_slice());
+            } else {
+
+                //Have no image (maybe a space
+                self.glyphs.insert(key.clone(), GlyphData::new(
+                    gid,
+                    None,
+                    Vector2::new(0.0, 0.0),
+                    Vector2::new(glyph.unpositioned().h_metrics().left_side_bearing, v_metrics.ascent),
+                    glyph.unpositioned().h_metrics().advance_width,
+                ));
+            }
+
+        }
+
+        unsafe { gl::PixelStorei(gl::PACK_ALIGNMENT, 1); }
     }
 
     pub fn register_shader(&mut self, key : &str, vertex_shader_source : &str, fragment_shader_source : &str) {
@@ -119,47 +185,6 @@ impl OpenGLRenderer  {
 
             self.shaders.insert(String::from(key), shader_program);
         }
-    }
-
-    pub fn register_font(&mut self, font_key : &str, font_size : u32, font : &Font<'static>){
-
-        unsafe { gl::PixelStorei(gl::UNPACK_ALIGNMENT, 1); }
-
-        self.font.insert(String::from(format!("{}{}", font_key, font_size)), font.clone());
-        let scale = Scale { x : font_size as f32, y : font_size as f32};
-        let v_metrics = font.v_metrics(scale);
-        let offset = point(0.0, v_metrics.ascent);
-        let generated_string = String::from("abcdefghijklmnopqrstuvwxyz123456789!:.,");
-        //let generated_string = String::from("abcdefghijklmnopqrstuvwxyz1234567890");
-        for c in generated_string.chars() {
-
-            let glyph = font.glyph(c).unwrap().scaled(scale).positioned(rusttype::Point{x: 0.0, y: 0.0});
-            let key = OpenGLRenderer::get_glyph_texture_key(font_key, font_size, glyph.id().0);
-
-            //rasterize glyph
-            if let Some(bb) = glyph.pixel_bounding_box(){
-                let mut pixels : Vec<u8> = vec![0; (bb.width() * bb.height()) as usize];
-                glyph.draw(|x, y, v| {
-                    let v = ((v * 255.0) + 0.5).floor().max(0.0).min(255.0) as u8;
-                    pixels[(x + y * bb.width() as u32) as usize] = v;
-                });
-
-                //uncomment for debug
-//                for i in 0..pixels.len() {
-//                    if pixels[i] <= 64 {
-//                        print!(" ");
-//                    }
-//                        else { print!("b"); }
-//                    if i != 0 && (i as i32 % bb.width() as i32) == 0 {
-//                        print!("\n");
-//                    }
-//                }
-
-                self.register_image_byte(&key, bb.width() as u32, bb.height() as u32, pixels.as_slice());
-            };
-        }
-
-        unsafe { gl::PixelStorei(gl::PACK_ALIGNMENT, 1); }
     }
 
     fn get_glyph_texture_key(font_key : &str, font_size : u32, id : u32) -> String {
@@ -390,78 +415,43 @@ impl OpenGLRenderer  {
                 let color = Vector4::from_value(1.0);
                 gl::Uniform4f(color_loc, color.x, color.y, color.z, color.w);
 
-                //get the font first
-                let font = self.font.get(&format!("{}{}",
-                    textrenderable.get_font_key(), textrenderable.get_font_size())).unwrap();
+                let mut adv = 0.0;
+                for c in string.chars() {
+                    //grab the glyph info first
+                    let gid = match c.into() {
+                        CodepointOrGlyphId::Codepoint(Codepoint(c)) => c,
+                        CodepointOrGlyphId::GlyphId(GlyphId(gid)) => gid
+                    };
 
-                let glyphs = font.layout(
-                    "abc",
-                    Scale { x : textrenderable.get_font_size() as f32,
-                                 y : textrenderable.get_font_size() as f32},
-                    point(transform2d.position.x, transform2d.position.y)
-                );
+                    let key = OpenGLRenderer::get_glyph_texture_key(textrenderable.get_font_key(), textrenderable.get_font_size(), gid);
+                    let glyph_data = self.glyphs.get(&key).unwrap();
 
-                for g in glyphs {
-                    let gid = g.id().0;
-                    let key = OpenGLRenderer::get_glyph_texture_key(
-                        textrenderable.get_font_key(),
-                        textrenderable.get_font_size(),
-                        gid
-                    );
+                    if let &Some(ref texture_key) = glyph_data.get_texture_key() {
+                        let model_loc = gl::GetUniformLocation(*shader, CString::new("model").unwrap().as_ptr());
+                        let positioned = Transform2D::new(
+                    Vector2::new(
+                                transform2d.position.x + adv + glyph_data.get_bearing().x,
+                                transform2d.position.y - glyph_data.get_size().y),
+                        Vector2::new(
+                                glyph_data.get_size().x,
+                                glyph_data.get_size().y
+                            ),
+                            0.0
+                        );
 
-                    if let Some(bb) = g.pixel_bounding_box() {
-                        g.draw(|x, y, c| {
-                            let model_loc = gl::GetUniformLocation(*shader, CString::new("model").unwrap().as_ptr());
+                        gl::UniformMatrix4fv(model_loc, 1, gl::FALSE, positioned.get_matrix().as_ptr());
 
-                            let t = Transform2D::new(Vector2::new(
-                                transform2d.position.x + g.position().x as f32,
-                                transform2d.position.y + g.position().y as f32
-                            ), Vector2::new(
-                                bb.width() as f32,
-                                bb.height() as f32
-                            ), 0.0);
-                            gl::UniformMatrix4fv(model_loc, 1, gl::FALSE, t.get_matrix().as_ptr());
+                        //grab the texture
+                        let texture = self.textures.get(texture_key.as_str()).unwrap();
+                        //let texture = self.textures.get("ball").unwrap();
+                        gl::ActiveTexture(gl::TEXTURE0);
+                        gl::BindTexture(gl::TEXTURE_2D, *texture);
 
-                            //grab the texture
-                            let texture = self.textures.get(&key).unwrap();
-                            //let texture = self.textures.get("ball").unwrap();
-                            gl::ActiveTexture(gl::TEXTURE0);
-                            gl::BindTexture(gl::TEXTURE_2D, *texture);
-
-                            gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
-                        });
+                        gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
                     }
+
+                    adv += glyph_data.get_advance();
                 }
-
-
-//                for c in string.chars() {
-//                    //grab the glyph info first
-//
-//                    let gid = match c.into() {
-//                        CodepointOrGlyphId::Codepoint(Codepoint(c)) => c,
-//                        CodepointOrGlyphId::GlyphId(GlyphId(gid)) => gid
-//                    };
-//
-//                    let key = OpenGLRenderer::get_glyph_key(textrenderable.get_font_key(), textrenderable.get_font_size(), gid);
-//                    let glyph_data = self.font_data.get(&key).unwrap();
-//
-//                    let model_loc = gl::GetUniformLocation(*shader, CString::new("model").unwrap().as_ptr());
-//                    transform2d.size.x = glyph_data.get_size().x;
-//                    transform2d.size.y = glyph_data.get_size().y;
-//
-//
-//                    gl::UniformMatrix4fv(model_loc, 1, gl::FALSE, transform2d.get_matrix().as_ptr());
-//
-//                    //grab the texture
-//                    let texture = self.textures.get(glyph_data.get_texture_key()).unwrap();
-//                    //let texture = self.textures.get("ball").unwrap();
-//                    gl::ActiveTexture(gl::TEXTURE0);
-//                    gl::BindTexture(gl::TEXTURE_2D, *texture);
-//
-//                    gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
-//
-//                    transform2d.position.x += glyph_data.get_advance();
-//                }
             }
 
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA)
