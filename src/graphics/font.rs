@@ -28,7 +28,7 @@ impl <'font> FontManager <'font> {
 
 pub struct GlyphData {
     id : u32,
-    texture_key : String,
+    texture_key : Option<String>,
     size : Vector2<f32>,
     bearing : Vector2<f32>,
     advance : f32
@@ -36,7 +36,7 @@ pub struct GlyphData {
 
 impl GlyphData {
     pub fn new(id : u32,
-               texture_key: String,
+               texture_key: Option<String>,
                size : Vector2<f32>,
                bearing : Vector2<f32>,
                advance : f32) -> GlyphData {
@@ -49,7 +49,7 @@ impl GlyphData {
         }
     }
 
-    pub fn get_texture_key(&self) -> &str {
+    pub fn get_texture_key(&self) -> &Option<String> {
         &self.texture_key
     }
 
