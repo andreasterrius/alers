@@ -80,7 +80,7 @@ impl OpenGLRenderer  {
         let offset = point(0.0, v_metrics.ascent);
         let generated_string = String::from(r#"ABCDEFGHIJKLMNOPQRSTUVWXYZ
             abcdefghijklmnopqrstuvwxyz123456789!:., "#);
-        //let generated_string = String::from("This is");
+        //let generated_string = String::from("mlp");
         for c in generated_string.chars() {
 
             let glyph = font.glyph(c).unwrap().scaled(scale).positioned(rusttype::Point{x: 0.0, y: 0.0});
@@ -88,6 +88,7 @@ impl OpenGLRenderer  {
                 CodepointOrGlyphId::Codepoint(Codepoint(c)) => c,
                 CodepointOrGlyphId::GlyphId(GlyphId(gid)) => gid
             };
+
 
             let key = OpenGLRenderer::get_glyph_texture_key(font_key, font_size, gid);
 
@@ -98,6 +99,8 @@ impl OpenGLRenderer  {
                     let v = ((v * 255.0) + 0.5).floor().max(0.0).min(255.0) as u8;
                     pixels[(x + y * bb.width() as u32) as usize] = v;
                 });
+
+                println!("{:?}", bb);
 
 
                 //uncomment for debug
@@ -117,7 +120,7 @@ impl OpenGLRenderer  {
                     Some(key.clone()),
                     Vector2::new(bb.width() as f32, bb.height() as f32),
                     Vector2::new(glyph.h_metrics().left_side_bearing,
-                                 v_metrics.ascent),
+                                 (bb.height() - bb.max.y) as f32),
                     glyph.h_metrics().advance_width,
                 ));
                 self.register_image_byte(&key, bb.width() as u32, bb.height() as u32, pixels.as_slice());
@@ -431,7 +434,7 @@ impl OpenGLRenderer  {
                         let positioned = Transform2D::new(
                     Vector2::new(
                                 transform2d.position.x + adv + glyph_data.get_bearing().x,
-                                transform2d.position.y - glyph_data.get_size().y),
+                                transform2d.position.y - glyph_data.get_bearing().y),
                         Vector2::new(
                                 glyph_data.get_size().x,
                                 glyph_data.get_size().y
