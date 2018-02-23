@@ -100,9 +100,7 @@ impl OpenGLRenderer  {
                     pixels[(x + y * bb.width() as u32) as usize] = v;
                 });
 
-                println!("{:?}", bb);
-
-
+                //println!("{:?}", bb);
                 //uncomment for debug
 //                for i in 0..pixels.len() {
 //                    if pixels[i] <= 64 {
@@ -488,8 +486,8 @@ impl OpenGLRenderer  {
             };
         }
         
-        //self.render_sprite(sprites);
-        //self.render_particles(particles);
+        self.render_sprite(sprites);
+        self.render_particles(particles);
         self.render_text(texts);
 
         if let Some(ref postprocess_shader_key) = self.preprocess_shader_key {
