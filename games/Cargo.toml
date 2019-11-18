@@ -1,7 +1,0 @@
-[package]
-name = "games"
-version = "0.1.0"
-authors = ["Alether <gotenwinz99@gmail.com>"]
-
-[dependencies]
-alexyt = { path=".." }
