@@ -3,10 +3,23 @@ name = "alexyt"
 version = "0.1.0"
 authors = ["Alether <gotenwinz99@gmail.com>"]
 
+[lib]
+name = "alers"
+path = "src/lib/lib.rs"
+
+[[bin]]
+name = "bin"
+path = "src/app/bin.rs"
+
+[dependencies.glfw]
+version = "0.34.0"
+git = "https://github.com/bjz/glfw-rs.git"
+default-features = false
+
 [dependencies]
+fbxcel-dom = "0.0.3"
 cgmath = "0.14.1"
 gl = "0.6.2"
-glfw = "0.15.0"
 image = "0.14.0"
 time = "0.1"
 rand = "0.3"
