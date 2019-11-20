@@ -26,6 +26,6 @@ pub fn load_fbx_rigged() {
     .expect("Fail to load rigged fbx");
 
   for object in fbx.objects() {
-    info!("Object: {:?}", object.name())
+    info!("Object: {:?}, {} {}", object.name(), object.class(), object.subclass())
   }
 }
