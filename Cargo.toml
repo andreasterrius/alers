@@ -1,5 +1,5 @@
 [package]
-name = "alexyt"
+name = "alers"
 version = "0.1.0"
 authors = ["Alether <gotenwinz99@gmail.com>"]
 
@@ -26,3 +26,5 @@ rand = "0.3"
 rodio = "0.5.2"
 rusttype = "0.3.0"
 unicode-normalization = "0.1.0"
+simplelog = "0.7.4"
+log = "0.4.8"

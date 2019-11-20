@@ -1,13 +1,19 @@
+#[macro_use]
+extern crate log;
 extern crate alers;
+
+mod example;
 
 use alers::*;
 
 pub fn main() {
+
+  // Initialize File Logging
+  alers::log::init();
+
   // Initialize the engine
   let mut engine = engine::Engine::new();
   let mut window = engine.windows().new(800, 600);
-
-  let mut cube_fbx = resource::load_fbx("E:/Codes/Repos/alexyt/resources/basic_blender.fbx");
 
   while !window.is_closing() {
     engine.poll_inputs();

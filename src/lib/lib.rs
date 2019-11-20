@@ -9,6 +9,8 @@ pub extern crate rodio;
 pub extern crate rusttype;
 pub extern crate unicode_normalization;
 pub extern crate fbxcel_dom;
+pub extern crate log as lg;
+pub extern crate simplelog;
 
 pub mod graphics;
 pub mod fisika;
@@ -18,6 +20,7 @@ pub mod math;
 pub mod audio;
 pub mod engine;
 pub mod window;
+pub mod log;
 
 use self::glfw::{Context, Key, Action};
 use cgmath::prelude::*;
