@@ -3,3 +3,4 @@ alexyt.iml
 .idea/
 .idea/workspace.xml
 resources
+*.log

@@ -2,33 +2,15 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::{BufReader, Cursor};
-use std::{self, fmt};
+use std::io::{BufReader, Cursor, Error};
+use std::{self, fmt, io};
 use rusttype::{FontCollection, Font, Scale, point, PositionedGlyph};
 use image;
 use fbxcel_dom::any::AnyDocument;
 
-pub enum LoadFbxErr{}
+pub mod fbx;
 
-pub fn load_fbx(path : &str)  {
-  let file: File = File::open(path).expect("test");
-  let reader = BufReader::new(file);
-  match AnyDocument::from_seekable_reader(reader).expect("Failed to load document") {
-    AnyDocument::V7400(doc) => {
-      println!("{:#?}", doc);
-      println!("Loaded FBX DOM successfully");
-      for scene in doc.scenes() {
-        println!("Scene object: object_id={:?}", scene.object_id());
-        let root_id = scene
-          .root_object_id()
-          .expect("Failed to get root object ID");
-        println!("\tRoot object ID: {:?}", root_id);
 
-      }
-    }
-    _ => panic!("FBX version unsupported by this example"),
-  }
-}
 
 
 
