@@ -18,14 +18,16 @@ pub fn load_fbx_simple_get_vertices(){
   info!("{} : {:?}", node.name(), node.attributes());
 }
 
+
 #[test]
-pub fn load_fbx_rigged() {
-  alers::log::init_test();
+pub fn load_fbx_rigged_print_attributes() {
+  alers::log::init();
 
   let mut fbx = resource::fbx::load("resources/test/geom/cylinder_rig.fbx")
     .expect("Fail to load rigged fbx");
 
-  for object in fbx.objects() {
-    info!("Object: {:?}, {} {}", object.name(), object.class(), object.subclass())
-  }
+  let root = fbx.scenes().nth(0).unwrap().node().tree().root();
+  info!("{}", resource::fbx::get_node_info_recursively(&root, 0));
+
+ // info!("{:#?}", fbx.tree());
 }
