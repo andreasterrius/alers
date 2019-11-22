@@ -9,8 +9,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "alers"
 version = "0.1.0"
 dependencies = [
+ "approx 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "cgmath 0.14.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "fbxcel-dom 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fbxcel-dom 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "gl 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "glfw 0.34.0 (git+https://github.com/bjz/glfw-rs.git)",
  "image 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -33,9 +34,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "approx"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "approx"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-traits 0.2.9 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "arrayref"
@@ -321,7 +335,7 @@ dependencies = [
 
 [[package]]
 name = "fbxcel"
-version = "0.4.4"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -333,11 +347,11 @@ dependencies = [
 
 [[package]]
 name = "fbxcel-dom"
-version = "0.0.3"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "fbxcel 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "anyhow 1.0.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fbxcel 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mint 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "rgb 0.8.14 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1004,7 +1018,9 @@ dependencies = [
 [metadata]
 "checksum adler32 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "5d2e7343e7fc9de883d1b0341e0b13970f764c14101234857d2ddafa1cb1cac2"
 "checksum alsa-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "b0edcbbf9ef68f15ae1b620f722180b82a98b6f0628d30baa6b8d2a5abc87d58"
+"checksum anyhow 1.0.22 (registry+https://github.com/rust-lang/crates.io-index)" = "e19f23ab207147bbdbcdfa7f7e4ca5e84963d79bae3937074682177ab9150968"
 "checksum approx 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "08abcc3b4e9339e33a3d0a5ed15d84a687350c05689d825e0f6655eef9e76a94"
+"checksum approx 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f0e60b75072ecd4168020818c0107f2857bb6c4e64252d8d3983f6263b40a5c3"
 "checksum arrayref 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "0d382e583f07208808f6b1249e60848879ba3543f57c32277bf52d69c2f0f0ee"
 "checksum arrayvec 0.4.12 (registry+https://github.com/rust-lang/crates.io-index)" = "cd9fd44efafa8690358b7408d253adf110036b88f55672a933f01d616ad9b1b9"
 "checksum arrayvec 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cff77d8686867eceff3105329d4698d96c2391c176d5d03adc90c7389162b5b8"
@@ -1040,8 +1056,8 @@ dependencies = [
 "checksum enum_primitive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "be4551092f4d519593039259a9ed8daedf0da12e5109c5280338073eaeb81180"
 "checksum failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "f8273f13c977665c5db7eb2b99ae520952fe5ac831ae4cd09d80c4c7042b5ed9"
 "checksum failure_derive 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0bc225b78e0391e4b8683440bf2e63c2deeeb2ce5189eab46e2b68c6d3725d08"
-"checksum fbxcel 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "4dbe93488d15971e231b9759804c7359209a7f97de1451a6db63cd9640ba933f"
-"checksum fbxcel-dom 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "19631685b58ad1c37b47301b36645e0ba09a2d7ec9fda47baa5ff8a5f01ea1cb"
+"checksum fbxcel 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1acfaf922faf71f283b73190b4f5df5b8c2101d0e2eeee34590c2ca511b2aaa0"
+"checksum fbxcel-dom 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "20ae006b4cfc7020fb976d9f1b08d35da42fd59ae5e2fb4b4566be811944a7e8"
 "checksum fuchsia-cprng 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a06f77d526c1a601b7c4cdd98f54b5eaabffc14d5f2f0296febdc7f357c6d3ba"
 "checksum futures 0.1.29 (registry+https://github.com/rust-lang/crates.io-index)" = "1b980f2816d6ee8673b6517b52cb0e808a180efc92e5c19d02cdda79066703ef"
 "checksum gif 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e2e41945ba23db3bf51b24756d73d81acb4f28d85c3dccc32c6fae904438c25f"

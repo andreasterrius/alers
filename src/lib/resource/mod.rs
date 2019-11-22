@@ -9,8 +9,7 @@ use image;
 use fbxcel_dom::any::AnyDocument;
 
 pub mod fbx;
-pub mod mesh;
-
+pub mod fbx_convert;
 
 
 
