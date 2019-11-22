@@ -11,6 +11,8 @@ pub extern crate unicode_normalization;
 pub extern crate fbxcel_dom;
 pub extern crate log as lg;
 pub extern crate simplelog;
+#[macro_use]
+pub extern crate approx;
 
 pub mod graphics;
 pub mod fisika;
@@ -21,6 +23,8 @@ pub mod audio;
 pub mod engine;
 pub mod window;
 pub mod log;
+pub mod renderer;
+pub mod data;
 
 use self::glfw::{Context, Key, Action};
 use cgmath::prelude::*;

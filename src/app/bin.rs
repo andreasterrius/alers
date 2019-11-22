@@ -3,7 +3,6 @@ extern crate log;
 extern crate alers;
 
 mod example;
-
 use alers::*;
 
 pub fn main() {
@@ -13,6 +12,9 @@ pub fn main() {
   // Initialize the engine
   let mut engine = engine::Engine::new();
   let mut window = engine.windows().new(800, 600);
+
+  // Initialize renderer
+  
 
   // Initialize the windowing system
   while !window.is_closing() {

@@ -4,7 +4,7 @@ use alers::resource;
 pub fn load_fbx_simple_get_vertices(){
   alers::log::init_test();
 
-  let mut cube_fbx = resource::fbx::load("resources/test/geom/basic_blender.fbx")
+  let mut cube_fbx = resource::fbx::load("resources/test/data/basic_blender.fbx")
     .expect("Fail to load cube fbx");
 
   let cube_object = cube_fbx.objects()
@@ -23,7 +23,7 @@ pub fn load_fbx_simple_get_vertices(){
 pub fn load_fbx_rigged_print_attributes() {
   alers::log::init();
 
-  let mut fbx = resource::fbx::load("resources/test/geom/cylinder_rig.fbx")
+  let mut fbx = resource::fbx::load("resources/test/geom/basic_blender.fbx")
     .expect("Fail to load rigged fbx");
 
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();
