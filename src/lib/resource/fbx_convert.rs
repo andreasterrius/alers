@@ -1,7 +1,8 @@
-use data::mesh::SimpleStaticMesh;
 use data::buffer::SeparateBufferBuilder;
+use resource::static_mesh::StaticMesh;
+use data::id::Id;
 
-pub fn to_simple_statich_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<SimpleStaticMesh> {
+pub fn to_simple_statich_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMesh> {
 
   //Get root node
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();
@@ -34,7 +35,8 @@ pub fn to_simple_statich_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<SimpleS
       ibuffer_builder = ibuffer_builder.info("index", 3, indices.to_vec());
     }
     
-    meshes.push(SimpleStaticMesh{
+    meshes.push(StaticMesh {
+      id: Id::new(),
       vertices: vbuffer_builder.build().unwrap(),
       indices: ibuffer_builder.build().ok()
     })

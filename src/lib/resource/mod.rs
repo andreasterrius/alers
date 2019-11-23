@@ -10,9 +10,8 @@ use fbxcel_dom::any::AnyDocument;
 
 pub mod fbx;
 pub mod fbx_convert;
-
-
-
+pub mod shader;
+pub mod static_mesh;
 
 pub struct ResourceManager {
   images: HashMap<String, ResourceImageFile>,
