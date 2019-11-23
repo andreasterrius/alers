@@ -13,8 +13,12 @@ pub fn main() {
   let mut engine = engine::Engine::new();
   let mut window = engine.windows().new(800, 600);
 
-  // Initialize renderer
-  
+  // Initialize resources
+  let mut fbx = resource::fbx::load("resources/test/geom/basic_blender.fbx").unwrap();
+  let mut meshes = resource::fbx_convert::to_simple_statich_meshes(fbx);
+
+  // Iniitalize renderer
+  let mut pipeline = renderer::opengl::Pipeline::new();
 
   // Initialize the windowing system
   while !window.is_closing() {

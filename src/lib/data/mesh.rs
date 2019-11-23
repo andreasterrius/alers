@@ -1,8 +1,9 @@
 use data::buffer::Buffer;
 
+#[derive(Debug)]
 pub struct SimpleStaticMesh {
-  vertices : Buffer<f64>,
-  elements : Buffer<i32>,
+  pub vertices : Buffer<f64>,
+  pub indices: Option<Buffer<i32>>,
 }
 
 impl SimpleStaticMesh {
