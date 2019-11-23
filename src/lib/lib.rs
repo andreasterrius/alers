@@ -11,9 +11,11 @@ pub extern crate unicode_normalization;
 pub extern crate fbxcel_dom;
 pub extern crate log as lg;
 pub extern crate simplelog;
-#[macro_use]
 pub extern crate approx;
+pub extern crate snowflake;
 
+#[macro_use]
+pub mod macros;
 pub mod graphics;
 pub mod fisika;
 pub mod ale;

@@ -18,7 +18,7 @@ pub fn main() {
   let mut meshes = resource::fbx_convert::to_simple_statich_meshes(fbx);
 
   // Iniitalize renderer
-  let mut pipeline = renderer::opengl::Pipeline::new();
+  let mut pipeline = renderer::opengl::Context::new();
 
   // Initialize the windowing system
   while !window.is_closing() {
