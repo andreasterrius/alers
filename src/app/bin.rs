@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate log;
 extern crate alers;
 
@@ -7,6 +6,10 @@ mod example;
 use alers::*;
 use std::fs;
 use alers::renderer::opengl::{SimpleRenderTasks, RenderTasks};
+use pile::Pile;
+use alers::data::object::Object;
+
+mod pile;
 
 pub fn main() {
   // Initialize File Logging
@@ -17,28 +20,25 @@ pub fn main() {
   let mut window = engine.windows().new(800, 600);
 
   // Initialize resources
-  let mut fbx = resource::fbx::load("resources/test/geom/basic_blender.fbx").unwrap();
-  let mut meshes = resource::fbx_convert::to_simple_statich_meshes(fbx);
+  let pile = Pile::load_initial();
 
-  // Load shaders
-  let mut lambert = resource::shader::ShaderFile::new(
-    fs::read_to_string("shaders/test.vs").unwrap(),
-    fs::read_to_string("shaders/test.fs").unwrap()
-  );
+  // Test create an object
+  let cube = Object {
+    mesh: &pile.cube_mesh,
+    shader: &pile.lambert_shader
+  };
 
   // Initialize render queue & assign render tasks
-  let mut render_queue = SimpleRenderTasks::new();
-
+  let mut render_tasks = SimpleRenderTasks::new();
 
   // Initialize renderer
-  let mut pipeline = renderer::opengl::Context::new();
+  let mut context = renderer::opengl::Context::new();
 
   // Initialize the windowing system
   while !window.is_closing() {
     engine.poll_inputs();
 
-    pipeline.render(render_queue);
-
+    context.render(&mut render_tasks);
     window.swap_buffers();
   }
 }

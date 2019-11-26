@@ -2,7 +2,7 @@ use data::buffer::SeparateBufferBuilder;
 use resource::static_mesh::StaticMesh;
 use data::id::Id;
 
-pub fn to_simple_statich_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMesh> {
+pub fn to_simple_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMesh> {
 
   //Get root node
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();
@@ -52,6 +52,6 @@ pub fn fbx_to_buffers_should_properly_parse() {
   let mut fbx = crate::resource::fbx::load("resources/test/geom/basic_blender.fbx")
     .expect("Fail to load rigged fbx");
 
-  let meshes = to_simple_statich_meshes(fbx);
+  let meshes = to_simple_static_meshes(fbx);
   println!("{:#?}", meshes);
 }
