@@ -28,8 +28,8 @@ impl Context {
     self.shaders.insert(shader.uid(), ShaderDrawInfo::new(shader));
   }
 
-  pub fn render<T: RenderQueue>(&self, queue: T) {
-    queue.render_queue(&self.static_meshes, &self.shaders);
+  pub fn render<T: RenderTasks>(&self, render_tasks: T) {
+    render_tasks.render(&self.static_meshes, &self.shaders);
   }
 }
 
@@ -53,30 +53,30 @@ enum Renderable {
   ShaderMesh(Id, Id)
 }
 
-pub trait RenderQueue {
+pub trait RenderTasks {
   fn static_mesh_shader(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>);
 
-  fn render_queue(&self,
-                  static_mesh_info: &HashMap<Id, StaticMeshDrawInfo>,
-                  shader_info: &HashMap<Id, ShaderDrawInfo>);
+  fn render(&self,
+            static_mesh_info: &HashMap<Id, StaticMeshDrawInfo>,
+            shader_info: &HashMap<Id, ShaderDrawInfo>);
 }
 
-pub struct SimpleRenderQueue {
+pub struct SimpleRenderTasks {
   renderables: Vec<Renderable>
 }
 
-impl SimpleRenderQueue {
-  fn new() -> SimpleRenderQueue {
-    SimpleRenderQueue { renderables: vec![] }
+impl SimpleRenderTasks {
+  pub fn new() -> SimpleRenderTasks {
+    SimpleRenderTasks { renderables: vec![] }
   }
 }
 
-impl RenderQueue for SimpleRenderQueue {
+impl RenderTasks for SimpleRenderTasks {
   fn static_mesh_shader(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>) {
     self.renderables.push(Renderable::ShaderMesh(shader.uid(), mesh.uid()));
   }
 
-  fn render_queue(&self, static_mesh_info: &HashMap<Id, StaticMeshDrawInfo>, shader_info: &HashMap<Id, ShaderDrawInfo>) {
+  fn render(&self, static_mesh_info: &HashMap<Id, StaticMeshDrawInfo>, shader_info: &HashMap<Id, ShaderDrawInfo>) {
     unimplemented!()
   }
 }
