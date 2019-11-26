@@ -3,7 +3,10 @@ extern crate log;
 extern crate alers;
 
 mod example;
+
 use alers::*;
+use std::fs;
+use alers::renderer::opengl::{SimpleRenderTasks, RenderTasks};
 
 pub fn main() {
   // Initialize File Logging
@@ -17,12 +20,25 @@ pub fn main() {
   let mut fbx = resource::fbx::load("resources/test/geom/basic_blender.fbx").unwrap();
   let mut meshes = resource::fbx_convert::to_simple_statich_meshes(fbx);
 
-  // Iniitalize renderer
+  // Load shaders
+  let mut lambert = resource::shader::ShaderFile::new(
+    fs::read_to_string("shaders/test.vs").unwrap(),
+    fs::read_to_string("shaders/test.fs").unwrap()
+  );
+
+  // Initialize render queue & assign render tasks
+  let mut render_queue = SimpleRenderTasks::new();
+
+
+  // Initialize renderer
   let mut pipeline = renderer::opengl::Context::new();
 
   // Initialize the windowing system
   while !window.is_closing() {
     engine.poll_inputs();
+
+    pipeline.render(render_queue);
+
     window.swap_buffers();
   }
 }
