@@ -28,7 +28,7 @@ impl Context {
     self.shaders.insert(shader.uid(), ShaderDrawInfo::new(shader));
   }
 
-  pub fn render<T: RenderTasks>(&self, render_tasks: T) {
+  pub fn render<T: RenderTasks>(&self, render_tasks: &mut T) {
     render_tasks.render(&self.static_meshes, &self.shaders);
   }
 }
