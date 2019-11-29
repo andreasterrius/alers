@@ -1,5 +1,6 @@
 extern crate log;
 extern crate alers;
+extern crate cgmath;
 
 mod example;
 
@@ -8,6 +9,9 @@ use std::fs;
 use alers::renderer::opengl::{SimpleRenderTasks, RenderTasks};
 use pile::Pile;
 use alers::data::object::Object;
+use alers::math::transform::Transform;
+use cgmath::{Matrix4, Vector3};
+use cgmath::prelude::*;
 
 mod pile;
 
@@ -23,22 +27,25 @@ pub fn main() {
   let pile = Pile::load_initial();
 
   // Test create an object
-  let cube = Object {
+  let mut cube = Object {
     mesh: &pile.cube_mesh,
-    shader: &pile.lambert_shader
+    shader: &pile.lambert_shader,
+    transform : Transform::position(Vector3::from_value(1.0)),
   };
 
-  // Initialize render queue & assign render tasks
-  let mut render_tasks = SimpleRenderTasks::new();
-
-  // Initialize renderer
+=
+  // Initialize renderer context
   let mut context = renderer::opengl::Context::new();
 
   // Initialize the windowing system
   while !window.is_closing() {
     engine.poll_inputs();
 
-    context.render(&mut render_tasks);
+    // Initialize render queue & assign render tasks
+    let mut render_tasks = SimpleRenderTasks::new();
+    render_tasks.queue_static_mesh(cube.shader, cube.mesh, cube.transform.get_matrix());
+    render_tasks.render(&context);
+
     window.swap_buffers();
   }
 }
