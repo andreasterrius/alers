@@ -27,10 +27,6 @@ impl Context {
   pub fn shader(&mut self, shader: &ShaderFile) {
     self.shaders.insert(shader.uid(), ShaderDrawInfo::new(shader));
   }
-
-  pub fn render<T: RenderTasks>(&self, render_tasks: &mut T) {
-    render_tasks.render(&self.static_meshes, &self.shaders);
-  }
 }
 
 pub struct StaticMeshDrawInfo {}
@@ -50,15 +46,13 @@ impl ShaderDrawInfo {
 }
 
 enum Renderable {
-  ShaderMesh(Id, Id)
+    StaticMesh { shader_id : Id, mesh_id : Id, transform : Matrix4<f32> }
 }
 
 pub trait RenderTasks {
-  fn static_mesh_shader(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>);
+  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>);
 
-  fn render(&self,
-            static_mesh_info: &HashMap<Id, StaticMeshDrawInfo>,
-            shader_info: &HashMap<Id, ShaderDrawInfo>);
+  fn render(&mut self, context:  &Context);
 }
 
 pub struct SimpleRenderTasks {
@@ -72,11 +66,15 @@ impl SimpleRenderTasks {
 }
 
 impl RenderTasks for SimpleRenderTasks {
-  fn static_mesh_shader(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>) {
-    self.renderables.push(Renderable::ShaderMesh(shader.uid(), mesh.uid()));
+  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>) {
+    self.renderables.push(Renderable::StaticMesh {
+      shader_id: shader.uid(),
+      mesh_id: mesh.uid(),
+      transform
+    });
   }
 
-  fn render(&self, static_mesh_info: &HashMap<Id, StaticMeshDrawInfo>, shader_info: &HashMap<Id, ShaderDrawInfo>) {
+  fn render(&mut self, context: &Context) {
     unimplemented!()
   }
 }
