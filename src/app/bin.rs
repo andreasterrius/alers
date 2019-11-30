@@ -49,6 +49,8 @@ pub fn main() {
 
     window.swap_buffers();
     engine.poll_inputs();
+
+    // Add handle events on windows to prevent crash
     window.handle_events();
   }
 }
