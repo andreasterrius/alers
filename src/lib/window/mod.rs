@@ -1,4 +1,5 @@
-use glfw::Context;
+use glfw::{Context, Key, Action, WindowEvent};
+use std::sync::mpsc::Receiver;
 
 pub struct WindowCreator <'a> {
     glfw : &'a mut glfw::Glfw
@@ -21,7 +22,7 @@ impl <'a> WindowCreator<'a> {
         #[cfg(target_os = "macos")] glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
         // glfw window creation
         // --------------------
-        let (mut glfw_window, events) = self.glfw.create_window(
+        let (mut glfw_window, glfw_events) = self.glfw.create_window(
             scr_width,
             scr_height,
             "LearnOpenGL",
@@ -37,13 +38,15 @@ impl <'a> WindowCreator<'a> {
         gl::load_with(|symbol| glfw_window.get_proc_address(symbol) as *const _);
 
         Window {
-            glfw_window
+            glfw_window,
+            glfw_events
         }
     }
 }
 
 pub struct Window {
-    glfw_window: glfw::Window
+    glfw_window: glfw::Window,
+    glfw_events: Receiver<(f64, WindowEvent)>
 }
 
 impl Window {
@@ -52,4 +55,15 @@ impl Window {
     }
 
     pub fn swap_buffers(&mut self) { self.glfw_window.swap_buffers(); }
+
+    pub fn handle_events(&mut self) {
+        for (_, event) in glfw::flush_messages(&self.glfw_events) {
+            match event {
+                glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
+                    self.glfw_window.set_should_close(true)
+                },
+                _ => {},
+            }
+        }
+    }
 }

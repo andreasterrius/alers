@@ -12,7 +12,7 @@ impl Pile {
   pub fn load_initial() -> Pile {
 
     // Load meshes
-    let mut fbx = resource::fbx::load("resources/test/geom/basic_blender.fbx").unwrap();
+    let mut fbx = resource::fbx::load("resources/test/geom/triangle.fbx").unwrap();
     let mut meshes = resource::fbx_convert::to_simple_static_meshes(fbx);
 
     // Load shaders

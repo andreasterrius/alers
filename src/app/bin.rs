@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate log;
 extern crate alers;
 extern crate cgmath;
@@ -40,7 +41,6 @@ pub fn main() {
 
   // Initialize the windowing system
   while !window.is_closing() {
-    engine.poll_inputs();
 
     // Initialize render queue & assign render tasks
     let mut render_tasks = SimpleRenderTasks::new();
@@ -48,5 +48,7 @@ pub fn main() {
     render_tasks.render(&context);
 
     window.swap_buffers();
+    engine.poll_inputs();
+    window.handle_events();
   }
 }

@@ -32,9 +32,17 @@ impl Context {
     Ok(())
   }
 
+  pub fn get_static_mesh(&self, mesh_id: &Id) -> Option<&StaticMeshDrawInfo> {
+    self.static_meshes.get(&mesh_id)
+  }
+
   pub fn shader(&mut self, shader: &ShaderFile) -> Result<(), ShaderError> {
     self.shaders.insert(shader.uid(), ShaderDrawInfo::new(shader)?);
     Ok(())
+  }
+
+  pub fn get_shader(&self, shader_id: &Id) -> Option<&ShaderDrawInfo> {
+    self.shaders.get(&shader_id)
   }
 }
 
@@ -53,12 +61,13 @@ pub struct StaticMeshDrawInfo {
   vao: u32,
   vbo: u32,
   ebo: Option<u32>,
+  draw_size: u32, //indices size, or vertex size
 }
 
 impl StaticMeshDrawInfo {
   pub fn new(mesh: &StaticMesh) -> Result<StaticMeshDrawInfo, StaticMeshError> {
-    let (vao, vbo, ebo) = unsafe { create_buffer(&mesh.vertices, &mesh.indices)? };
-    Ok(StaticMeshDrawInfo { vao, vbo, ebo })
+    let (vao, vbo, ebo, draw_size ) = unsafe { create_buffer(&mesh.vertices, &mesh.indices)? };
+    Ok(StaticMeshDrawInfo { vao, vbo, ebo, draw_size })
   }
 }
 
@@ -113,16 +122,41 @@ impl RenderTasks for SimpleRenderTasks {
     });
   }
 
-  fn render(&mut self, context: &Context) {}
+  fn render(&mut self, context: &Context) {
+    unsafe {
+      gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);
+      gl::Clear(gl::COLOR_BUFFER_BIT);
+    }
+
+    for renderable in &self.renderables {
+      match renderable {
+        Renderable::StaticMesh { shader_id, mesh_id, transform } => {
+          let mesh_draw_info = match context.get_static_mesh(mesh_id) { None => continue, Some(x) => x };
+          let shader_draw_info = match context.get_shader(shader_id) { None => continue, Some(x) => x, };
+
+          unsafe {
+            gl::UseProgram(shader_draw_info.shader);
+            gl::BindVertexArray(mesh_draw_info.vao);
+            match mesh_draw_info.ebo {
+              None => gl::DrawArrays(mesh_draw_info.draw_size, 0, mesh_draw_info.draw_size as i32),
+              Some(ebo) => gl::DrawElements(gl::TRIANGLES, mesh_draw_info.draw_size as i32, gl::UNSIGNED_INT, ptr::null()),
+            }
+          }
+        }
+      }
+    }
+  }
+
 }
 
 #[derive(Debug)]
 pub struct CreateBufferError {}
 
 unsafe fn create_buffer(vertices: &Buffer<f32>,
-                        indices: &Option<Buffer<i32>>) -> Result<(u32, u32, Option<u32>), CreateBufferError>
+                        indices: &Option<Buffer<i32>>) -> Result<(u32, u32, Option<u32>, u32), CreateBufferError>
 {
   let (mut vao, mut vbo) = (0, 0);
+  let mut draw_size = vertices.len() as u32;
   gl::GenVertexArrays(1, &mut vao);
   gl::GenBuffers(1, &mut vbo);
 
@@ -151,12 +185,14 @@ unsafe fn create_buffer(vertices: &Buffer<f32>,
       gl::STATIC_DRAW
     );
     ebo = Some(ebo_ptr);
+    draw_size = buffer.len() as u32;
   }
 
   let mut count = 0;
   let mut start = 0;
   let total_row_size = (vertices.total_row_size() * mem::size_of::<GLfloat>()) as GLsizeiptr;
   for element in vertices.elements() {
+    //println!("{:?} {:?}", start, count);
     let stride = (start * mem::size_of::<GLfloat>()) as *const c_void;
     gl::VertexAttribPointer(count, element.size.try_into().unwrap(),
       gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
@@ -168,7 +204,11 @@ unsafe fn create_buffer(vertices: &Buffer<f32>,
   gl::BindBuffer(gl::ARRAY_BUFFER, 0);
   gl::BindVertexArray(0);
 
-  Ok((vao, vbo, ebo))
+  //println!("{:?} {:?} {:?} {:?}", vao, vbo, ebo, draw_size);
+  //println!("vertices {:?}", vertices);
+  //println!("indices {:?}", indices);
+
+  Ok((vao, vbo, ebo, draw_size))
 }
 
 #[derive(Debug)]
@@ -179,7 +219,8 @@ pub enum CreateShaderError {
 }
 
 unsafe fn create_shader(vertex_shader_source: &str,
-                        fragment_shader_source: &str) -> Result<u32, CreateShaderError> {
+                        fragment_shader_source: &str) -> Result<u32, CreateShaderError>
+{
   // vertex shader
   let vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
   let c_str_vert = CString::new(vertex_shader_source.as_bytes()).unwrap();

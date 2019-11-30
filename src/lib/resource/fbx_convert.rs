@@ -31,8 +31,9 @@ pub fn to_simple_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMe
     let element_node = object.children_by_name("PolygonVertexIndex").nth(0);
     let mut ibuffer_builder = SeparateBufferBuilder::new();
     if let Some(element_node) = element_node {
-      let indices = element_node.attributes().iter().nth(0).unwrap().get_arr_i32().unwrap();
-      ibuffer_builder = ibuffer_builder.info("index", 3, indices.to_vec());
+      let mut indices = element_node.attributes().iter().nth(0).unwrap().get_arr_i32().unwrap().to_vec();
+      for i in (2..indices.len()).step_by(3) { indices[i] = !indices[i]}
+      ibuffer_builder = ibuffer_builder.info("index", 3, indices);
     }
     
     meshes.push(StaticMesh {

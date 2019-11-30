@@ -9,6 +9,7 @@ pub extern crate rodio;
 pub extern crate rusttype;
 pub extern crate unicode_normalization;
 pub extern crate fbxcel_dom;
+#[macro_use]
 pub extern crate log as lg;
 pub extern crate simplelog;
 pub extern crate approx;

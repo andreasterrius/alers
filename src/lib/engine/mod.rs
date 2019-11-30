@@ -17,6 +17,6 @@ impl Engine {
   }
 
   pub fn poll_inputs(&mut self) {
-    self.glfw.poll_events()
+    self.glfw.poll_events();
   }
 }
