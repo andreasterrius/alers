@@ -16,6 +16,7 @@ pub extern crate snowflake;
 
 #[macro_use]
 pub mod macros;
+pub mod log;
 pub mod graphics;
 pub mod fisika;
 pub mod ale;
@@ -24,7 +25,6 @@ pub mod math;
 pub mod audio;
 pub mod engine;
 pub mod window;
-pub mod log;
 pub mod renderer;
 pub mod data;
 

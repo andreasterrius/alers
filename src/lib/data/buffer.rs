@@ -1,9 +1,9 @@
 use std::iter::FromIterator;
 
 #[derive(Debug)]
-struct BufferElementInfo {
-  name: String,
-  size: usize,
+pub struct BufferElementInfo {
+  pub name: String,
+  pub size: usize,
 }
 
 #[derive(Debug)]
@@ -19,7 +19,12 @@ pub struct Buffer<T: Clone> {
 }
 
 impl<T: Clone> Buffer<T> {
-  pub fn elements(&self, name: &str) -> Option<BufferElementIterator<T>> {
+
+  pub fn elements(&self) -> &Vec<BufferElementInfo> {
+    &self.element_info
+  }
+
+  pub fn element_iter(&self, name: &str) -> Option<BufferElementIterator<T>> {
     let mut size_now = 0;
     for i in 0..self.element_info.len() {
       let info = &self.element_info[i];
@@ -35,6 +40,19 @@ impl<T: Clone> Buffer<T> {
       size_now += self.element_info[i].size;
     }
     None
+  }
+
+  pub fn len(&self) -> usize {
+    self.data.len()
+  }
+
+  pub fn total_row_size(&self) -> usize {
+    self.total_row_size
+  }
+
+  // Get pointer to the start of the data
+  pub fn as_ptr(&self) -> *const T {
+    self.data.as_ptr()
   }
 }
 
@@ -181,7 +199,7 @@ pub fn test_buffers() {
     2.0, 2.0, 2.0,
     3.0, 3.0, 3.0,
   );
-  let vertices: Vec<f32> = buffer.elements("vertex").unwrap().collect();
+  let vertices: Vec<f32> = buffer.element_iter("vertex").unwrap().collect();
   for i in 0..vertices.len() { relative_eq!(vertices[i], vertices_expected[i]); }
 
   let uvs_expected = vec!(
@@ -189,7 +207,7 @@ pub fn test_buffers() {
     20.0, 20.0,
     30.0, 30.0,
   );
-  let uvs: Vec<f32> = buffer.elements("uv").unwrap().collect();
+  let uvs: Vec<f32> = buffer.element_iter("uv").unwrap().collect();
   for i in 0..uvs.len() { relative_eq!(uvs[i], uvs_expected[i]); }
 
   let normals_expected = vec!(
@@ -197,7 +215,7 @@ pub fn test_buffers() {
     -2.0, -2.0, -2.0,
     -3.0, -3.0, -3.0,
   );
-  let normals: Vec<f32> = buffer.elements("normal").unwrap().collect();
+  let normals: Vec<f32> = buffer.element_iter("normal").unwrap().collect();
   for i in 0..normals.len() { relative_eq!(normals[i], normals_expected[i]); }
 }
 
@@ -214,9 +232,9 @@ pub fn test_separate_buffers() {
     .build()
     .unwrap();
 
-  let vertices: Vec<f64> = buffer.elements("vertex").unwrap().collect();
-  let uvs: Vec<f64> = buffer.elements("uv").unwrap().collect();
-  let normals: Vec<f64> = buffer.elements("normal").unwrap().collect();
+  let vertices: Vec<f64> = buffer.element_iter("vertex").unwrap().collect();
+  let uvs: Vec<f64> = buffer.element_iter("uv").unwrap().collect();
+  let normals: Vec<f64> = buffer.element_iter("normal").unwrap().collect();
 
   for i in 0..vertices.len() { relative_eq!(vertices[i], vertices_data[i]); }
   for i in 0..uvs.len() { relative_eq!(uvs[i], uvs_data[i]); }

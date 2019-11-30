@@ -1,9 +1,9 @@
 use data::id::Id;
 
 pub struct ShaderFile {
-  id : Id,
-  vertex_shader : String,
-  fragment_shader : String,
+  pub id : Id,
+  pub vertex_shader : String,
+  pub fragment_shader : String,
 }
 
 impl ShaderFile {

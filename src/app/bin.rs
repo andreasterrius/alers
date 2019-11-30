@@ -33,9 +33,10 @@ pub fn main() {
     transform : Transform::position(Vector3::from_value(1.0)),
   };
 
-=
   // Initialize renderer context
   let mut context = renderer::opengl::Context::new();
+  context.shader(&pile.lambert_shader).unwrap();
+  context.static_mesh(&pile.cube_mesh).unwrap();
 
   // Initialize the windowing system
   while !window.is_closing() {
