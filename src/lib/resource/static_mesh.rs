@@ -4,7 +4,7 @@ use data::id::{Id};
 #[derive(Debug)]
 pub struct StaticMesh {
   pub id : Id,
-  pub vertices : Buffer<f64>,
+  pub vertices : Buffer<f32>,
   pub indices: Option<Buffer<i32>>,
 }
 
