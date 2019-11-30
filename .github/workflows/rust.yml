@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Setup
-      run: sudo apt-get install libasound2-dev libglfw3-dev libxinerama-dev
+      run: sudo apt-get install libasound2-dev libglfw3-dev libxinerama-dev libxcursor-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
