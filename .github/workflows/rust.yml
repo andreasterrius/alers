@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Setup
-      run: sudo apt-get install libasound2-dev
+      run: sudo apt-get install libasound2-dev libglfw-dev
     - name: Build
       run: cargo build --verbose
     - name: Run tests
