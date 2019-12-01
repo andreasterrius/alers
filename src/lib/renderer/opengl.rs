@@ -13,6 +13,7 @@ use data::buffer::Buffer;
 use std::os::raw::c_void;
 use std::convert::TryInto;
 use std::ffi::CString;
+use camera::Camera;
 
 pub struct Context {
   static_meshes: HashMap<Id, StaticMeshDrawInfo>,
@@ -100,7 +101,7 @@ enum Renderable {
 pub trait RenderTasks {
   fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>);
 
-  fn render<Camera : camera::Camera>(&mut self, context: &Context, camera : &mut Camera);
+  fn render(&mut self, context: &Context, camera : &mut Box<Camera>);
 }
 
 pub struct SimpleRenderTasks {
@@ -122,7 +123,7 @@ impl RenderTasks for SimpleRenderTasks {
     });
   }
 
-  fn render<Camera : camera::Camera>(&mut self, context: &Context, camera: &mut Camera) {
+  fn render(&mut self, context: &Context, camera: &mut Box<Camera>) {
 
     // Clear screen
     unsafe {

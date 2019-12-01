@@ -1,21 +1,28 @@
-use alers::renderer::opengl::{RenderTasks, Context};
-use alers::resource;
 use std::fs;
-use alers::math::transform::Transform;
+
+use cgmath::Vector3;
+
+use alers::{camera, resource};
+use alers::camera::Camera;
+use alers::camera::fly_camera::FlyCamera;
+use alers::data::display_info::DisplayInfo;
 use alers::data::id::Identifiable;
+use alers::math::transform::Transform;
+use alers::renderer::opengl::{Context, RenderTasks};
+use alers::resource::ResourceEventObserver;
+use alers::resource::shader::ShaderFile;
+use alers::resource::static_mesh::StaticMesh;
 
 pub struct Game {
-
+  camera: Box<dyn Camera>,
+  mesh: StaticMesh,
+  lambert: ShaderFile,
+  transform : Transform,
 }
 
 impl Game {
-  pub fn new() -> Game {
-    Game {
 
-    }
-  }
-
-  pub fn load(&mut self, context : &mut Context) {
+  pub fn load(context : &mut Context) -> Game {
     // Load meshes
     let mut mesh = resource::fbx_convert::to_static_meshes(
       resource::fbx::load("resources/test/geom/triangle.fbx").unwrap()).remove(0);
@@ -28,13 +35,25 @@ impl Game {
 
     context.static_mesh(&mesh);
     context.shader(&lambert);
+
+    let camera = camera::fly_camera::FlyCamera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
+      Vector3::unit_z(), 90.0f32, 800f32 / 600f32);
+
+    Game {
+      camera: Box::new(camera),
+      mesh,
+      lambert,
+      transform: Transform::new()
+    }
   }
 
-  pub fn tick(&mut self) {
-
-  }
+  pub fn tick(&mut self) {}
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
+    render_tasks.queue_static_mesh(&self.lambert, &self.mesh, self.transform.calculate_matrix())
+  }
 
+  pub fn camera(&mut self) -> &mut Box<dyn Camera> {
+    &mut self.camera
   }
 }

@@ -11,6 +11,7 @@ use cgmath::prelude::*;
 use alers::*;
 use alers::math::transform::Transform;
 use alers::renderer::opengl::{RenderTasks, SimpleRenderTasks};
+use std::borrow::BorrowMut;
 
 mod example;
 mod game;
@@ -25,19 +26,17 @@ pub fn main() {
 
   let mut context = renderer::opengl::Context::new();
 
-  // Create camera here
-  let mut camera = camera::fly_camera::FlyCamera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
-    Vector3::unit_z(), 90.0f32, 800f32 / 600f32);
-
-  let mut game = game::Game::new();
-  game.load(&mut context);
+  let mut game = game::Game::load(&mut context);
 
   // Main Game Loop
   while !window.is_closing() {
 
+    game.tick();
+
     // Initialize render queue & assign render tasks
     let mut render_tasks = SimpleRenderTasks::new();
-    render_tasks.render(&context, &mut camera);
+    game.render(&mut render_tasks);
+    render_tasks.render(&context, game.camera().borrow_mut());
 
     window.swap_buffers();
     engine.poll_inputs();
