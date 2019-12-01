@@ -31,7 +31,7 @@ pub fn main() {
   let mut cube = Object {
     mesh: &pile.cube_mesh,
     shader: &pile.lambert_shader,
-    transform : Transform::position(Vector3::from_value(1.0)),
+    transform : Transform::position(Vector3::from_value(0.0)),
   };
 
   // Initialize renderer context
@@ -39,13 +39,17 @@ pub fn main() {
   context.shader(&pile.lambert_shader).unwrap();
   context.static_mesh(&pile.cube_mesh).unwrap();
 
-  // Initialize the windowing system
+  // Create camera here
+  let mut camera = camera::fly_camera::FlyCamera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
+    Vector3::unit_z(), 90.0f32, 800f32/600f32);
+
+  // Main Game Loop
   while !window.is_closing() {
 
     // Initialize render queue & assign render tasks
     let mut render_tasks = SimpleRenderTasks::new();
-    render_tasks.queue_static_mesh(cube.shader, cube.mesh, cube.transform.get_matrix());
-    render_tasks.render(&context);
+    render_tasks.queue_static_mesh(cube.shader, cube.mesh, cube.transform.calculate_matrix());
+    render_tasks.render(&context, &mut camera);
 
     window.swap_buffers();
     engine.poll_inputs();

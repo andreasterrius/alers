@@ -28,6 +28,7 @@ pub mod engine;
 pub mod window;
 pub mod renderer;
 pub mod data;
+pub mod camera;
 
 use self::glfw::{Context, Key, Action};
 use cgmath::prelude::*;

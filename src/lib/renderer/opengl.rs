@@ -1,8 +1,8 @@
-use gl;
+use ::{gl, camera};
 use gl::types::{GLfloat, GLsizeiptr, GLint, GLchar};
 use std::{ptr, mem};
 use data::id::Id;
-use cgmath::{Matrix4};
+use cgmath::{Matrix4, Matrix};
 use std::collections::HashMap;
 use std::borrow::Borrow;
 use std::collections::hash_map::RandomState;
@@ -100,7 +100,7 @@ enum Renderable {
 pub trait RenderTasks {
   fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>);
 
-  fn render(&mut self, context: &Context);
+  fn render<Camera : camera::Camera>(&mut self, context: &Context, camera : &mut Camera);
 }
 
 pub struct SimpleRenderTasks {
@@ -122,7 +122,9 @@ impl RenderTasks for SimpleRenderTasks {
     });
   }
 
-  fn render(&mut self, context: &Context) {
+  fn render<Camera : camera::Camera>(&mut self, context: &Context, camera: &mut Camera) {
+
+    // Clear screen
     unsafe {
       gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);
       gl::Clear(gl::COLOR_BUFFER_BIT);
@@ -135,8 +137,18 @@ impl RenderTasks for SimpleRenderTasks {
           let shader_draw_info = match context.get_shader(shader_id) { None => continue, Some(x) => x, };
 
           unsafe {
+            // Bind shader
             gl::UseProgram(shader_draw_info.shader);
+
+            // Pass uniforms
+            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("model").unwrap().as_ptr()), 1, gl::FALSE, transform.as_ptr());
+            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("view").unwrap().as_ptr() as *const i8), 1, gl::FALSE, camera.calculate_view().as_ptr());
+            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("projection").unwrap().as_ptr() as *const i8), 1, gl::FALSE, camera.calculate_projection().as_ptr());
+
+            // Bind Array Buffer
             gl::BindVertexArray(mesh_draw_info.vao);
+
+            // Draw according to EBO
             match mesh_draw_info.ebo {
               None => gl::DrawArrays(mesh_draw_info.draw_size, 0, mesh_draw_info.draw_size as i32),
               Some(ebo) => gl::DrawElements(gl::TRIANGLES, mesh_draw_info.draw_size as i32, gl::UNSIGNED_INT, ptr::null()),
@@ -283,3 +295,6 @@ unsafe fn create_shader(vertex_shader_source: &str,
 
   Ok(shader_program)
 }
+
+
+
