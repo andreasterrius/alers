@@ -1,8 +1,8 @@
 use data::buffer::SeparateBufferBuilder;
-use resource::static_mesh::StaticMesh;
 use data::id::Id;
+use resource::static_mesh::StaticMesh;
 
-pub fn to_simple_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMesh> {
+pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMesh> {
 
   //Get root node
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();
@@ -32,15 +32,14 @@ pub fn to_simple_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMe
     let mut ibuffer_builder = SeparateBufferBuilder::new();
     if let Some(element_node) = element_node {
       let mut indices = element_node.attributes().iter().nth(0).unwrap().get_arr_i32().unwrap().to_vec();
-      for i in (2..indices.len()).step_by(3) { indices[i] = !indices[i]}
+      for i in (2..indices.len()).step_by(3) { indices[i] = !indices[i] }
       ibuffer_builder = ibuffer_builder.info("index", 3, indices);
     }
-    
-    meshes.push(StaticMesh {
-      id: Id::new(),
-      vertices: vbuffer_builder.build().unwrap(),
-      indices: ibuffer_builder.build().ok()
-    })
+
+    meshes.push(StaticMesh::new(
+      vbuffer_builder.build().unwrap(),
+      ibuffer_builder.build().ok())
+    )
   }
 
   meshes
@@ -53,6 +52,6 @@ pub fn fbx_to_buffers_should_properly_parse() {
   let mut fbx = crate::resource::fbx::load("resources/test/geom/basic_blender.fbx")
     .expect("Fail to load rigged fbx");
 
-  let meshes = to_simple_static_meshes(fbx);
+  let meshes = to_static_meshes(fbx);
   println!("{:#?}", meshes);
 }

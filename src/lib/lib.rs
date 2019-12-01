@@ -8,7 +8,6 @@ pub extern crate image;
 #[macro_use]
 pub extern crate log as lg;
 pub extern crate rand;
-pub extern crate rhai;
 pub extern crate rodio;
 pub extern crate rusttype;
 pub extern crate simplelog;
@@ -24,7 +23,6 @@ use std::time::Instant;
 use cgmath::{Matrix4, Vector2, Vector3};
 use cgmath::prelude::*;
 
-
 use self::glfw::{Action, Context, Key};
 
 #[macro_use]
@@ -37,5 +35,3 @@ pub mod window;
 pub mod renderer;
 pub mod data;
 pub mod camera;
-pub mod script;
-

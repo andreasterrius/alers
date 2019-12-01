@@ -2,7 +2,7 @@ use cgmath::{Vector3, Matrix, Matrix4, Quaternion, One};
 use cgmath::prelude::*;
 use rusttype::vector;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Transform {
   pub position: Vector3<f32>,
   pub lcl_rotation : Quaternion<f32>,

@@ -1,23 +1,18 @@
 use data::buffer::Buffer;
-use data::id::{Id};
-
+use data::id::Id;
 #[derive(Debug)]
 pub struct StaticMesh {
-  pub id : Id,
-  pub vertices : Buffer<f32>,
+  pub id: Id,
+  pub vertices: Buffer<f32>,
   pub indices: Option<Buffer<i32>>,
 }
 
 impl StaticMesh {
-}
-
-pub struct SimpleStaticMeshBuilder {
-}
-
-impl SimpleStaticMeshBuilder {
-  pub fn new () -> SimpleStaticMeshBuilder {
-    SimpleStaticMeshBuilder {
-
+  pub fn new(vertices : Buffer<f32>, indices : Option<Buffer<i32>>) -> StaticMesh {
+    StaticMesh {
+      id: Id::new(),
+      vertices,
+      indices,
     }
   }
 }
