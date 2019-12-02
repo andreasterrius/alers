@@ -14,6 +14,8 @@ pub extern crate simplelog;
 pub extern crate snowflake;
 pub extern crate time;
 pub extern crate unicode_normalization;
+#[macro_use]
+pub extern crate bitflags;
 
 use std::path::Path;
 use std::str;
@@ -35,3 +37,4 @@ pub mod window;
 pub mod renderer;
 pub mod data;
 pub mod camera;
+pub mod input;

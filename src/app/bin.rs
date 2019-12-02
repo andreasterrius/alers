@@ -25,7 +25,6 @@ pub fn main() {
   let mut window = engine.windows().new(800, 600);
 
   let mut context = renderer::opengl::Context::new();
-
   let mut game = game::Game::load(&mut context);
 
   // Main Game Loop
@@ -42,6 +41,6 @@ pub fn main() {
     engine.poll_inputs();
 
     // Add handle events on windows to prevent crash
-    window.handle_events();
+    game.input(window.input());
   }
 }

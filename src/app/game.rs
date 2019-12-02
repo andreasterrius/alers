@@ -12,6 +12,7 @@ use alers::renderer::opengl::{Context, RenderTasks};
 use alers::resource::ResourceEventObserver;
 use alers::resource::shader::ShaderFile;
 use alers::resource::static_mesh::StaticMesh;
+use alers::input::Input;
 
 pub struct Game {
   camera: Box<dyn Camera>,
@@ -51,6 +52,10 @@ impl Game {
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
     render_tasks.queue_static_mesh(&self.lambert, &self.mesh, self.transform.calculate_matrix())
+  }
+
+  pub fn input(&mut self, input: Vec<Input>){
+
   }
 
   pub fn camera(&mut self) -> &mut Box<dyn Camera> {

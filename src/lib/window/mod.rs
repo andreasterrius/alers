@@ -1,5 +1,9 @@
 use glfw::{Context, Key, Action, WindowEvent};
 use std::sync::mpsc::Receiver;
+use input::Input;
+use window::input_translator::{translate_key, translate_scancode, translate_modifier, translate_action};
+
+pub mod input_translator;
 
 pub struct WindowCreator <'a> {
     glfw : &'a mut glfw::Glfw
@@ -39,14 +43,17 @@ impl <'a> WindowCreator<'a> {
 
         Window {
             glfw_window,
-            glfw_events
+            glfw_events,
+            mouse_position : None,
         }
     }
 }
 
 pub struct Window {
     glfw_window: glfw::Window,
-    glfw_events: Receiver<(f64, WindowEvent)>
+    glfw_events: Receiver<(f64, WindowEvent)>,
+
+    mouse_position : Option<(f64, f64)>
 }
 
 impl Window {
@@ -56,14 +63,32 @@ impl Window {
 
     pub fn swap_buffers(&mut self) { self.glfw_window.swap_buffers(); }
 
-    pub fn handle_events(&mut self) {
+    pub fn input(&mut self) -> Vec<Input> {
+        let mut inputs = vec!();
         for (_, event) in glfw::flush_messages(&self.glfw_events) {
             match event {
                 glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
                     self.glfw_window.set_should_close(true)
                 },
-                _ => {},
+                glfw::WindowEvent::Key(key, scancode, action, modifier) => {
+                    let input = Input::Key(translate_key(key), translate_scancode(scancode),
+                        translate_action(action), translate_modifier(modifier));
+                    inputs.push(input);
+                }
+                glfw::WindowEvent::CursorPos(x, y) => {
+                    inputs.push(match self.mouse_position {
+                        None => {
+                            Input::MouseMotion(0.0f32, 0.0f32)
+                        },
+                        Some(mouse_position) => {
+                            Input::MouseMotion((x - mouse_position.0) as f32,
+                                (y - mouse_position.1) as f32,)
+                        },
+                    })
+                }
+                _ => {}
             }
         }
+        inputs
     }
 }
