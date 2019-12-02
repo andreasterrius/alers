@@ -3,7 +3,6 @@ use std::fs;
 use cgmath::Vector3;
 
 use alers::{camera, resource};
-use alers::camera::Camera;
 use alers::camera::fly_camera::FlyCamera;
 use alers::data::display_info::DisplayInfo;
 use alers::data::id::Identifiable;
@@ -13,9 +12,10 @@ use alers::resource::ResourceEventObserver;
 use alers::resource::shader::ShaderFile;
 use alers::resource::static_mesh::StaticMesh;
 use alers::input::Input;
+use alers::camera::CameraRenderInfo;
 
 pub struct Game {
-  camera: Box<dyn Camera>,
+  camera: FlyCamera,
   mesh: StaticMesh,
   lambert: ShaderFile,
   transform : Transform,
@@ -41,7 +41,7 @@ impl Game {
       Vector3::unit_z(), 90.0f32, 800f32 / 600f32);
 
     Game {
-      camera: Box::new(camera),
+      camera,
       mesh,
       lambert,
       transform: Transform::new()
@@ -58,7 +58,7 @@ impl Game {
 
   }
 
-  pub fn camera(&mut self) -> &mut Box<dyn Camera> {
-    &mut self.camera
+  pub fn camera_render_info(&mut self) -> CameraRenderInfo {
+    self.camera.camera_render_info()
   }
 }

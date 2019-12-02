@@ -1,6 +1,6 @@
 use cgmath::{Matrix4, Vector3, Rotation, Deg, Quaternion};
 use math::transform::Transform;
-use camera::Camera;
+use camera::{CameraRenderInfo};
 
 pub struct FlyCamera {
   transform: Transform,
@@ -30,15 +30,6 @@ impl FlyCamera {
     return self.transform.lcl_rotation.rotate_vector(Vector3::unit_x());
   }
 
-  pub fn recalculate_projection_mat(&mut self) {
-    match self.projection_mat {
-      None => self.projection_mat = Some(cgmath::perspective(Deg(self.fov), self.aspect_ratio, 0.1f32, 100.0f32)),
-      Some(_) => ()
-    }
-  }
-}
-
-impl Camera for FlyCamera {
   fn calculate_view(&mut self) -> Matrix4<f32> {
     self.transform.calculate_matrix()
   }
@@ -47,4 +38,19 @@ impl Camera for FlyCamera {
     self.recalculate_projection_mat();
     self.projection_mat.unwrap()
   }
+
+  pub fn recalculate_projection_mat(&mut self) {
+    match self.projection_mat {
+      None => self.projection_mat = Some(cgmath::perspective(Deg(self.fov), self.aspect_ratio, 0.1f32, 100.0f32)),
+      Some(_) => ()
+    }
+  }
+
+  pub fn camera_render_info(&mut self) -> CameraRenderInfo {
+    CameraRenderInfo {
+      view: self.calculate_view(),
+      projection: self.calculate_projection()
+    }
+  }
 }
+

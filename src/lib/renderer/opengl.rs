@@ -13,7 +13,7 @@ use data::buffer::Buffer;
 use std::os::raw::c_void;
 use std::convert::TryInto;
 use std::ffi::CString;
-use camera::Camera;
+use camera::CameraRenderInfo;
 
 pub struct Context {
   static_meshes: HashMap<Id, StaticMeshDrawInfo>,
@@ -101,7 +101,7 @@ enum Renderable {
 pub trait RenderTasks {
   fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>);
 
-  fn render(&mut self, context: &Context, camera : &mut Box<Camera>);
+  fn render(&mut self, context: &Context, camera : &mut CameraRenderInfo);
 }
 
 pub struct SimpleRenderTasks {
@@ -123,7 +123,7 @@ impl RenderTasks for SimpleRenderTasks {
     });
   }
 
-  fn render(&mut self, context: &Context, camera: &mut Box<Camera>) {
+  fn render(&mut self, context: &Context, camera: &mut CameraRenderInfo) {
 
     // Clear screen
     unsafe {
@@ -143,8 +143,8 @@ impl RenderTasks for SimpleRenderTasks {
 
             // Pass uniforms
             gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("model").unwrap().as_ptr()), 1, gl::FALSE, transform.as_ptr());
-            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("view").unwrap().as_ptr() as *const i8), 1, gl::FALSE, camera.calculate_view().as_ptr());
-            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("projection").unwrap().as_ptr() as *const i8), 1, gl::FALSE, camera.calculate_projection().as_ptr());
+            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("view").unwrap().as_ptr() as *const i8), 1, gl::FALSE, camera.view.as_ptr());
+            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("projection").unwrap().as_ptr() as *const i8), 1, gl::FALSE, camera.projection.as_ptr());
 
             // Bind Array Buffer
             gl::BindVertexArray(mesh_draw_info.vao);
