@@ -49,6 +49,11 @@ impl Transform {
     }
   }
 
+  pub fn translate(&mut self, unit : Vector3<f32>) {
+    self.position += unit;
+    self.matrix = None;
+  }
+
   pub fn calculate_matrix(&mut self) -> Matrix4<f32> {
     self.recalculate();
     self.matrix.unwrap()

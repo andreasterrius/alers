@@ -22,6 +22,10 @@ impl FlyCamera {
     }
   }
 
+  pub fn translate(&mut self, translation : Vector3<f32>) {
+    self.transform.translate(translation);
+  }
+
   pub fn calculate_forward_dir(&self) -> Vector3<f32> {
     return self.transform.lcl_rotation.rotate_vector(Vector3::unit_z());
   }
