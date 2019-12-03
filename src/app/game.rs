@@ -26,7 +26,7 @@ impl Game {
   pub fn load(context : &mut Context) -> Game {
     // Load meshes
     let mut mesh = resource::fbx_convert::to_static_meshes(
-      resource::fbx::load("resources/test/geom/triangle.fbx").unwrap()).remove(0);
+      resource::fbx::load("resources/test/triangle.fbx").unwrap()).remove(0);
 
     // Load shaders
     let mut lambert = resource::shader::ShaderFile::new(

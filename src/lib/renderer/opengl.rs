@@ -1,19 +1,21 @@
-use ::{gl, camera};
-use gl::types::{GLfloat, GLsizeiptr, GLint, GLchar};
-use std::{ptr, mem};
-use data::id::Id;
-use cgmath::{Matrix4, Matrix};
-use std::collections::HashMap;
+use std::{mem, ptr};
 use std::borrow::Borrow;
 use std::collections::hash_map::RandomState;
-use resource::static_mesh::StaticMesh;
-use resource::shader::ShaderFile;
-use data::id::Identifiable;
-use data::buffer::Buffer;
-use std::os::raw::c_void;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::ffi::CString;
+use std::os::raw::c_void;
+
+use cgmath::{Matrix, Matrix4, Vector3, Vector4};
+use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
+
+use ::{camera, gl};
 use camera::CameraRenderInfo;
+use data::buffer::Buffer;
+use data::id::Id;
+use data::id::Identifiable;
+use resource::shader::ShaderFile;
+use resource::static_mesh::StaticMesh;
 
 pub struct Context {
   static_meshes: HashMap<Id, StaticMeshDrawInfo>,
@@ -67,7 +69,7 @@ pub struct StaticMeshDrawInfo {
 
 impl StaticMeshDrawInfo {
   pub fn new(mesh: &StaticMesh) -> Result<StaticMeshDrawInfo, StaticMeshError> {
-    let (vao, vbo, ebo, draw_size ) = unsafe { create_buffer(&mesh.vertices, &mesh.indices)? };
+    let (vao, vbo, ebo, draw_size) = unsafe { create_buffer(&mesh.vertices, &mesh.indices)? };
     Ok(StaticMeshDrawInfo { vao, vbo, ebo, draw_size })
   }
 }
@@ -95,13 +97,13 @@ impl ShaderDrawInfo {
 }
 
 enum Renderable {
-  StaticMesh { shader_id: Id, mesh_id: Id, transform: Matrix4<f32> }
+  StaticMesh { shader_id: Id, mesh_id: Id, transform: Matrix4<f32>, shader_variables: Vec<ShaderVariable> }
 }
 
 pub trait RenderTasks {
   fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>);
 
-  fn render(&mut self, context: &Context, camera : &mut CameraRenderInfo);
+  fn render(&mut self, context: &Context, camera: &mut CameraRenderInfo);
 }
 
 pub struct SimpleRenderTasks {
@@ -119,7 +121,8 @@ impl RenderTasks for SimpleRenderTasks {
     self.renderables.push(Renderable::StaticMesh {
       shader_id: shader.uid(),
       mesh_id: mesh.uid(),
-      transform
+      transform,
+      shader_variables: vec![]
     });
   }
 
@@ -133,13 +136,22 @@ impl RenderTasks for SimpleRenderTasks {
 
     for renderable in &self.renderables {
       match renderable {
-        Renderable::StaticMesh { shader_id, mesh_id, transform } => {
+        Renderable::StaticMesh { shader_id, mesh_id, transform, shader_variables } => {
           let mesh_draw_info = match context.get_static_mesh(mesh_id) { None => continue, Some(x) => x };
           let shader_draw_info = match context.get_shader(shader_id) { None => continue, Some(x) => x, };
 
           unsafe {
             // Bind shader
             gl::UseProgram(shader_draw_info.shader);
+
+            // Pass shader specific uniforms
+            for shader_variable in shader_variables {
+              let location = gl::GetUniformLocation(shader_draw_info.shader, CString::new(shader_variable.name).unwrap().as_ptr() as *const i8);
+              match shader_variable.variable_type {
+                ShaderVariableType::F32_3(vec) => gl::Uniform3f(location, vec.x, vec.y, vec.z);
+                ShaderVariableType::F32_4(vec) => gl::Uniform4f(location, vec.x, vec.y, vec.z, vec.w);
+              }
+            }
 
             // Pass uniforms
             gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("model").unwrap().as_ptr()), 1, gl::FALSE, transform.as_ptr());
@@ -159,7 +171,25 @@ impl RenderTasks for SimpleRenderTasks {
       }
     }
   }
+}
 
+struct ShaderVariable {
+  pub name: String,
+  pub variable_type: ShaderVariableType,
+}
+
+impl ShaderVariable {
+  pub fn new(name: String, variable_type: ShaderVariableType) -> ShaderVariable {
+    ShaderVariable {
+      name,
+      variable_type
+    }
+  }
+}
+
+pub enum ShaderVariableType {
+  F32_3(Vector3<f32>),
+  F32_4(Vector4<f32>),
 }
 
 #[derive(Debug)]
