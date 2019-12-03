@@ -1,4 +1,7 @@
 use window::WindowCreator;
+use std::time::Instant;
+
+pub mod tick;
 
 pub struct Engine {
   glfw: glfw::Glfw

@@ -48,7 +48,9 @@ impl Game {
     }
   }
 
-  pub fn tick(&mut self) {}
+  pub fn tick(&mut self, delta_time : f32) {
+
+  }
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
     render_tasks.queue_static_mesh(&self.lambert, &self.mesh, self.transform.calculate_matrix())
