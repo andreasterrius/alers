@@ -146,10 +146,10 @@ impl RenderTasks for SimpleRenderTasks {
 
             // Pass shader specific uniforms
             for shader_variable in shader_variables {
-              let location = gl::GetUniformLocation(shader_draw_info.shader, CString::new(shader_variable.name).unwrap().as_ptr() as *const i8);
+              let location = gl::GetUniformLocation(shader_draw_info.shader, CString::new(shader_variable.name.clone()).unwrap().as_ptr() as *const i8);
               match shader_variable.variable_type {
-                ShaderVariableType::F32_3(vec) => gl::Uniform3f(location, vec.x, vec.y, vec.z);
-                ShaderVariableType::F32_4(vec) => gl::Uniform4f(location, vec.x, vec.y, vec.z, vec.w);
+                ShaderVariableType::F32_3(vec) => gl::Uniform3f(location, vec.x, vec.y, vec.z),
+                ShaderVariableType::F32_4(vec) => gl::Uniform4f(location, vec.x, vec.y, vec.z, vec.w),
               }
             }
 
