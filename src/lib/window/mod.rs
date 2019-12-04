@@ -2,6 +2,7 @@ use glfw::{Context, Key, Action, WindowEvent};
 use std::sync::mpsc::Receiver;
 use input::Input;
 use window::input_translator::{translate_key, translate_scancode, translate_modifier, translate_action};
+use data::display_info::DisplayInfo;
 
 pub mod input_translator;
 
@@ -17,7 +18,7 @@ impl <'a> WindowCreator<'a> {
         }
     }
 
-    pub fn new(mut self, scr_width : u32, scr_height : u32) -> Window {
+    pub fn new(mut self, display_info : DisplayInfo) -> Window {
 
         self.glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
         self.glfw.window_hint(glfw::WindowHint::OpenGlProfile(
@@ -27,14 +28,15 @@ impl <'a> WindowCreator<'a> {
         // glfw window creation
         // --------------------
         let (mut glfw_window, glfw_events) = self.glfw.create_window(
-            scr_width,
-            scr_height,
+            display_info.width,
+            display_info.height,
             "LearnOpenGL",
             glfw::WindowMode::Windowed,
         ).expect("Failed to create GLFW window");
 
         glfw_window.make_current();
         glfw_window.set_key_polling(true);
+        glfw_window.set_cursor_pos_polling(true);
         glfw_window.set_framebuffer_size_polling(true);
 
         // gl: load all OpenGL function pointers
@@ -44,6 +46,7 @@ impl <'a> WindowCreator<'a> {
         Window {
             glfw_window,
             glfw_events,
+            display_info,
             mouse_position : None,
         }
     }
@@ -52,6 +55,8 @@ impl <'a> WindowCreator<'a> {
 pub struct Window {
     glfw_window: glfw::Window,
     glfw_events: Receiver<(f64, WindowEvent)>,
+
+    display_info : DisplayInfo,
 
     mouse_position : Option<(f64, f64)>
 }
@@ -78,11 +83,15 @@ impl Window {
                 glfw::WindowEvent::CursorPos(x, y) => {
                     inputs.push(match self.mouse_position {
                         None => {
+                            self.mouse_position = Some((x, y));
                             Input::MouseMotion(0.0f32, 0.0f32)
                         },
                         Some(mouse_position) => {
-                            Input::MouseMotion((x - mouse_position.0) as f32,
-                                (y - mouse_position.1) as f32,)
+                            let result = Input::MouseMotion(
+                                (x - mouse_position.0) as f32 / self.display_info.width as f32,
+                                (y - mouse_position.1) as f32 / self.display_info.height as f32,);
+                            self.mouse_position = Some((x, y));
+                            result
                         },
                     })
                 }

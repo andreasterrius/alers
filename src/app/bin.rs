@@ -13,6 +13,7 @@ use alers::math::transform::Transform;
 use alers::renderer::opengl::{RenderTasks, SimpleRenderTasks};
 use std::borrow::BorrowMut;
 use alers::engine::tick::FixedStep;
+use alers::data::display_info::DisplayInfo;
 
 mod example;
 mod game;
@@ -23,7 +24,7 @@ pub fn main() {
 
   // Initialize the engine
   let mut engine = engine::Engine::new();
-  let mut window = engine.windows().new(800, 600);
+  let mut window = engine.windows().new(DisplayInfo::new(800, 600));
 
   let mut context = renderer::opengl::Context::new();
   let mut game = game::Game::load(&mut context);

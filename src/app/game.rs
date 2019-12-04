@@ -1,10 +1,10 @@
 use std::fs;
 
-use cgmath::Vector3;
+use cgmath::{Vector3, Vector2};
 
 use alers::{camera, resource};
 use alers::camera::CameraRenderInfo;
-use alers::camera::fly_camera::FlyCamera;
+use alers::camera::fly_camera::Camera;
 use alers::data::display_info::DisplayInfo;
 use alers::data::id::Identifiable;
 use alers::input::Input;
@@ -18,7 +18,7 @@ use alers::resource::static_mesh::StaticMesh;
 use cgmath::Zero;
 
 pub struct Game {
-  camera: FlyCamera,
+  camera: Camera,
   mesh: StaticMesh,
   lambert: ShaderFile,
   transform: Transform,
@@ -26,6 +26,7 @@ pub struct Game {
   // Camera
   camera_input: CameraInput,
   camera_speed: f32,
+  camera_rotate_speed : f32,
 }
 
 impl Game {
@@ -43,7 +44,7 @@ impl Game {
     context.static_mesh(&mesh);
     context.shader(&lambert);
 
-    let camera = camera::fly_camera::FlyCamera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
+    let camera = camera::fly_camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
       Vector3::unit_z(), 90.0f32, 800f32 / 600f32);
 
     Game {
@@ -51,8 +52,9 @@ impl Game {
       mesh,
       lambert,
       transform: Transform::new(),
-      camera_input: CameraInput { should_move: Vector3::zero() },
-      camera_speed: 100.0
+      camera_input: CameraInput { should_move: Vector3::zero(), should_rotate: Vector2::zero() },
+      camera_speed: 100.0,
+      camera_rotate_speed: 10000.0,
     }
   }
 
@@ -65,6 +67,8 @@ impl Game {
   }
 
   pub fn input(&mut self, inputs: Vec<Input>) {
+    //reset rotation every frame
+    self.camera_input.should_rotate = Vector2::zero();
     for input in inputs {
       self.camera_input(&input);
     }
@@ -76,25 +80,33 @@ impl Game {
 
   fn camera_input(&mut self, input: &Input) {
     match input {
+
+      // Handle movement
       Input::Key(Left, _, Press, _) => self.camera_input.should_move.x = 1.0f32,
       Input::Key(Right, _, Press, _) => self.camera_input.should_move.x = -1.0f32,
-      Input::Key(Up, _, Press, _) => self.camera_input.should_move.y = 1.0f32,
-      Input::Key(Down, _, Press, _) => self.camera_input.should_move.y = -1.0f32,
+      Input::Key(Up, _, Press, _) => self.camera_input.should_move.z = 1.0f32,
+      Input::Key(Down, _, Press, _) => self.camera_input.should_move.z = -1.0f32,
       Input::Key(Left, _, Release, _) => {self.camera_input.should_move.x = 0.0f32},
       Input::Key(Right, _, Release, _) => self.camera_input.should_move.x = 0.0f32,
-      Input::Key(Up, _, Release, _ ) => self.camera_input.should_move.y = 0.0f32,
-      Input::Key(Down, _, Release, _) => self.camera_input.should_move.y = 0.0f32,
+      Input::Key(Up, _, Release, _ ) => self.camera_input.should_move.z = 0.0f32,
+      Input::Key(Down, _, Release, _) => self.camera_input.should_move.z = 0.0f32,
+
+      Input::MouseMotion(x, y) => {
+        self.camera_input.should_rotate.x += *x;
+        self.camera_input.should_rotate.y += *y;
+      }
+
       _ => {}
     }
   }
 
   fn camera_transform(&mut self, delta_time : f32) {
     self.camera.translate(self.camera_input.should_move * self.camera_speed * delta_time);
-    //println!("{:?}", self.camera_input.should_move);
+    self.camera.yaw_and_pitch(-self.camera_input.should_rotate * self.camera_rotate_speed * delta_time);
   }
-
 }
 
 pub struct CameraInput {
   pub should_move: Vector3<f32>,
+  pub should_rotate : Vector2<f32>,
 }
