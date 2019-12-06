@@ -11,7 +11,7 @@ use alers::input::Input;
 use alers::input::Key::{Down, Left, Right, Up};
 use alers::input::Action::{Release, Press, Repeat};
 use alers::math::transform::Transform;
-use alers::renderer::opengl::{Context, RenderTasks};
+use alers::renderer::opengl::{Context, RenderTasks, ShaderVariable, ShaderVariableType};
 use alers::resource::ResourceEventObserver;
 use alers::resource::shader::ShaderFile;
 use alers::resource::static_mesh::StaticMesh;
@@ -31,6 +31,7 @@ pub struct Game {
 
 impl Game {
   pub fn load(context: &mut Context) -> Game {
+
     // Load meshes
     let mut mesh = resource::fbx_convert::to_static_meshes(
       resource::fbx::load("resources/test/cube.fbx").unwrap()).unwrap().remove(0);
@@ -53,8 +54,8 @@ impl Game {
       lambert,
       transform: Transform::new(),
       camera_input: CameraInput { should_move: Vector3::zero(), should_rotate: Vector2::zero() },
-      camera_speed: 100.0,
-      camera_rotate_speed: 10000.0,
+      camera_speed: 10.0,
+      camera_rotate_speed: 1000.0,
     }
   }
 
@@ -63,7 +64,12 @@ impl Game {
   }
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
-    render_tasks.queue_static_mesh(&self.lambert, &self.mesh, self.transform.calculate_matrix())
+
+    // Let there be light
+    let light_position = ShaderVariable::new("light_position".to_owned(), ShaderVariableType::F32_3(Vector3::new(5.0, 5.0, 5.0)));
+    let light_color = ShaderVariable::new("light_color".to_owned(), ShaderVariableType::F32_3(Vector3::new(0.0, 0.0, 1.0)));
+
+    render_tasks.queue_static_mesh(&self.lambert, &self.mesh, self.transform.calculate_matrix(), vec![light_position, light_color]);
   }
 
   pub fn input(&mut self, inputs: Vec<Input>) {

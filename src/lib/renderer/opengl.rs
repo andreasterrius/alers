@@ -101,7 +101,7 @@ enum Renderable {
 }
 
 pub trait RenderTasks {
-  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>);
+  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>, shader_vars: Vec<ShaderVariable>);
 
   fn render(&mut self, context: &Context, camera: &mut CameraRenderInfo);
 }
@@ -117,7 +117,7 @@ impl SimpleRenderTasks {
 }
 
 impl RenderTasks for SimpleRenderTasks {
-  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>) {
+  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>, shader_vars : Vec<ShaderVariable>) {
     self.renderables.push(Renderable::StaticMesh {
       shader_id: shader.uid(),
       mesh_id: mesh.uid(),
@@ -173,7 +173,7 @@ impl RenderTasks for SimpleRenderTasks {
   }
 }
 
-struct ShaderVariable {
+pub struct ShaderVariable {
   pub name: String,
   pub variable_type: ShaderVariableType,
 }

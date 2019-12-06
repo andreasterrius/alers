@@ -21,18 +21,18 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<StaticMe
     vbuffer_builder = vbuffer_builder.info("vertex", 3, position.iter().map(|x| *x as f32).collect::<Vec<f32>>());
 
     // Get uv coords
-    let uv_node = object.children_by_name("LayerElementUV").nth(0);
-    if let Some(uv_node) = uv_node {
-      let uvs = uv_node.children_by_name("UV").nth(0).unwrap().attributes().iter().nth(0).unwrap().get_arr_f64().unwrap();
-      vbuffer_builder = vbuffer_builder.info("uv", 2, uvs.iter().map(|x| *x as f32).collect::<Vec<f32>>());
-    }
+//    let uv_node = object.children_by_name("LayerElementUV").nth(0);
+//    if let Some(uv_node) = uv_node {
+//      let uvs = uv_node.children_by_name("UV").nth(0).unwrap().attributes().iter().nth(0).unwrap().get_arr_f64().unwrap();
+//      vbuffer_builder = vbuffer_builder.info("uv", 2, uvs.iter().map(|x| *x as f32).collect::<Vec<f32>>());
+//    }
 
     // Get normals
-    let normal_node = object.children_by_name("LayerElementNormal").nth(0);
-    if let Some(normal_node) = normal_node {
-      let uvs = normal_node.children_by_name("Normals").nth(0).unwrap().attributes().iter().nth(0).unwrap().get_arr_f64().unwrap();
-      vbuffer_builder = vbuffer_builder.info("normal", 3, uvs.iter().map(|x| *x as f32).collect::<Vec<f32>>());
-    }
+//    let normal_node = object.children_by_name("LayerElementNormal").nth(0);
+//    if let Some(normal_node) = normal_node {
+//      let uvs = normal_node.children_by_name("Normals").nth(0).unwrap().attributes().iter().nth(0).unwrap().get_arr_f64().unwrap();
+//      vbuffer_builder = vbuffer_builder.info("normal", 3, uvs.iter().map(|x| *x as f32).collect::<Vec<f32>>());
+//    }
 
     let element_node = object.children_by_name("PolygonVertexIndex").nth(0);
     let mut ibuffer_builder = SeparateBufferBuilder::new();
