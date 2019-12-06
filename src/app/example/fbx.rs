@@ -23,7 +23,7 @@ pub fn load_fbx_simple_get_vertices(){
 pub fn load_fbx_rigged_print_attributes() {
   alers::log::init();
 
-  let mut fbx = resource::fbx::load("resources/test/geom/basic_blender.fbx")
+  let mut fbx = resource::fbx::load("resources/test/cube.fbx")
     .expect("Fail to load rigged fbx");
 
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();

@@ -2,7 +2,13 @@ use data::buffer::SeparateBufferBuilder;
 use data::id::Id;
 use resource::static_mesh::StaticMesh;
 
-pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMesh> {
+#[derive(Debug)]
+pub enum ConversionError {
+  NGonNotSupported,
+  IncompleteLastPoly
+}
+
+pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<StaticMesh>, ConversionError> {
 
   //Get root node
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();
@@ -31,9 +37,8 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMesh> {
     let element_node = object.children_by_name("PolygonVertexIndex").nth(0);
     let mut ibuffer_builder = SeparateBufferBuilder::new();
     if let Some(element_node) = element_node {
-      let mut indices = element_node.attributes().iter().nth(0).unwrap().get_arr_i32().unwrap().to_vec();
-      for i in (2..indices.len()).step_by(3) { indices[i] = !indices[i] }
-      ibuffer_builder = ibuffer_builder.info("index", 3, indices);
+      let mut indices = element_node.attributes().iter().nth(0).unwrap().get_arr_i32().unwrap();
+      ibuffer_builder = ibuffer_builder.info("index", 3, parse_indices(indices)?);
     }
 
     meshes.push(StaticMesh::new(
@@ -42,7 +47,54 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Vec<StaticMesh> {
     )
   }
 
-  meshes
+  Ok(meshes)
+}
+
+
+// Only receives tris or quads
+pub fn parse_indices(indices: &[i32]) -> Result<Vec<i32>, ConversionError> {
+  let mut start = 0;
+  let mut end = 0;
+  let mut arr = vec!();
+  for i in 0..indices.len() {
+    if indices[i] < 0 {
+      end = i;
+      println!("start {}, end {}, indices {}", start, end, i);
+      if end - start == 2 { // 2 index apart
+        // 1 tri
+        arr.push(indices[start]);
+        arr.push(indices[start + 1]);
+        arr.push(!indices[start + 2]); // flip last bit
+      } else if end - start == 3 { // 3 index apart
+        // Quad, convert to 2 tris
+        arr.push(indices[start]);
+        arr.push(indices[start+1]);
+        arr.push(indices[start+2]);
+
+        arr.push(indices[start]);
+        arr.push(indices[start+2]);
+        arr.push(!indices[start+3]);
+      } else if end - start >= 4 {
+        return Err(ConversionError::NGonNotSupported);
+      }
+      // Reset counter to the next index
+      // since we have consumed a set of polys
+      start = i+1;
+    } else {
+      end = i;
+    }
+  }
+
+  println!("result {:?}", arr);
+  println!("start {}, end {}", start, end);
+
+  // there's a poly that isn't consumed
+  // possibly because it has less than 2 vertices
+  if end != indices.len()-1 {
+    return Err(ConversionError::IncompleteLastPoly);
+  }
+
+  Ok(arr)
 }
 
 #[test]
