@@ -4,10 +4,10 @@ use cgmath::{Vector3, Vector2};
 
 use alers::{camera, resource};
 use alers::camera::CameraRenderInfo;
-use alers::camera::fly_camera::Camera;
+use alers::camera::camera::Camera;
 use alers::data::display_info::DisplayInfo;
 use alers::data::id::Identifiable;
-use alers::input::Input;
+use alers::input::{Input, Key};
 use alers::input::Key::{Down, Left, Right, Up};
 use alers::input::Action::{Release, Press, Repeat};
 use alers::math::transform::Transform;
@@ -45,7 +45,7 @@ impl Game {
     context.static_mesh(&mesh);
     context.shader(&lambert);
 
-    let camera = camera::fly_camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
+    let camera = camera::camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
       Vector3::unit_z(), 90.0f32, 800f32 / 600f32);
 
     Game {
@@ -55,12 +55,12 @@ impl Game {
       transform: Transform::new(),
       camera_input: CameraInput { should_move: Vector3::zero(), should_rotate: Vector2::zero() },
       camera_speed: 10.0,
-      camera_rotate_speed: 1000.0,
+      camera_rotate_speed: 5000.0,
     }
   }
 
   pub fn tick(&mut self, delta_time: f32) {
-    self.camera_transform(delta_time);
+    self.camera_tick(delta_time);
   }
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
@@ -69,7 +69,7 @@ impl Game {
     let light_position = ShaderVariable::new("light_position".to_owned(), ShaderVariableType::F32_3(Vector3::new(5.0, 5.0, 5.0)));
     let light_color = ShaderVariable::new("light_color".to_owned(), ShaderVariableType::F32_3(Vector3::new(0.0, 0.0, 1.0)));
 
-    render_tasks.queue_static_mesh(&self.lambert, &self.mesh, self.transform.calculate_matrix(), vec![light_position, light_color]);
+    render_tasks.queue_static_mesh(&self.lambert, &self.mesh, self.transform.matrix(), vec![light_position, light_color]);
   }
 
   pub fn input(&mut self, inputs: Vec<Input>) {
@@ -88,25 +88,25 @@ impl Game {
     match input {
 
       // Handle movement
-      Input::Key(Left, _, Press, _) => self.camera_input.should_move.x = 1.0f32,
-      Input::Key(Right, _, Press, _) => self.camera_input.should_move.x = -1.0f32,
-      Input::Key(Up, _, Press, _) => self.camera_input.should_move.z = 1.0f32,
-      Input::Key(Down, _, Press, _) => self.camera_input.should_move.z = -1.0f32,
-      Input::Key(Left, _, Release, _) => {self.camera_input.should_move.x = 0.0f32},
-      Input::Key(Right, _, Release, _) => self.camera_input.should_move.x = 0.0f32,
-      Input::Key(Up, _, Release, _ ) => self.camera_input.should_move.z = 0.0f32,
-      Input::Key(Down, _, Release, _) => self.camera_input.should_move.z = 0.0f32,
+      Input::Key(Key::A, _, Press, _) => self.camera_input.should_move.x = -1.0f32,
+      Input::Key(Key::D, _, Press, _) => self.camera_input.should_move.x = 1.0f32,
+      Input::Key(Key::W, _, Press, _) => self.camera_input.should_move.z = 1.0f32,
+      Input::Key(Key::S, _, Press, _) => self.camera_input.should_move.z = -1.0f32,
+      Input::Key(Key::A, _, Release, _) => {self.camera_input.should_move.x = 0.0f32},
+      Input::Key(Key::D, _, Release, _) => self.camera_input.should_move.x = 0.0f32,
+      Input::Key(Key::W, _, Release, _ ) => self.camera_input.should_move.z = 0.0f32,
+      Input::Key(Key::S, _, Release, _) => self.camera_input.should_move.z = 0.0f32,
 
       Input::MouseMotion(x, y) => {
         self.camera_input.should_rotate.x += *x;
-        self.camera_input.should_rotate.y += *y;
+        self.camera_input.should_rotate.y -= *y;
       }
 
       _ => {}
     }
   }
 
-  fn camera_transform(&mut self, delta_time : f32) {
+  fn camera_tick(&mut self, delta_time : f32) {
     self.camera.translate(self.camera_input.should_move * self.camera_speed * delta_time);
     self.camera.yaw_and_pitch(-self.camera_input.should_rotate * self.camera_rotate_speed * delta_time);
   }

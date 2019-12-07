@@ -1,4 +1,4 @@
-use glfw::{Context, Key, Action, WindowEvent};
+use glfw::{Context, Key, Action, WindowEvent, CursorMode};
 use std::sync::mpsc::Receiver;
 use input::Input;
 use window::input_translator::{translate_key, translate_scancode, translate_modifier, translate_action};
@@ -38,6 +38,7 @@ impl <'a> WindowCreator<'a> {
         glfw_window.set_key_polling(true);
         glfw_window.set_cursor_pos_polling(true);
         glfw_window.set_framebuffer_size_polling(true);
+        glfw_window.set_cursor_mode(CursorMode::Disabled);
 
         // gl: load all OpenGL function pointers
         // ---------------------------------------

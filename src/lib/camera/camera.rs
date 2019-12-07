@@ -27,8 +27,8 @@ impl Camera {
   }
 
   pub fn translate(&mut self, translation: Vector3<f32>) {
-    let forward_dir = self.calculate_forward_dir();
-    let right_dir = self.calculate_right_dir();
+    let forward_dir = self.forward_dir();
+    let right_dir = self.right_dir();
     self.transform.translate(forward_dir * translation.z + right_dir * translation.x);
     self.view_mat = None;
   }
@@ -38,47 +38,39 @@ impl Camera {
     self.view_mat = None;
   }
 
-  pub fn calculate_forward_dir(&self) -> Vector3<f32> {
+  pub fn forward_dir(&self) -> Vector3<f32> {
     return self.transform.lcl_rotation.rotate_vector(self.view_dir).normalize();
   }
 
-  pub fn calculate_right_dir(&self) -> Vector3<f32> {
-    return self.calculate_forward_dir().cross(Vector3::unit_y()).normalize();
+  pub fn right_dir(&self) -> Vector3<f32> {
+    return self.forward_dir().cross(Vector3::unit_y()).normalize();
   }
 
-  fn calculate_view(&mut self) -> Matrix4<f32> {
-    self.recalculate_view_mat();
+  fn view_mat(&mut self) -> Matrix4<f32> {
+    match self.view_mat {
+      None => {
+        self.view_mat = Some(
+          Matrix4::look_at(Point3::from_vec(self.transform.position),
+            Point3::from_vec(self.transform.position + self.forward_dir()), Vector3::unit_y()));
+      },
+      Some(_) => ()
+    }
+
     self.view_mat.unwrap()
   }
 
-  fn calculate_projection(&mut self) -> Matrix4<f32> {
-    self.recalculate_projection_mat();
-    self.projection_mat.unwrap()
-  }
-
-  pub fn recalculate_projection_mat(&mut self) {
+  fn projection_mat(&mut self) -> Matrix4<f32> {
     match self.projection_mat {
       None => self.projection_mat = Some(cgmath::perspective(Deg(self.fov), self.aspect_ratio, 0.1f32, 100.0f32)),
       Some(_) => ()
     }
-  }
-
-  pub fn recalculate_view_mat(&mut self) {
-    match self.view_mat {
-      None => {
-        self.view_mat = Some(
-          Matrix4::from_translation(self.transform.position) *
-            Matrix4::look_at(Point3::from_vec(self.transform.position),
-              Point3::from_vec(self.transform.position + self.calculate_forward_dir()), Vector3::unit_y()));
-      },
-      Some(_) => ()
-    }
+    self.projection_mat.unwrap()
   }
 
   pub fn camera_render_info(&mut self) -> CameraRenderInfo {
     CameraRenderInfo {
-      view: self.calculate_view(),
-      projection: self.calculate_projection()
+      view: self.view_mat(),
+      projection: self.projection_mat()
     }
   }
 }

@@ -39,16 +39,6 @@ impl Transform {
     }
   }
 
-  pub fn recalculate(&mut self) {
-    match self.matrix {
-      None => {
-        let mut m = Matrix4::from_translation(self.position);
-        self.matrix = Some(m);
-      },
-      Some(_) => (),
-    }
-  }
-
   pub fn translate(&mut self, unit : Vector3<f32>) {
     self.position += unit;
     self.matrix = None; // Destroy matrix cache
@@ -56,13 +46,19 @@ impl Transform {
 
   pub fn rotate_by_axis(&mut self, theta_by_axis : Vector3<f32>){
     self.lcl_rotation = self.lcl_rotation * Quaternion::from_angle_y(Deg(theta_by_axis.x)); // yaw ?
-//    self.lcl_rotation = self.lcl_rotation * Quaternion::from_angle_y(Deg(theta_by_axis.y));
-//    self.lcl_rotation = self.lcl_rotation * Quaternion::from_angle_z(Deg(theta_by_axis.z));
+    self.lcl_rotation = self.lcl_rotation * Quaternion::from_angle_x(Deg(theta_by_axis.y));
+    self.lcl_rotation = self.lcl_rotation * Quaternion::from_angle_z(Deg(theta_by_axis.z));
     self.matrix = None; // Destroy matrix cache
   }
 
-  pub fn calculate_matrix(&mut self) -> Matrix4<f32> {
-    self.recalculate();
+  pub fn matrix(&mut self) -> Matrix4<f32> {
+    match self.matrix {
+      None => {
+        let mut m = Matrix4::from_translation(self.position);
+        self.matrix = Some(m);
+      },
+      Some(_) => (),
+    }
     self.matrix.unwrap()
   }
 }

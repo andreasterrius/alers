@@ -163,7 +163,7 @@ impl RenderTasks for SimpleRenderTasks {
 
             // Draw according to EBO
             match mesh_draw_info.ebo {
-              None => gl::DrawArrays(mesh_draw_info.draw_size, 0, mesh_draw_info.draw_size as i32),
+              None => gl::DrawArrays(gl::TRIANGLES, 0, mesh_draw_info.draw_size as i32),
               Some(ebo) => gl::DrawElements(gl::TRIANGLES, mesh_draw_info.draw_size as i32, gl::UNSIGNED_INT, ptr::null()),
             }
           }
