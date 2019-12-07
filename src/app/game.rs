@@ -4,7 +4,7 @@ use cgmath::{Vector3, Vector2};
 
 use alers::{camera, resource};
 use alers::camera::CameraRenderInfo;
-use alers::camera::camera::Camera;
+use alers::camera::Camera;
 use alers::data::display_info::DisplayInfo;
 use alers::data::id::Identifiable;
 use alers::input::{Input, Key};
@@ -16,17 +16,13 @@ use alers::resource::ResourceEventObserver;
 use alers::resource::shader::ShaderFile;
 use alers::resource::static_mesh::StaticMesh;
 use cgmath::Zero;
+use alers::camera::flycamera::FlyCamera;
 
 pub struct Game {
-  camera: Camera,
+  fly_camera: FlyCamera,
   mesh: StaticMesh,
   lambert: ShaderFile,
   transform: Transform,
-
-  // Camera
-  camera_input: CameraInput,
-  camera_speed: f32,
-  camera_rotate_speed : f32,
 }
 
 impl Game {
@@ -45,22 +41,24 @@ impl Game {
     context.static_mesh(&mesh);
     context.shader(&lambert);
 
-    let camera = camera::camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
+    let camera = camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
       Vector3::unit_z(), 90.0f32, 800f32 / 600f32);
+    let fly_camera = camera::flycamera::FlyCamera::new(camera);
 
     Game {
-      camera,
+      fly_camera,
       mesh,
       lambert,
       transform: Transform::new(),
-      camera_input: CameraInput { should_move: Vector3::zero(), should_rotate: Vector2::zero() },
-      camera_speed: 10.0,
-      camera_rotate_speed: 5000.0,
     }
   }
 
+  pub fn input(&mut self, inputs: Vec<Input>) {
+    self.fly_camera.input(&inputs);
+  }
+
   pub fn tick(&mut self, delta_time: f32) {
-    self.camera_tick(delta_time);
+    self.fly_camera.tick(delta_time);
   }
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
@@ -72,47 +70,8 @@ impl Game {
     render_tasks.queue_static_mesh(&self.lambert, &self.mesh, self.transform.matrix(), vec![light_position, light_color]);
   }
 
-  pub fn input(&mut self, inputs: Vec<Input>) {
-    //reset rotation every frame
-    self.camera_input.should_rotate = Vector2::zero();
-    for input in inputs {
-      self.camera_input(&input);
-    }
-  }
-
   pub fn camera_render_info(&mut self) -> CameraRenderInfo {
-    self.camera.camera_render_info()
+    self.fly_camera.camera_mut().camera_render_info()
   }
 
-  fn camera_input(&mut self, input: &Input) {
-    match input {
-
-      // Handle movement
-      Input::Key(Key::A, _, Press, _) => self.camera_input.should_move.x = -1.0f32,
-      Input::Key(Key::D, _, Press, _) => self.camera_input.should_move.x = 1.0f32,
-      Input::Key(Key::W, _, Press, _) => self.camera_input.should_move.z = 1.0f32,
-      Input::Key(Key::S, _, Press, _) => self.camera_input.should_move.z = -1.0f32,
-      Input::Key(Key::A, _, Release, _) => {self.camera_input.should_move.x = 0.0f32},
-      Input::Key(Key::D, _, Release, _) => self.camera_input.should_move.x = 0.0f32,
-      Input::Key(Key::W, _, Release, _ ) => self.camera_input.should_move.z = 0.0f32,
-      Input::Key(Key::S, _, Release, _) => self.camera_input.should_move.z = 0.0f32,
-
-      Input::MouseMotion(x, y) => {
-        self.camera_input.should_rotate.x += *x;
-        self.camera_input.should_rotate.y -= *y;
-      }
-
-      _ => {}
-    }
-  }
-
-  fn camera_tick(&mut self, delta_time : f32) {
-    self.camera.translate(self.camera_input.should_move * self.camera_speed * delta_time);
-    self.camera.yaw_and_pitch(-self.camera_input.should_rotate * self.camera_rotate_speed * delta_time);
-  }
-}
-
-pub struct CameraInput {
-  pub should_move: Vector3<f32>,
-  pub should_rotate : Vector2<f32>,
 }
