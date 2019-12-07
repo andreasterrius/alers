@@ -41,8 +41,7 @@ impl Game {
     context.static_mesh(&mesh);
     context.shader(&lambert);
 
-    let camera = camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32),
-      Vector3::unit_z(), 90.0f32, 800f32 / 600f32);
+    let camera = camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), 90.0f32, 800f32 / 600f32);
     let fly_camera = camera::flycamera::FlyCamera::new(camera);
 
     Game {

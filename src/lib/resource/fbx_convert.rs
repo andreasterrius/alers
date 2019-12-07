@@ -84,8 +84,8 @@ pub fn parse_indices(indices: &[i32]) -> Result<Vec<i32>, ConversionError> {
     }
   }
 
-  println!("result {:?}", arr);
-  println!("start {}, end {}", start, end);
+//  println!("result {:?}", arr);
+//  println!("start {}, end {}", start, end);
 
   // there's a poly that isn't consumed
   // possibly because it has less than 2 vertices
@@ -133,9 +133,9 @@ pub fn construct_buffer(indices: &[i32],
     }
   }
 
-  println!("{:?}", position_vec);
-  println!("{:?}", uv_vec);
-  println!("{:?}", normal_vec);
+//  println!("{:?}", position_vec);
+//  println!("{:?}", uv_vec);
+//  println!("{:?}", normal_vec);
 
   let vbuffer = SeparateBufferBuilder::new()
     .info("position", 3, position_vec)
