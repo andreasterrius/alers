@@ -61,7 +61,6 @@ impl Game {
   }
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
-
     // Let there be light
     let light_position = ShaderVariable::new("light_position".to_owned(), ShaderVariableType::F32_3(Vector3::new(5.0, 5.0, 5.0)));
     let light_color = ShaderVariable::new("light_color".to_owned(), ShaderVariableType::F32_3(Vector3::new(0.0, 0.0, 1.0)));

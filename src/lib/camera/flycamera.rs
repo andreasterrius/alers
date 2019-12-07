@@ -6,11 +6,6 @@ use cgmath::prelude::*;
 pub struct FlyCamera {
   camera: Camera,
 
-  // Uses polar coordinate to keep track of angles
-  // r = 1
-  theta: f32,
-  phi: f32,
-
   rotate_input: Vector2<f32>,
   move_input: Vector3<f32>,
 
@@ -22,8 +17,6 @@ impl FlyCamera {
   pub fn new(camera: Camera) -> FlyCamera {
     FlyCamera {
       camera,
-      theta: 0.0,
-      phi: 0.0,
       rotate_input: Vector2::zero(),
       move_input: Vector3::zero(),
       camera_speed: 10.0,
