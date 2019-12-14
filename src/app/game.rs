@@ -1,21 +1,14 @@
 use std::fs;
 
-use cgmath::{Vector3, Vector2};
+use cgmath::{Vector3};
 
 use alers::{camera, resource};
 use alers::camera::CameraRenderInfo;
-use alers::camera::Camera;
-use alers::data::display_info::DisplayInfo;
-use alers::data::id::Identifiable;
-use alers::input::{Input, Key};
-use alers::input::Key::{Down, Left, Right, Up};
-use alers::input::Action::{Release, Press, Repeat};
+use alers::input::{Input};
 use alers::math::transform::Transform;
 use alers::renderer::opengl::{Context, RenderTasks, ShaderVariable, ShaderVariableType};
-use alers::resource::ResourceEventObserver;
 use alers::resource::shader::ShaderFile;
 use alers::resource::static_mesh::StaticMesh;
-use cgmath::Zero;
 use alers::camera::flycamera::FlyCamera;
 
 pub struct Game {
@@ -29,17 +22,17 @@ impl Game {
   pub fn load(context: &mut Context) -> Game {
 
     // Load meshes
-    let mut mesh = resource::fbx_convert::to_static_meshes(
+    let mesh = resource::fbx_convert::to_static_meshes(
       resource::fbx::load("resources/test/cube.fbx").unwrap()).unwrap().remove(0);
 
     // Load shaders
-    let mut lambert = resource::shader::ShaderFile::new(
+    let lambert = resource::shader::ShaderFile::new(
       fs::read_to_string("shaders/lambert.vs").unwrap(),
       fs::read_to_string("shaders/lambert.fs").unwrap()
     );
 
-    context.static_mesh(&mesh);
-    context.shader(&lambert);
+    context.static_mesh(&mesh).unwrap();
+    context.shader(&lambert).unwrap();
 
     let camera = camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), 90.0f32, 800f32 / 600f32);
     let fly_camera = camera::flycamera::FlyCamera::new(camera);

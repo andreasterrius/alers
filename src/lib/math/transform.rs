@@ -1,6 +1,5 @@
-use cgmath::{Deg, Matrix, Matrix4, One, Quaternion, Rad, Vector3};
+use cgmath::{Matrix4, One, Quaternion, Vector3};
 use cgmath::prelude::*;
-use rusttype::vector;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Transform {
@@ -16,7 +15,7 @@ impl Transform {
       position: Vector3::zero(),
       lcl_rotation: Quaternion::one(),
       scale: Vector3::from_value(1.0f32),
-      matrix: None
+      matrix: None,
     }
   }
 
@@ -43,7 +42,7 @@ impl Transform {
     self.matrix = None; // Destroy matrix cache
   }
 
-  pub fn set_rotation(&mut self, rotation : Quaternion<f32>) {
+  pub fn set_rotation(&mut self, rotation: Quaternion<f32>) {
     self.lcl_rotation = rotation;
     self.matrix = None; // Destroy matrix cache
   }
@@ -51,12 +50,11 @@ impl Transform {
   pub fn matrix(&mut self) -> Matrix4<f32> {
     match self.matrix {
       None => {
-        let mut m = Matrix4::from(self.lcl_rotation) * Matrix4::from_translation(self.position);
+        let m = Matrix4::from(self.lcl_rotation) * Matrix4::from_translation(self.position);
         self.matrix = Some(m);
-      },
+      }
       Some(_) => (),
     }
     self.matrix.unwrap()
-
   }
 }

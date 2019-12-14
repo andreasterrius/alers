@@ -1,6 +1,4 @@
 use std::{mem, ptr};
-use std::borrow::Borrow;
-use std::collections::hash_map::RandomState;
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::ffi::CString;
@@ -9,7 +7,6 @@ use std::os::raw::c_void;
 use cgmath::{Matrix, Matrix4, Vector3, Vector4};
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
 
-use ::{camera, gl};
 use camera::CameraRenderInfo;
 use data::buffer::Buffer;
 use data::id::Id;
@@ -62,7 +59,7 @@ impl From<CreateBufferError> for StaticMeshError {
 
 pub struct StaticMeshDrawInfo {
   vao: u32,
-  vbo: u32,
+  _vbo: u32,
   ebo: Option<u32>,
   draw_size: u32, //indices size, or vertex size
 }
@@ -70,7 +67,7 @@ pub struct StaticMeshDrawInfo {
 impl StaticMeshDrawInfo {
   pub fn new(mesh: &StaticMesh) -> Result<StaticMeshDrawInfo, StaticMeshError> {
     let (vao, vbo, ebo, draw_size) = unsafe { create_buffer(&mesh.vertices, &mesh.indices)? };
-    Ok(StaticMeshDrawInfo { vao, vbo, ebo, draw_size })
+    Ok(StaticMeshDrawInfo { vao, _vbo: vbo, ebo, draw_size })
   }
 }
 
@@ -122,7 +119,7 @@ impl RenderTasks for SimpleRenderTasks {
       shader_id: shader.uid(),
       mesh_id: mesh.uid(),
       transform,
-      shader_variables: vec![]
+      shader_variables: shader_vars
     });
   }
 
@@ -164,7 +161,7 @@ impl RenderTasks for SimpleRenderTasks {
             // Draw according to EBO
             match mesh_draw_info.ebo {
               None => gl::DrawArrays(gl::TRIANGLES, 0, mesh_draw_info.draw_size as i32),
-              Some(ebo) => gl::DrawElements(gl::TRIANGLES, mesh_draw_info.draw_size as i32, gl::UNSIGNED_INT, ptr::null()),
+              Some(_) => gl::DrawElements(gl::TRIANGLES, mesh_draw_info.draw_size as i32, gl::UNSIGNED_INT, ptr::null()),
             }
           }
         }
@@ -258,6 +255,7 @@ unsafe fn create_buffer(vertices: &Buffer<f32>,
 pub enum CreateShaderError {
   VertexShaderError(String),
   FragmentShaderError(String),
+
   LinkingShaderError(String),
 }
 

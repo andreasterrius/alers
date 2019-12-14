@@ -1,4 +1,4 @@
-use cgmath::{Deg, Matrix4, Point3, Quaternion, Rotation, Vector2, Vector3};
+use cgmath::{Deg, Matrix4, Quaternion, Rotation, Vector3};
 use cgmath::prelude::*;
 
 use math::transform::Transform;

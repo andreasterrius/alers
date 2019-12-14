@@ -1,5 +1,4 @@
 use window::WindowCreator;
-use std::time::Instant;
 
 pub mod tick;
 
@@ -9,7 +8,7 @@ pub struct Engine {
 
 impl Engine {
   pub fn new() -> Engine {
-    let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+    let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
     Engine {
       glfw
     }

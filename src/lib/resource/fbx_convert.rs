@@ -1,5 +1,4 @@
 use data::buffer::{Buffer, SeparateBufferBuilder};
-use data::id::Id;
 use resource::static_mesh::StaticMesh;
 
 #[derive(Debug)]
@@ -18,9 +17,9 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<StaticMe
   for object in objects.children_by_name("Geometry") {
     let element_node = object.children_by_name("PolygonVertexIndex").nth(0);
     let indices = match element_node {
-      None => { return Err(ConversionError::PolgyonVertexIndexNotFound) },
+      None => { return Err(ConversionError::PolgyonVertexIndexNotFound); }
       Some(element_node) => {
-        let mut indices = element_node.attributes().iter().nth(0).unwrap().get_arr_i32().unwrap();
+        let indices = element_node.attributes().iter().nth(0).unwrap().get_arr_i32().unwrap();
         parse_indices(indices)?
       }
     };
@@ -31,14 +30,14 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<StaticMe
     // Get uv coords
     let uv_node = object.children_by_name("LayerElementUV").nth(0);
     let uv_arr = match uv_node {
-      None => { &[0.0f64; 0] },
+      None => { &[0.0f64; 0] }
       Some(uv_node) => uv_node.children_by_name("UV").nth(0).unwrap().attributes().iter().nth(0).unwrap().get_arr_f64().unwrap()
     };
 
     //Get normals
     let normal_node = object.children_by_name("LayerElementNormal").nth(0);
     let normal_arr = match normal_node {
-      None => { &[0.0f64; 0] },
+      None => { &[0.0f64; 0] }
       Some(normal_node) => normal_node.children_by_name("Normals").nth(0).unwrap().attributes().iter().nth(0).unwrap().get_arr_f64().unwrap(),
     };
 

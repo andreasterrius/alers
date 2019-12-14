@@ -1,5 +1,3 @@
-use std::iter::FromIterator;
-
 #[derive(Debug)]
 pub struct BufferElementInfo {
   pub name: String,
@@ -82,7 +80,7 @@ impl<T: Clone> BufferBuilder<T> {
     self
   }
 
-  pub fn build(mut self) -> Result<Buffer<T>, BufferBuildError> {
+  pub fn build(self) -> Result<Buffer<T>, BufferBuildError> {
     let size = self.data.len() / self.total_row_size;
     Ok(Buffer {
       data: self.data,
@@ -115,7 +113,7 @@ impl<T: Clone> SeparateBufferBuilder<T> {
     self
   }
 
-  pub fn build(mut self) -> Result<Buffer<T>, BufferBuildError> {
+  pub fn build(self) -> Result<Buffer<T>, BufferBuildError> {
     let mut column_size = 0;
     if !self.element_data.is_empty() {
       column_size = self.element_data[0].len() / self.element_info[0].size;

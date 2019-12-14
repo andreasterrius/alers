@@ -1,19 +1,11 @@
 extern crate alers;
 extern crate cgmath;
-#[macro_use]
 extern crate log;
 
-use std::fs;
-
-use cgmath::{Matrix4, Vector3};
-use cgmath::prelude::*;
-
 use alers::*;
-use alers::math::transform::Transform;
-use alers::renderer::opengl::{RenderTasks, SimpleRenderTasks};
-use std::borrow::BorrowMut;
-use alers::engine::tick::FixedStep;
 use alers::data::display_info::DisplayInfo;
+use alers::engine::tick::FixedStep;
+use alers::renderer::opengl::{RenderTasks, SimpleRenderTasks};
 
 mod example;
 mod game;
@@ -33,7 +25,6 @@ pub fn main() {
 
   // Main Game Loop
   while !window.is_closing() {
-
     engine.poll_inputs();
     game.input(window.input());
 
@@ -50,6 +41,5 @@ pub fn main() {
     render_tasks.render(&context, &mut game.camera_render_info());
 
     window.swap_buffers();
-
   }
 }

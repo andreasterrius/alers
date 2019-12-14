@@ -13,5 +13,5 @@ pub fn init(){
 }
 
 pub fn init_test(){
-  TermLogger::init(LevelFilter::Info, Config::default(), TerminalMode::Mixed);
+  TermLogger::init(LevelFilter::Info, Config::default(), TerminalMode::Mixed).unwrap();
 }

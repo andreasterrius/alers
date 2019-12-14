@@ -18,7 +18,7 @@ impl <'a> WindowCreator<'a> {
         }
     }
 
-    pub fn new(mut self, display_info : DisplayInfo) -> Window {
+    pub fn new(self, display_info : DisplayInfo) -> Window {
 
         self.glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
         self.glfw.window_hint(glfw::WindowHint::OpenGlProfile(
