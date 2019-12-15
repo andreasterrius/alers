@@ -13,10 +13,12 @@ use data::id::Id;
 use data::id::Identifiable;
 use resource::shader::ShaderFile;
 use resource::static_mesh::StaticMesh;
+use resource::texture::Texture;
 
 pub struct Context {
   static_meshes: HashMap<Id, StaticMeshDrawInfo>,
-  shaders: HashMap<Id, ShaderDrawInfo>
+  shaders: HashMap<Id, ShaderDrawInfo>,
+  textures: HashMap<Id, TextureDrawInfo>,
 }
 
 impl Context {
@@ -24,6 +26,7 @@ impl Context {
     Context {
       static_meshes: HashMap::new(),
       shaders: HashMap::new(),
+      textures: HashMap::new(),
     }
   }
 
@@ -32,17 +35,26 @@ impl Context {
     Ok(())
   }
 
-  pub fn get_static_mesh(&self, mesh_id: &Id) -> Option<&StaticMeshDrawInfo> {
-    self.static_meshes.get(&mesh_id)
-  }
-
   pub fn shader(&mut self, shader: &ShaderFile) -> Result<(), ShaderError> {
     self.shaders.insert(shader.uid(), ShaderDrawInfo::new(shader)?);
     Ok(())
   }
 
+  pub fn texture(&mut self, texture: &Texture) -> Result<(), TextureError> {
+    self.textures.insert(texture.uid(), TextureDrawInfo::new(texture)?);
+    Ok(())
+  }
+
+  pub fn get_static_mesh(&self, mesh_id: &Id) -> Option<&StaticMeshDrawInfo> {
+    self.static_meshes.get(&mesh_id)
+  }
+
   pub fn get_shader(&self, shader_id: &Id) -> Option<&ShaderDrawInfo> {
     self.shaders.get(&shader_id)
+  }
+
+  pub fn get_texture(&self, texture_id: &Id) -> Option<&TextureDrawInfo> {
+    self.textures.get(&texture_id)
   }
 }
 
@@ -93,6 +105,28 @@ impl ShaderDrawInfo {
   }
 }
 
+#[derive(Debug)]
+pub enum TextureError {
+  CreateTextureError(CreateTextureError),
+}
+
+impl From<CreateTextureError> for TextureError {
+  fn from(e: CreateTextureError) -> Self {
+    TextureError::CreateTextureError(e)
+  }
+}
+
+pub struct TextureDrawInfo {
+  texture: u32,
+}
+
+impl TextureDrawInfo {
+  pub fn new(texture : &Texture) -> Result<TextureDrawInfo, TextureError> {
+    let texture = unsafe { create_texture()? };
+    Ok(TextureDrawInfo { texture })
+  }
+}
+
 enum Renderable {
   StaticMesh { shader_id: Id, mesh_id: Id, transform: Matrix4<f32>, shader_variables: Vec<ShaderVariable> }
 }
@@ -114,12 +148,12 @@ impl SimpleRenderTasks {
 }
 
 impl RenderTasks for SimpleRenderTasks {
-  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>, shader_vars : Vec<ShaderVariable>) {
+  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>, shader_vars: Vec<ShaderVariable>) {
     self.renderables.push(Renderable::StaticMesh {
       shader_id: shader.uid(),
       mesh_id: mesh.uid(),
       transform,
-      shader_variables: shader_vars
+      shader_variables: shader_vars,
     });
   }
 
@@ -134,8 +168,14 @@ impl RenderTasks for SimpleRenderTasks {
     for renderable in &self.renderables {
       match renderable {
         Renderable::StaticMesh { shader_id, mesh_id, transform, shader_variables } => {
-          let mesh_draw_info = match context.get_static_mesh(mesh_id) { None => continue, Some(x) => x };
-          let shader_draw_info = match context.get_shader(shader_id) { None => continue, Some(x) => x, };
+          let mesh_draw_info = match context.get_static_mesh(mesh_id) {
+            None => continue,
+            Some(x) => x
+          };
+          let shader_draw_info = match context.get_shader(shader_id) {
+            None => continue,
+            Some(x) => x,
+          };
 
           unsafe {
             // Bind shader
@@ -179,7 +219,7 @@ impl ShaderVariable {
   pub fn new(name: String, variable_type: ShaderVariableType) -> ShaderVariable {
     ShaderVariable {
       name,
-      variable_type
+      variable_type,
     }
   }
 }
@@ -222,7 +262,7 @@ unsafe fn create_buffer(vertices: &Buffer<f32>,
       gl::ELEMENT_ARRAY_BUFFER,
       (buffer.len() * mem::size_of::<GLint>()) as GLsizeiptr,
       buffer.as_ptr() as *const c_void,
-      gl::STATIC_DRAW
+      gl::STATIC_DRAW,
     );
     ebo = Some(ebo_ptr);
     draw_size = buffer.len() as u32;
@@ -235,7 +275,7 @@ unsafe fn create_buffer(vertices: &Buffer<f32>,
     //println!("{:?} {:?}", start, count);
     let stride = (start * mem::size_of::<GLfloat>()) as *const c_void;
     gl::VertexAttribPointer(count, element.size.try_into().unwrap(),
-      gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
+                            gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
     gl::EnableVertexAttribArray(count);
     start += element.size;
     count += 1;
@@ -281,7 +321,7 @@ unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::VertexShaderError(format!("Vertex Shader compilation failed: {}",
-      String::from_utf8_lossy(&info_log))));
+                                                            String::from_utf8_lossy(&info_log))));
   }
 
   // fragment shader
@@ -299,7 +339,7 @@ unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::FragmentShaderError(format!("Fragment shader compilation failed: {}",
-      String::from_utf8_lossy(&info_log))));
+                                                              String::from_utf8_lossy(&info_log))));
   }
 
   // link shaders
@@ -317,7 +357,7 @@ unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::LinkingShaderError(format!("Linking shader failed: {}",
-      String::from_utf8_lossy(&info_log))));
+                                                             String::from_utf8_lossy(&info_log))));
   }
   gl::DeleteShader(vertex_shader);
   gl::DeleteShader(fragment_shader);
@@ -325,5 +365,12 @@ unsafe fn create_shader(vertex_shader_source: &str,
   Ok(shader_program)
 }
 
+#[derive(Debug)]
+pub struct CreateTextureError {}
+
+unsafe fn create_texture() -> Result<u32, CreateTextureError>
+{
+  return Ok(0);
+}
 
 
