@@ -1,4 +1,4 @@
-use image::{ImageError, GenericImageView};
+use image::{GenericImageView, ImageError};
 
 use data::id::Id;
 
@@ -7,6 +7,9 @@ pub struct Texture {
   data: Vec<u8>,
   width: u32,
   height: u32,
+
+  texture_wrap: TextureWrap,
+  texture_magnification: TextureMagnification,
 }
 
 impl Texture {
@@ -15,18 +18,20 @@ impl Texture {
       id: Id::new(),
       data,
       width,
-      height
+      height,
+      texture_wrap: TextureWrap { x: TextureWrapType::Repeat, y: TextureWrapType::Repeat },
+      texture_magnification: TextureMagnification { min: TextureMagnificationType::Linear, max: TextureMagnificationType::Linear }
     }
   }
 
-  pub fn load(path : &str) -> Result<Texture, LoadTextureError>{
+  pub fn load(path: &str) -> Result<Texture, LoadTextureError> {
     let i = image::open(path)?;
 
     // TODO: i.raw_pixels() clones the underlying bytes
     Ok(Texture::new(i.raw_pixels(), i.width(), i.height()))
   }
 
-  pub fn as_ptr(&self) -> *const u8{
+  pub fn as_ptr(&self) -> *const u8 {
     &self.data[0]
   }
 
@@ -37,7 +42,37 @@ impl Texture {
   pub fn height(&self) -> u32 {
     self.height
   }
+
+  pub fn get_wrap(&self) -> &TextureWrap {
+    &self.texture_wrap
+  }
+
+  pub fn get_magnification(&self) -> &TextureMagnification {
+    &self.texture_magnification
+  }
 }
+
+pub struct TextureWrap {
+  pub x : TextureWrapType,
+  pub y : TextureWrapType,
+}
+
+pub enum TextureWrapType {
+  ClampToEdge,
+  MirroredRepeat,
+  Repeat,
+}
+
+pub struct TextureMagnification {
+  pub min : TextureMagnificationType,
+  pub max : TextureMagnificationType,
+}
+
+pub enum TextureMagnificationType {
+  Nearest,
+  Linear,
+}
+
 
 impl_id!(Texture, id);
 
@@ -51,3 +86,4 @@ impl From<ImageError> for LoadTextureError {
     LoadTextureError::ImageError(e)
   }
 }
+

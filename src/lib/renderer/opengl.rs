@@ -13,7 +13,7 @@ use data::id::Id;
 use data::id::Identifiable;
 use resource::shader::ShaderFile;
 use resource::static_mesh::StaticMesh;
-use resource::texture::Texture;
+use resource::texture::{Texture, TextureMagnificationType, TextureWrapType};
 
 pub struct Context {
   static_meshes: HashMap<Id, StaticMeshDrawInfo>,
@@ -62,7 +62,6 @@ impl Context {
   pub fn get_texture(&self, texture_id: &Id) -> Option<&TextureDrawInfo> {
     self.textures.get(&texture_id)
   }
-
 }
 
 #[derive(Debug)]
@@ -140,7 +139,7 @@ enum Renderable {
     mesh_id: Id,
     texture_ids: Vec<Id>,
     transform: Matrix4<f32>,
-    shader_variables: Vec<ShaderVariable>
+    shader_variables: Vec<ShaderVariable>,
   }
 }
 
@@ -311,7 +310,7 @@ unsafe fn create_buffer(vertices: &Buffer<f32>,
     //println!("{:?} {:?}", start, count);
     let stride = (start * mem::size_of::<GLfloat>()) as *const c_void;
     gl::VertexAttribPointer(count, element.size.try_into().unwrap(),
-      gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
+                            gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
     gl::EnableVertexAttribArray(count);
     start += element.size;
     count += 1;
@@ -357,7 +356,7 @@ unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::VertexShaderError(format!("Vertex Shader compilation failed: {}",
-      String::from_utf8_lossy(&info_log))));
+                                                            String::from_utf8_lossy(&info_log))));
   }
 
   // fragment shader
@@ -375,7 +374,7 @@ unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::FragmentShaderError(format!("Fragment shader compilation failed: {}",
-      String::from_utf8_lossy(&info_log))));
+                                                              String::from_utf8_lossy(&info_log))));
   }
 
   // link shaders
@@ -393,7 +392,7 @@ unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::LinkingShaderError(format!("Linking shader failed: {}",
-      String::from_utf8_lossy(&info_log))));
+                                                             String::from_utf8_lossy(&info_log))));
   }
   gl::DeleteShader(vertex_shader);
   gl::DeleteShader(fragment_shader);
@@ -410,15 +409,31 @@ unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureError>
   gl::GenTextures(1, &mut gl_texture);
   gl::BindTexture(gl::TEXTURE_2D, gl_texture);
 
-  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
-  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
-  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, texture_wrap_to_gl(&texture.get_wrap().x));
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, texture_wrap_to_gl(&texture.get_wrap().y));
+
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, texture_mag_to_gl(&texture.get_magnification().min));
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, texture_mag_to_gl(&texture.get_magnification().max));
 
   gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32,
-    texture.width() as i32, texture.height() as i32, 0, gl::RGB, gl::UNSIGNED_BYTE, texture.as_ptr() as *const c_void);
+                 texture.width() as i32, texture.height() as i32, 0, gl::RGB, gl::UNSIGNED_BYTE, texture.as_ptr() as *const c_void);
 
   return Ok(gl_texture);
+}
+
+fn texture_wrap_to_gl(wrap: &TextureWrapType) -> i32 {
+  match wrap {
+    TextureWrapType::ClampToEdge => gl::CLAMP_TO_EDGE as i32,
+    TextureWrapType::MirroredRepeat => gl::MIRRORED_REPEAT as i32,
+    TextureWrapType::Repeat => gl::REPEAT as i32,
+  }
+}
+
+fn texture_mag_to_gl(mag: &TextureMagnificationType) -> i32 {
+  match mag {
+    TextureMagnificationType::Nearest => gl::NEAREST as i32,
+    TextureMagnificationType::Linear => gl::LINEAR as i32,
+  }
 }
 
 

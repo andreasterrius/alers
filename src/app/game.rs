@@ -23,7 +23,7 @@ pub struct Game {
 impl Game {
   pub fn load(context: &mut Context) -> Game {
 
-    let base_path = "E:/Codes/Repos/alers";
+    let base_path = "/home/alether/Codes/Graphics/alers";
 
     // Load meshes
     let mesh = resource::fbx_convert::to_static_meshes(
