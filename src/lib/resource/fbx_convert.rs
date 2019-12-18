@@ -114,13 +114,6 @@ pub fn construct_buffer(indices: &[i32],
     position_vec.push(position_arr[index_3 + 1] as f32);
     position_vec.push(position_arr[index_3 + 2] as f32);
 
-    if uv_arr.len() != 0 {
-      uv_vec.push(uv_arr[index_2] as f32);
-      uv_vec.push(uv_arr[index_2 + 1] as f32);
-    } else {
-      uv_vec.push(0.0f32);
-      uv_vec.push(0.0f32);
-    }
     if normal_arr.len() != 0 {
       normal_vec.push(normal_arr[index_3] as f32);
       normal_vec.push(normal_arr[index_3 + 1] as f32);
@@ -130,6 +123,14 @@ pub fn construct_buffer(indices: &[i32],
       normal_vec.push(0.0f32);
       normal_vec.push(0.0f32);
     }
+
+    if uv_arr.len() != 0 {
+      uv_vec.push(uv_arr[index_2] as f32);
+      uv_vec.push(uv_arr[index_2 + 1] as f32);
+    } else {
+      uv_vec.push(0.0f32);
+      uv_vec.push(0.0f32);
+    }
   }
 
 //  println!("{:?}", position_vec);
@@ -138,8 +139,8 @@ pub fn construct_buffer(indices: &[i32],
 
   let vbuffer = SeparateBufferBuilder::new()
     .info("position", 3, position_vec)
-    .info("uv", 2, uv_vec)
     .info("normal", 3, normal_vec)
+    .info("uv", 2, uv_vec)
     .build().unwrap();
   Ok(vbuffer)
 }

@@ -28,6 +28,7 @@ impl Game {
     // Load meshes
     let mesh = resource::fbx_convert::to_static_meshes(
       resource::fbx::load(&format!("{}/{}", base_path, "resources/test/cube.fbx")).unwrap()).unwrap().remove(0);
+    //let mesh = resource::static_mesh::create_cube();
 
     // Load shaders
     let lambert = resource::shader::ShaderFile::new(
@@ -46,7 +47,6 @@ impl Game {
 
     let camera = camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), 90.0f32, 800f32 / 600f32);
     let fly_camera = camera::flycamera::FlyCamera::new(camera);
-
 
     Game {
       fly_camera,
