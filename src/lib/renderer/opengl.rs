@@ -30,6 +30,12 @@ impl Context {
     }
   }
 
+  pub fn setup(&mut self) {
+    unsafe {
+      gl::Enable(gl::DEPTH_TEST)
+    }
+  }
+
   pub fn static_mesh(&mut self, mesh: &StaticMesh) -> Result<(), StaticMeshError> {
     self.static_meshes.insert(mesh.uid(), StaticMeshDrawInfo::new(mesh)?);
     Ok(())
@@ -56,6 +62,7 @@ impl Context {
   pub fn get_texture(&self, texture_id: &Id) -> Option<&TextureDrawInfo> {
     self.textures.get(&texture_id)
   }
+
 }
 
 #[derive(Debug)]
@@ -121,18 +128,29 @@ pub struct TextureDrawInfo {
 }
 
 impl TextureDrawInfo {
-  pub fn new(texture : &Texture) -> Result<TextureDrawInfo, TextureError> {
-    let texture = unsafe { create_texture()? };
+  pub fn new(texture: &Texture) -> Result<TextureDrawInfo, TextureError> {
+    let texture = unsafe { create_texture(texture)? };
     Ok(TextureDrawInfo { texture })
   }
 }
 
 enum Renderable {
-  StaticMesh { shader_id: Id, mesh_id: Id, transform: Matrix4<f32>, shader_variables: Vec<ShaderVariable> }
+  StaticMesh {
+    shader_id: Id,
+    mesh_id: Id,
+    texture_ids: Vec<Id>,
+    transform: Matrix4<f32>,
+    shader_variables: Vec<ShaderVariable>
+  }
 }
 
 pub trait RenderTasks {
-  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>, shader_vars: Vec<ShaderVariable>);
+  fn queue_static_mesh(&mut self,
+                       shader: &ShaderFile,
+                       mesh: &StaticMesh,
+                       textures: Vec<&Texture>,
+                       transform: Matrix4<f32>,
+                       shader_vars: Vec<ShaderVariable>);
 
   fn render(&mut self, context: &Context, camera: &mut CameraRenderInfo);
 }
@@ -148,10 +166,17 @@ impl SimpleRenderTasks {
 }
 
 impl RenderTasks for SimpleRenderTasks {
-  fn queue_static_mesh(&mut self, shader: &ShaderFile, mesh: &StaticMesh, transform: Matrix4<f32>, shader_vars: Vec<ShaderVariable>) {
+  fn queue_static_mesh(&mut self,
+                       shader: &ShaderFile,
+                       mesh: &StaticMesh,
+                       textures: Vec<&Texture>,
+                       transform: Matrix4<f32>,
+                       shader_vars: Vec<ShaderVariable>)
+  {
     self.renderables.push(Renderable::StaticMesh {
       shader_id: shader.uid(),
       mesh_id: mesh.uid(),
+      texture_ids: textures.into_iter().map(|x| x.uid()).collect(),
       transform,
       shader_variables: shader_vars,
     });
@@ -162,12 +187,12 @@ impl RenderTasks for SimpleRenderTasks {
     // Clear screen
     unsafe {
       gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);
-      gl::Clear(gl::COLOR_BUFFER_BIT);
+      gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
     }
 
     for renderable in &self.renderables {
       match renderable {
-        Renderable::StaticMesh { shader_id, mesh_id, transform, shader_variables } => {
+        Renderable::StaticMesh { shader_id, mesh_id, texture_ids, transform, shader_variables } => {
           let mesh_draw_info = match context.get_static_mesh(mesh_id) {
             None => continue,
             Some(x) => x
@@ -180,6 +205,17 @@ impl RenderTasks for SimpleRenderTasks {
           unsafe {
             // Bind shader
             gl::UseProgram(shader_draw_info.shader);
+
+            // Bind textures here
+            for i in 0..texture_ids.len() {
+              let texture_draw_info = match context.get_texture(&texture_ids[i]) {
+                None => continue,
+                Some(x) => x,
+              };
+
+              gl::ActiveTexture(gl::TEXTURE0 + i as u32);
+              gl::BindTexture(gl::TEXTURE_2D, texture_draw_info.texture);
+            }
 
             // Pass shader specific uniforms
             for shader_variable in shader_variables {
@@ -275,7 +311,7 @@ unsafe fn create_buffer(vertices: &Buffer<f32>,
     //println!("{:?} {:?}", start, count);
     let stride = (start * mem::size_of::<GLfloat>()) as *const c_void;
     gl::VertexAttribPointer(count, element.size.try_into().unwrap(),
-                            gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
+      gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
     gl::EnableVertexAttribArray(count);
     start += element.size;
     count += 1;
@@ -321,7 +357,7 @@ unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::VertexShaderError(format!("Vertex Shader compilation failed: {}",
-                                                            String::from_utf8_lossy(&info_log))));
+      String::from_utf8_lossy(&info_log))));
   }
 
   // fragment shader
@@ -339,7 +375,7 @@ unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::FragmentShaderError(format!("Fragment shader compilation failed: {}",
-                                                              String::from_utf8_lossy(&info_log))));
+      String::from_utf8_lossy(&info_log))));
   }
 
   // link shaders
@@ -357,7 +393,7 @@ unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::LinkingShaderError(format!("Linking shader failed: {}",
-                                                             String::from_utf8_lossy(&info_log))));
+      String::from_utf8_lossy(&info_log))));
   }
   gl::DeleteShader(vertex_shader);
   gl::DeleteShader(fragment_shader);
@@ -368,9 +404,21 @@ unsafe fn create_shader(vertex_shader_source: &str,
 #[derive(Debug)]
 pub struct CreateTextureError {}
 
-unsafe fn create_texture() -> Result<u32, CreateTextureError>
+unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureError>
 {
-  return Ok(0);
+  let mut gl_texture = 0;
+  gl::GenTextures(1, &mut gl_texture);
+  gl::BindTexture(gl::TEXTURE_2D, gl_texture);
+
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+
+  gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB as i32,
+    texture.width() as i32, texture.height() as i32, 0, gl::RGB, gl::UNSIGNED_BYTE, texture.as_ptr() as *const c_void);
+
+  return Ok(gl_texture);
 }
 
 
