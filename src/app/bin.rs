@@ -10,7 +10,8 @@ use alers::renderer::opengl::{RenderTasks, SimpleRenderTasks};
 mod example;
 mod game;
 
-pub fn main() {
+#[async_std::main]
+async fn main() {
   // Initialize File Logging
   alers::log::init();
 
