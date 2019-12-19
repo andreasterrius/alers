@@ -26,9 +26,9 @@ impl Game {
     let base_path = "/home/alether/Codes/Graphics/alers";
 
     // Load meshes
-    let mesh = resource::fbx_convert::to_static_meshes(
-      resource::fbx::load(&format!("{}/{}", base_path, "resources/test/cube.fbx")).unwrap()).unwrap().remove(0);
-    //let mesh = resource::static_mesh::create_cube();
+    //let mesh = resource::fbx_convert::to_static_meshes(
+    //  resource::fbx::load(&format!("{}/{}", base_path, "resources/test/cube.fbx")).unwrap()).unwrap().remove(0);
+    let mesh = resource::static_mesh::create_cube();
 
     // Load shaders
     let lambert = resource::shader::ShaderFile::new(

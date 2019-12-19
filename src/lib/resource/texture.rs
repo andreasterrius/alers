@@ -52,6 +52,8 @@ impl Texture {
   }
 }
 
+impl_id!(Texture, id);
+
 pub struct TextureWrap {
   pub x : TextureWrapType,
   pub y : TextureWrapType,
@@ -73,8 +75,6 @@ pub enum TextureMagnificationType {
   Linear,
 }
 
-
-impl_id!(Texture, id);
 
 #[derive(Debug)]
 pub enum LoadTextureError {
