@@ -1,8 +1,8 @@
 use glfw::{Context, Key, Action, WindowEvent, CursorMode};
 use std::sync::mpsc::Receiver;
-use input::Input;
-use window::input_translator::{translate_key, translate_scancode, translate_modifier, translate_action};
-use data::display_info::DisplayInfo;
+use crate::input::Input;
+use crate::window::input_translator::{translate_key, translate_scancode, translate_modifier, translate_action};
+use crate::data::display_info::DisplayInfo;
 
 pub mod input_translator;
 

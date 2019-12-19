@@ -1,6 +1,6 @@
 use glfw::{Key, Action};
 
-use input;
+use crate::input;
 
 pub fn translate_key(glfw_key: glfw::Key) -> input::Key {
   match glfw_key {

@@ -1,5 +1,5 @@
-use camera::Camera;
-use input::{Input, Key, Action};
+use crate::camera::Camera;
+use crate::input::{Input, Key, Action};
 use cgmath::{Vector3, Vector2, Deg, Quaternion};
 use cgmath::prelude::*;
 

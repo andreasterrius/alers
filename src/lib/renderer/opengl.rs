@@ -7,13 +7,13 @@ use std::os::raw::c_void;
 use cgmath::{Matrix, Matrix4, Vector3, Vector4};
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
 
-use camera::CameraRenderInfo;
-use data::buffer::Buffer;
-use data::id::Id;
-use data::id::Identifiable;
-use resource::shader::ShaderFile;
-use resource::static_mesh::StaticMesh;
-use resource::texture::{Texture, TextureMagnificationType, TextureWrapType};
+use crate::camera::CameraRenderInfo;
+use crate::data::buffer::Buffer;
+use crate::data::id::Id;
+use crate::data::id::Identifiable;
+use crate::resource::shader::ShaderFile;
+use crate::resource::static_mesh::StaticMesh;
+use crate::resource::texture::{Texture, TextureMagnificationType, TextureWrapType};
 
 pub struct Context {
   static_meshes: HashMap<Id, StaticMeshDrawInfo>,

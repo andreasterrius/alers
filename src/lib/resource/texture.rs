@@ -1,6 +1,6 @@
 use image::{GenericImageView, ImageError};
 
-use data::id::Id;
+use crate::data::id::Id;
 
 pub struct Texture {
   id: Id,

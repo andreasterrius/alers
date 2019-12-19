@@ -1,5 +1,5 @@
-use data::buffer::{Buffer, SeparateBufferBuilder};
-use resource::static_mesh::StaticMesh;
+use crate::data::buffer::{Buffer, SeparateBufferBuilder};
+use crate::resource::static_mesh::StaticMesh;
 
 #[derive(Debug)]
 pub enum ConversionError {

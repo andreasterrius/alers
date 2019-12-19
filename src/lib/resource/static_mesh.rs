@@ -1,5 +1,5 @@
-use data::buffer::{Buffer, BufferBuilder};
-use data::id::Id;
+use crate::data::buffer::{Buffer, BufferBuilder};
+use crate::data::id::Id;
 
 #[derive(Debug)]
 pub struct StaticMesh {

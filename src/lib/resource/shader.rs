@@ -1,4 +1,4 @@
-use data::id::Id;
+use crate::data::id::Id;
 
 pub struct ShaderFile {
   pub id : Id,

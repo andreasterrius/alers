@@ -1,4 +1,4 @@
-use window::WindowCreator;
+use crate::window::WindowCreator;
 
 pub mod tick;
 
