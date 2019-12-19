@@ -1,3 +1,5 @@
+use bitflags::bitflags;
+
 #[derive(Debug)]
 pub enum Input {
   Key(Key, Scancode, Action, Modifier),
@@ -140,11 +142,11 @@ pub enum Action {
 
 bitflags! {
   pub struct Modifier : u32 {
-    const Shift     = 0b00000001;
-    const Control   = 0b00000010;
-    const Alt       = 0b00000100;
-    const Super     = 0b00001000;
-    const CapsLock  = 0b00010000;
-    const NumLock   = 0b00100000;
+    const SHIFT     = 0b00000001;
+    const CONTROL   = 0b00000010;
+    const ALT       = 0b00000100;
+    const SUPER     = 0b00001000;
+    const CAPSLOCK  = 0b00010000;
+    const NUMLOCK   = 0b00100000;
   }
 }
