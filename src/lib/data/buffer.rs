@@ -1,3 +1,5 @@
+use approx::relative_eq;
+
 #[derive(Debug)]
 pub struct BufferElementInfo {
   pub name: String,

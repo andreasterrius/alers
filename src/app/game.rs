@@ -23,7 +23,7 @@ pub struct Game {
 impl Game {
   pub fn load(context: &mut Context) -> Game {
 
-    let base_path = "/home/alether/Codes/Graphics/alers";
+    let base_path = "E:/Codes/Repos/alers";
 
     // Load meshes
     //let mesh = resource::fbx_convert::to_static_meshes(
@@ -38,7 +38,7 @@ impl Game {
 
     // Load textures
     let texture = resource::texture::Texture::load(
-      &format!("{}/{}", base_path, "resources/test/container.jpg")).unwrap();
+      &format!("{}/{}", base_path, "resources/test/hdr/GravelPlaza_Env.hdr")).unwrap();
 
     context.static_mesh(&mesh).unwrap();
     context.shader(&lambert).unwrap();
