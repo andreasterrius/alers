@@ -10,6 +10,11 @@ use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
 use crate::data::buffer::Buffer;
 use crate::resource::texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 
+pub unsafe fn clear_buffer() {
+  gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);
+  gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+}
+
 #[derive(Debug)]
 pub struct CreateBufferError {}
 
@@ -233,13 +238,50 @@ pub unsafe fn create_cubemap() -> u32
   return cube_map;
 }
 
-pub unsafe fn project_cubemap(_renderbuffer: u32, _cubemap: u32) {
-  //let projection = cgmath::perspective();
+pub unsafe fn project_cubemap(_renderbuffer: u32, _cubemap: u32, projection_shader: u32) {
   let _views = vec!(
     cgmath::Matrix4::look_at(Point3::origin(), Point3::new(1.0f32, 0.0, 0.0), -Vector3::unit_y()),
+    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(-1.0f32, 0.0, 0.0), -Vector3::unit_y()),
+    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 1.0, 0.0), -Vector3::unit_z()),
+    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, -1.0, 0.0), Vector3::unit_z()),
+    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, 1.0), -Vector3::unit_y()),
+    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, 1.0), -Vector3::unit_y()),
   );
+
+  gl::UseProgram(projection_shader);
 }
 
 pub unsafe fn enable_depth_test() {
   gl::Enable(gl::DEPTH_TEST)
+}
+
+pub unsafe fn use_shader(shader: u32) {
+  gl::UseProgram(shader);
+}
+
+pub unsafe fn active_texture(texture_slot_offset: u32) {
+  gl::ActiveTexture(gl::TEXTURE0 + texture_slot_offset);
+}
+
+pub unsafe fn bind_texture(texture: u32) {
+  gl::BindTexture(gl::TEXTURE_2D, texture);
+}
+
+pub unsafe fn uniform3f(shader: u32, name: &str, x: f32, y: f32, z: f32) {
+  let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
+  gl::Uniform3f(location, x, y, z);
+}
+
+pub unsafe fn uniform4f(shader: u32, name: &str, x: f32, y: f32, z: f32, q: f32) {
+  let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
+  gl::Uniform4f(location, x, y, z, q);
+}
+
+pub unsafe fn matrix4f(shader: u32, name: &str, ptr: *const f32) {
+  gl::UniformMatrix4fv(
+    gl::GetUniformLocation(shader, CString::new(name).unwrap().as_ptr()),
+    1,
+    gl::FALSE,
+    ptr
+  );
 }

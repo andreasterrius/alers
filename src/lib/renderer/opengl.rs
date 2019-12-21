@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ffi::CString;
 use std::ptr;
 
 use cgmath::{Matrix, Matrix4};
@@ -81,7 +80,14 @@ enum Renderable {
     texture_ids: Vec<Id>,
     transform: Matrix4<f32>,
     shader_variables: Vec<ShaderVariable>,
-  }
+  },
+
+  EquirectCubemapProjection {
+    shader_id: Id, // Projection shader
+    mesh_id: Id, // Cube mesh
+    texture_id: Id, // Equirect
+    shader_variables: Vec<ShaderVariable>,
+  },
 }
 
 pub trait RenderTasks {
@@ -91,6 +97,12 @@ pub trait RenderTasks {
                        textures: Vec<&Texture>,
                        transform: Matrix4<f32>,
                        shader_vars: Vec<ShaderVariable>);
+
+  fn queue_cubemap_projection(&mut self,
+                              equirect_shader_id : &ShaderFile,
+                              cube_mesh : &StaticMesh,
+                              equirect_texture : &Texture,
+                              shader_vars : Vec<ShaderVariable>);
 
   fn render(&mut self, context: &Context, camera: &mut CameraRenderInfo);
 }
@@ -111,24 +123,34 @@ impl RenderTasks for SimpleRenderTasks {
                        mesh: &StaticMesh,
                        textures: Vec<&Texture>,
                        transform: Matrix4<f32>,
-                       shader_vars: Vec<ShaderVariable>)
+                       shader_variables: Vec<ShaderVariable>)
   {
     self.renderables.push(Renderable::StaticMesh {
       shader_id: shader.uid(),
       mesh_id: mesh.uid(),
       texture_ids: textures.into_iter().map(|x| x.uid()).collect(),
       transform,
-      shader_variables: shader_vars,
+      shader_variables,
     });
+  }
+
+  fn queue_cubemap_projection(&mut self,
+                              equirect_shader_id : &ShaderFile,
+                              cube_mesh : &StaticMesh,
+                              equirect_texture : &Texture,
+                              shader_variables: Vec<ShaderVariable>) {
+    self.renderables.push(Renderable::EquirectCubemapProjection {
+      shader_id: equirect_shader_id.uid(),
+      mesh_id: cube_mesh.uid(),
+      texture_id: equirect_texture.uid(),
+      shader_variables
+    })
   }
 
   fn render(&mut self, context: &Context, camera: &mut CameraRenderInfo) {
 
-    // Clear screen
-    unsafe {
-      gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);
-      gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-    }
+    // Clear the screen buffer
+    unsafe { raw::clear_buffer(); }
 
     for renderable in &self.renderables {
       match renderable {
@@ -144,7 +166,7 @@ impl RenderTasks for SimpleRenderTasks {
 
           unsafe {
             // Bind shader
-            gl::UseProgram(shader_draw_info.shader);
+            raw::use_shader(shader_draw_info.shader);
 
             // Bind textures here
             for i in 0..texture_ids.len() {
@@ -153,23 +175,22 @@ impl RenderTasks for SimpleRenderTasks {
                 Some(x) => x,
               };
 
-              gl::ActiveTexture(gl::TEXTURE0 + i as u32);
-              gl::BindTexture(gl::TEXTURE_2D, texture_draw_info.texture);
+              raw::active_texture(i as u32);
+              raw::bind_texture(texture_draw_info.texture);
             }
 
             // Pass shader specific uniforms
             for shader_variable in shader_variables {
-              let location = gl::GetUniformLocation(shader_draw_info.shader, CString::new(shader_variable.name.clone()).unwrap().as_ptr() as *const i8);
               match shader_variable.variable_type {
-                ShaderVariableType::F32_3(vec) => gl::Uniform3f(location, vec.x, vec.y, vec.z),
-                ShaderVariableType::F32_4(vec) => gl::Uniform4f(location, vec.x, vec.y, vec.z, vec.w),
+                ShaderVariableType::F32_3(vec) => raw::uniform3f(shader_draw_info.shader, &shader_variable.name, vec.x, vec.y, vec.z),
+                ShaderVariableType::F32_4(vec) => raw::uniform4f(shader_draw_info.shader, &shader_variable.name, vec.x, vec.y, vec.z, vec.w),
               }
             }
 
             // Pass uniforms
-            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("model").unwrap().as_ptr()), 1, gl::FALSE, transform.as_ptr());
-            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("view").unwrap().as_ptr() as *const i8), 1, gl::FALSE, camera.view.as_ptr());
-            gl::UniformMatrix4fv(gl::GetUniformLocation(shader_draw_info.shader, CString::new("projection").unwrap().as_ptr() as *const i8), 1, gl::FALSE, camera.projection.as_ptr());
+            raw::matrix4f(shader_draw_info.shader, "model", transform.as_ptr());
+            raw::matrix4f(shader_draw_info.shader, "view", camera.view.as_ptr());
+            raw::matrix4f(shader_draw_info.shader, "projection", camera.projection.as_ptr());
 
             // Bind Array Buffer
             gl::BindVertexArray(mesh_draw_info.vao);
@@ -180,6 +201,9 @@ impl RenderTasks for SimpleRenderTasks {
               Some(_) => gl::DrawElements(gl::TRIANGLES, mesh_draw_info.draw_size as i32, gl::UNSIGNED_INT, ptr::null()),
             }
           }
+        }
+        Renderable::EquirectCubemapProjection { shader_id: _, mesh_id: _, texture_id: _, shader_variables: _ } => {
+
         }
       }
     }
