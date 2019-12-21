@@ -53,7 +53,7 @@ impl Game {
       mesh,
       texture,
       lambert,
-      transform: Transform::new(),
+      transform: Transform::from_position(Vector3::new(0.0f32, 0.0, 0.0)),
     }
   }
 
