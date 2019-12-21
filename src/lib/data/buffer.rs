@@ -1,5 +1,3 @@
-use approx::relative_eq;
-
 #[derive(Debug)]
 pub struct BufferElementInfo {
   pub name: String,
@@ -180,6 +178,8 @@ impl<'a, T: Clone> Iterator for BufferElementIterator<'a, T> {
 
 #[test]
 pub fn test_buffers() {
+  use approx::relative_eq;
+
   let data: Vec<f32> = vec![
     // vertices (3), uv(2), normals(3)
     1.0, 1.0, 1.0, 10.0, 10.0, -1.0, -1.0, -1.0,
@@ -221,6 +221,8 @@ pub fn test_buffers() {
 
 #[test]
 pub fn test_separate_buffers() {
+  use approx::relative_eq;
+
   let vertices_data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
   let uvs_data = vec![10.0, 20.0, 30.0, -30.0, 40.0, -40.0];
   let normals_data = vec![-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0];

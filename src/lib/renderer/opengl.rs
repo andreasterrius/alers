@@ -421,12 +421,6 @@ unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureError>
     TexturePixel::RgbF32(v) => { (gl::RGB32F as i32, gl::FLOAT, v.as_ptr() as *const c_void) },
   };
 
-//  let mut i = 0;
-//  while i < 100000 {
-//    i += 1;
-//    println!("{}", i);
-//  }
-
   gl::TexImage2D(
     gl::TEXTURE_2D,
     0,

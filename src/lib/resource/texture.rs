@@ -1,9 +1,6 @@
-use std::fs;
 use std::fs::File;
 
-use glfw::log_errors;
 use image::{GenericImageView, ImageError};
-use log::info;
 
 use crate::data::id::Id;
 
@@ -42,7 +39,7 @@ impl Texture {
         v.push(p.b);
       }
 
-      let mut v = flip_byte_vertically(&v, i.width as u32, i.height as u32, 3);
+      let v = flip_byte_vertically(&v, i.width as u32, i.height as u32, 3);
       Ok(Texture::new(TexturePixel::RgbF32(v), i.width as u32, i.height as u32, 3))
     } else {
       let i = image::open(path)?;
@@ -127,7 +124,7 @@ fn flip_byte_vertically<T: Clone>(v: &Vec<T>, width: u32, height: u32, channel_c
   let row_size = height as usize;
   let mut flipped = vec!();
   for row in (0..row_size).rev() {
-    let first_row_idx = (row * column_size);
+    let first_row_idx = row * column_size;
     flipped.extend_from_slice(&v[first_row_idx..first_row_idx + column_size]);
   }
   flipped
