@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::ptr;
 
-use cgmath::{Matrix, Matrix4, Vector3, Vector4};
+use cgmath::{Matrix, Matrix4};
 
 use crate::camera::CameraRenderInfo;
 use crate::data::id::Id;
@@ -27,8 +27,8 @@ pub struct Context {
   static_meshes: HashMap<Id, StaticMeshDrawInfo>,
   shaders: HashMap<Id, ShaderDrawInfo>,
   textures: HashMap<Id, TextureDrawInfo>,
-  renderbuffer: HashMap<Id, RenderbufferDrawInfo>,
-  cubemap: HashMap<Id, CubemapDrawInfo>,
+  _renderbuffer: HashMap<Id, RenderbufferDrawInfo>,
+  _cubemap: HashMap<Id, CubemapDrawInfo>,
 }
 
 impl Context {
@@ -37,8 +37,8 @@ impl Context {
       static_meshes: HashMap::new(),
       shaders: HashMap::new(),
       textures: HashMap::new(),
-      renderbuffer: HashMap::new(),
-      cubemap: HashMap::new()
+      _renderbuffer: HashMap::new(),
+      _cubemap: HashMap::new()
     }
   }
 

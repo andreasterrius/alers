@@ -1,8 +1,9 @@
 #[test]
 pub fn load_fbx_simple_get_vertices(){
+  use log::info;
   alers::log::init_test();
 
-  let mut cube_fbx = alers::resource::fbx::load("resources/test/data/basic_blender.fbx")
+  let cube_fbx = alers::resource::fbx::load("resources/test/data/basic_blender.fbx")
     .expect("Fail to load cube fbx");
 
   let cube_object = cube_fbx.objects()
@@ -12,16 +13,17 @@ pub fn load_fbx_simple_get_vertices(){
   assert_eq!(cube_object.is_some(), true);
 
   // Get vertices
-  let mut node = cube_object.unwrap().node().children_by_name("Vertices").nth(0).unwrap();
+  let node = cube_object.unwrap().node().children_by_name("Vertices").nth(0).unwrap();
   info!("{} : {:?}", node.name(), node.attributes());
 }
 
 
 #[test]
 pub fn load_fbx_rigged_print_attributes() {
+  use log::info;
   alers::log::init();
 
-  let mut fbx = alers::resource::fbx::load("resources/test/cube.fbx")
+  let fbx = alers::resource::fbx::load("resources/test/cube.fbx")
     .expect("Fail to load rigged fbx");
 
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();
