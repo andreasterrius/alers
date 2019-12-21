@@ -233,9 +233,9 @@ pub unsafe fn create_cubemap() -> u32
   return cube_map;
 }
 
-pub unsafe fn project_cubemap(renderbuffer: u32, cubemap: u32) {
+pub unsafe fn project_cubemap(_renderbuffer: u32, _cubemap: u32) {
   //let projection = cgmath::perspective();
-  let views = vec!(
+  let _views = vec!(
     cgmath::Matrix4::look_at(Point3::origin(), Point3::new(1.0f32, 0.0, 0.0), -Vector3::unit_y()),
   );
 }

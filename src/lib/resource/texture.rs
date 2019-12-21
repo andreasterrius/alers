@@ -139,7 +139,7 @@ fn test_flip_image_vertically() {
       12.0f32, 13.0, 14.0, 15.0, 16.0, 17.0,
     );
 
-  let t = Texture::new(TexturePixel::RgbF32(k), 2, 3, 3);
+  let _t = Texture::new(TexturePixel::RgbF32(k), 2, 3, 3);
 
   let k =
     vec!(

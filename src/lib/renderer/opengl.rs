@@ -1,24 +1,20 @@
-use std::ptr;
 use std::collections::HashMap;
 use std::ffi::CString;
+use std::ptr;
 
-use bitflags::_core::ptr::null;
-use cgmath::{Matrix, Matrix4, Point3, Vector3, Vector4};
-use cgmath::prelude::*;
+use cgmath::{Matrix, Matrix4, Vector3, Vector4};
 
 use crate::camera::CameraRenderInfo;
-use crate::data::buffer::Buffer;
 use crate::data::id::Id;
 use crate::data::id::Identifiable;
 use crate::renderer::opengl::cubemap::CubemapDrawInfo;
-use crate::renderer::opengl::raw::CreateBufferError;
 use crate::renderer::opengl::renderbuffer::RenderbufferDrawInfo;
-use crate::renderer::opengl::shader::{ShaderDrawInfo, ShaderError};
+use crate::renderer::opengl::shader::{ShaderDrawInfo, ShaderError, ShaderVariableType, ShaderVariable};
 use crate::renderer::opengl::static_mesh::{StaticMeshDrawInfo, StaticMeshError};
 use crate::renderer::opengl::texture::{TextureDrawInfo, TextureError};
 use crate::resource::shader::ShaderFile;
 use crate::resource::static_mesh::StaticMesh;
-use crate::resource::texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
+use crate::resource::texture::Texture;
 
 pub mod static_mesh;
 pub mod renderbuffer;
@@ -32,7 +28,7 @@ pub struct Context {
   shaders: HashMap<Id, ShaderDrawInfo>,
   textures: HashMap<Id, TextureDrawInfo>,
   renderbuffer: HashMap<Id, RenderbufferDrawInfo>,
-  cube_map: HashMap<Id, CubemapDrawInfo>,
+  cubemap: HashMap<Id, CubemapDrawInfo>,
 }
 
 impl Context {
@@ -42,7 +38,7 @@ impl Context {
       shaders: HashMap::new(),
       textures: HashMap::new(),
       renderbuffer: HashMap::new(),
-      cube_map: HashMap::new()
+      cubemap: HashMap::new()
     }
   }
 
@@ -188,23 +184,4 @@ impl RenderTasks for SimpleRenderTasks {
       }
     }
   }
-}
-
-pub struct ShaderVariable {
-  pub name: String,
-  pub variable_type: ShaderVariableType,
-}
-
-impl ShaderVariable {
-  pub fn new(name: String, variable_type: ShaderVariableType) -> ShaderVariable {
-    ShaderVariable {
-      name,
-      variable_type,
-    }
-  }
-}
-
-pub enum ShaderVariableType {
-  F32_3(Vector3<f32>),
-  F32_4(Vector4<f32>),
 }

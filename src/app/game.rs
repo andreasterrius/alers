@@ -7,10 +7,11 @@ use alers::camera::CameraRenderInfo;
 use alers::camera::flycamera::FlyCamera;
 use alers::input::Input;
 use alers::math::transform::Transform;
-use alers::renderer::opengl::{Context, RenderTasks, ShaderVariable, ShaderVariableType};
+use alers::renderer::opengl::{Context, RenderTasks};
 use alers::resource::shader::ShaderFile;
 use alers::resource::static_mesh::StaticMesh;
 use alers::resource::texture::Texture;
+use alers::renderer::opengl::shader::{ShaderVariable, ShaderVariableType};
 
 pub struct Game {
   fly_camera: FlyCamera,

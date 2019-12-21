@@ -149,7 +149,7 @@ pub fn construct_buffer(indices: &[i32],
 pub fn fbx_to_buffers_should_properly_parse() {
   crate::log::init_test();
 
-  let mut fbx = crate::resource::fbx::load("resources/test/geom/basic_blender.fbx")
+  let fbx = crate::resource::fbx::load("resources/test/geom/basic_blender.fbx")
     .expect("Fail to load rigged fbx");
 
   let meshes = to_static_meshes(fbx);
