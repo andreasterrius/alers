@@ -7,7 +7,7 @@ use alers::camera::CameraRenderInfo;
 use alers::camera::flycamera::FlyCamera;
 use alers::input::Input;
 use alers::math::transform::Transform;
-use alers::renderer::opengl::{Context, RenderTasks};
+use alers::renderer::opengl::{Context, RenderTasks, SimpleRenderTasks};
 use alers::resource::shader::ShaderFile;
 use alers::resource::static_mesh::StaticMesh;
 use alers::resource::texture::Texture;
@@ -35,6 +35,10 @@ impl Game {
     let lambert = resource::shader::ShaderFile::new(
       fs::read_to_string(format!("{}/{}", base_path, "shaders/lambert.vert")).unwrap(),
       fs::read_to_string(format!("{}/{}", base_path, "shaders/lambert.frag")).unwrap()
+    );    // Load shaders
+    let equirect = resource::shader::ShaderFile::new(
+      fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.frag")).unwrap()
     );
 
     // Load textures
@@ -45,6 +49,17 @@ impl Game {
     context.shader(&lambert).unwrap();
     context.texture(&texture).unwrap();
     context.setup();
+
+
+    // Conduct a render pass here for our equirect projection
+    let mut render_tasks = SimpleRenderTasks::new();
+    render_tasks.queue_cubemap_projection(
+      &equirect,
+      &mesh,
+      &texture,
+      vec!()
+    );
+    render_tasks.render(context);
 
     let camera = camera::Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), 90.0f32, 800f32 / 600f32);
     let fly_camera = camera::flycamera::FlyCamera::new(camera);
@@ -71,11 +86,7 @@ impl Game {
     let light_position = ShaderVariable::new("light_position".to_owned(), ShaderVariableType::F32_3(Vector3::new(5.0, 5.0, 5.0)));
     let light_color = ShaderVariable::new("light_color".to_owned(), ShaderVariableType::F32_3(Vector3::new(0.0, 0.0, 1.0)));
 
-    render_tasks.queue_static_mesh(&self.lambert, &self.mesh, vec!(&self.texture),
-      self.transform.matrix(), vec![light_position, light_color]);
-  }
-
-  pub fn camera_render_info(&mut self) -> CameraRenderInfo {
-    self.fly_camera.camera_mut().camera_render_info()
+    render_tasks.queue_static_mesh(&self.lambert, &self.mesh, vec!(&self.texture), self.transform.matrix(),
+      self.fly_camera.camera_mut().camera_render_info(), vec![light_position, light_color]);
   }
 }

@@ -39,7 +39,7 @@ async fn main() {
     // Initialize render queue & assign render tasks
     let mut render_tasks = SimpleRenderTasks::new();
     game.render(&mut render_tasks);
-    render_tasks.render(&context, &mut game.camera_render_info());
+    render_tasks.render(&context);
 
     window.swap_buffers();
   }

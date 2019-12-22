@@ -96,6 +96,7 @@ enum Renderable {
     mesh_id: Id,
     texture_ids: Vec<Id>,
     transform: Matrix4<f32>,
+    camera_render_info : CameraRenderInfo,
     shader_variables: Vec<ShaderVariable>,
   },
 
@@ -113,6 +114,7 @@ pub trait RenderTasks {
                        mesh: &StaticMesh,
                        textures: Vec<&Texture>,
                        transform: Matrix4<f32>,
+                       camera_render_info: CameraRenderInfo,
                        shader_vars: Vec<ShaderVariable>);
 
   fn queue_cubemap_projection(&mut self,
@@ -121,7 +123,7 @@ pub trait RenderTasks {
                               equirect_texture: &Texture,
                               shader_vars: Vec<ShaderVariable>);
 
-  fn render(&mut self, context: &Context, camera: &mut CameraRenderInfo) -> Result<(), RenderError>;
+  fn render(&mut self, context: &Context) -> Result<(), RenderError>;
 }
 
 pub struct SimpleRenderTasks {
@@ -140,6 +142,7 @@ impl RenderTasks for SimpleRenderTasks {
                        mesh: &StaticMesh,
                        textures: Vec<&Texture>,
                        transform: Matrix4<f32>,
+                       camera_render_info: CameraRenderInfo,
                        shader_variables: Vec<ShaderVariable>)
   {
     self.renderables.push(Renderable::StaticMesh {
@@ -147,6 +150,7 @@ impl RenderTasks for SimpleRenderTasks {
       mesh_id: mesh.uid(),
       texture_ids: textures.into_iter().map(|x| x.uid()).collect(),
       transform,
+      camera_render_info,
       shader_variables,
     });
   }
@@ -164,14 +168,14 @@ impl RenderTasks for SimpleRenderTasks {
     })
   }
 
-  fn render(&mut self, context: &Context, camera: &mut CameraRenderInfo) -> Result<(), RenderError> {
+  fn render(&mut self, context: &Context) -> Result<(), RenderError> {
 
     // Clear the screen buffer
     unsafe { raw::clear_buffer(); }
 
     for renderable in &self.renderables {
       match renderable {
-        Renderable::StaticMesh { shader_id, mesh_id, texture_ids, transform, shader_variables } => {
+        Renderable::StaticMesh { shader_id, mesh_id, texture_ids, transform, camera_render_info, shader_variables } => {
           let mesh_draw_info = context.get_static_mesh(mesh_id).ok_or(UnregisteredMesh(*mesh_id))?;
           let shader_draw_info = context.get_shader(shader_id).ok_or(UnregisteredShader(*shader_id))?;
 
@@ -200,8 +204,8 @@ impl RenderTasks for SimpleRenderTasks {
 
             // Pass uniforms
             raw::matrix4f(shader_draw_info.shader, MODEL, transform.as_ptr());
-            raw::matrix4f(shader_draw_info.shader, VIEW, camera.view.as_ptr());
-            raw::matrix4f(shader_draw_info.shader, PROJECTION, camera.projection.as_ptr());
+            raw::matrix4f(shader_draw_info.shader, VIEW, camera_render_info.view.as_ptr());
+            raw::matrix4f(shader_draw_info.shader, PROJECTION, camera_render_info.projection.as_ptr());
 
             // Bind Array Buffer
             raw::bind_vao(mesh_draw_info.vao);
