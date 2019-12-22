@@ -3,16 +3,77 @@ use std::convert::TryInto;
 use std::ffi::{c_void, CString};
 use std::ptr::null;
 
-use cgmath::{Point3, Vector3};
+use cgmath::{Deg, Point3, Vector3};
 use cgmath::prelude::*;
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
 
 use crate::data::buffer::Buffer;
 use crate::resource::texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
+use crate::renderer::constant::{PROJECTION, VIEW};
 
 pub unsafe fn clear_buffer() {
   gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);
   gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+}
+
+pub unsafe fn set_viewport(x: u32, y: u32, w : u32, h : u32){
+  gl::Viewport(x as i32, y as i32, w as i32, h as i32);
+}
+
+pub unsafe fn enable_depth_test() {
+  gl::Enable(gl::DEPTH_TEST)
+}
+
+pub unsafe fn use_shader(shader: u32) {
+  gl::UseProgram(shader);
+}
+
+pub unsafe fn active_texture(texture_slot_offset: u32) {
+  gl::ActiveTexture(gl::TEXTURE0 + texture_slot_offset);
+}
+
+pub unsafe fn bind_texture(texture: u32) {
+  gl::BindTexture(gl::TEXTURE_2D, texture);
+}
+
+pub unsafe fn bind_framebuffer(framebuffer: u32) {
+  gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer);
+}
+
+pub unsafe fn uniform1i(shader: u32, name: &str, num: i32) {
+  let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
+  gl::Uniform1i(location, num);
+}
+
+pub unsafe fn uniform3f(shader: u32, name: &str, x: f32, y: f32, z: f32) {
+  let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
+  gl::Uniform3f(location, x, y, z);
+}
+
+pub unsafe fn uniform4f(shader: u32, name: &str, x: f32, y: f32, z: f32, q: f32) {
+  let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
+  gl::Uniform4f(location, x, y, z, q);
+}
+
+pub unsafe fn matrix4f(shader: u32, name: &str, ptr: *const f32) {
+  gl::UniformMatrix4fv(
+    gl::GetUniformLocation(shader, CString::new(name).unwrap().as_ptr()),
+    1,
+    gl::FALSE,
+    ptr,
+  );
+}
+
+pub unsafe fn bind_vao(vao : u32) {
+  gl::BindVertexArray(vao);
+}
+
+pub unsafe fn draw_arrays(start_index: u32, draw_size: u32) {
+  gl::DrawArrays(gl::TRIANGLES, start_index as i32, draw_size as i32)
+}
+
+pub unsafe fn draw_elements(draw_size: u32) {
+  gl::DrawElements(gl::TRIANGLES, draw_size as i32, gl::UNSIGNED_INT, ptr::null());
 }
 
 #[derive(Debug)]
@@ -61,7 +122,7 @@ pub unsafe fn create_buffer(vertices: &Buffer<f32>,
     //println!("{:?} {:?}", start, count);
     let stride = (start * mem::size_of::<GLfloat>()) as *const c_void;
     gl::VertexAttribPointer(count, element.size.try_into().unwrap(),
-      gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
+                            gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
     gl::EnableVertexAttribArray(count);
     start += element.size;
     count += 1;
@@ -107,7 +168,7 @@ pub unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::VertexShaderError(format!("Vertex Shader compilation failed: {}",
-      String::from_utf8_lossy(&info_log))));
+                                                            String::from_utf8_lossy(&info_log))));
   }
 
   // fragment shader
@@ -125,7 +186,7 @@ pub unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::FragmentShaderError(format!("Fragment shader compilation failed: {}",
-      String::from_utf8_lossy(&info_log))));
+                                                              String::from_utf8_lossy(&info_log))));
   }
 
   // link shaders
@@ -143,7 +204,7 @@ pub unsafe fn create_shader(vertex_shader_source: &str,
       info_log.as_mut_ptr() as *mut GLchar,
     );
     return Err(CreateShaderError::LinkingShaderError(format!("Linking shader failed: {}",
-      String::from_utf8_lossy(&info_log))));
+                                                             String::from_utf8_lossy(&info_log))));
   }
   gl::DeleteShader(vertex_shader);
   gl::DeleteShader(fragment_shader);
@@ -168,8 +229,8 @@ pub unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureErro
 
   let byte = texture.get_data();
   let (internal_format, pixel_format, ptr) = match byte {
-    TexturePixel::RgbF8(v) => { (gl::RGB as i32, gl::UNSIGNED_BYTE, v.as_ptr() as *const c_void) },
-    TexturePixel::RgbF32(v) => { (gl::RGB32F as i32, gl::FLOAT, v.as_ptr() as *const c_void) },
+    TexturePixel::RgbF8(v) => { (gl::RGB as i32, gl::UNSIGNED_BYTE, v.as_ptr() as *const c_void) }
+    TexturePixel::RgbF32(v) => { (gl::RGB32F as i32, gl::FLOAT, v.as_ptr() as *const c_void) }
   };
 
   gl::TexImage2D(
@@ -181,7 +242,7 @@ pub unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureErro
     0,
     gl::RGB,
     pixel_format,
-    ptr
+    ptr,
   );
 
   return Ok(gl_texture);
@@ -204,7 +265,7 @@ fn texture_mag_to_gl(mag: &TextureMagnificationType) -> i32
   }
 }
 
-pub unsafe fn create_renderbuffer() -> (u32, u32)
+pub unsafe fn create_framebuffer() -> (u32, u32)
 {
   let mut fbo = 0;
   gl::GenFramebuffers(1, &mut fbo);
@@ -218,14 +279,14 @@ pub unsafe fn create_renderbuffer() -> (u32, u32)
   gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT24, 512, 512);
   gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
 
-  return (fbo, rbo)
+  return (fbo, rbo);
 }
 
 pub unsafe fn create_cubemap() -> u32
 {
-  let mut cube_map = 0;
-  gl::GenTextures(1, &mut cube_map);
-  gl::BindTexture(gl::TEXTURE_CUBE_MAP, cube_map);
+  let mut cubemap = 0;
+  gl::GenTextures(1, &mut cubemap);
+  gl::BindTexture(gl::TEXTURE_CUBE_MAP, cubemap);
   for i in 0..6 {
     gl::TexImage2D(gl::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl::RGB32F as i32, 512, 512, 0, gl::RGB, gl::FLOAT, null());
   }
@@ -235,53 +296,6 @@ pub unsafe fn create_cubemap() -> u32
   gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
   gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
 
-  return cube_map;
+  return cubemap;
 }
 
-pub unsafe fn project_cubemap(_renderbuffer: u32, _cubemap: u32, projection_shader: u32) {
-  let _views = vec!(
-    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(1.0f32, 0.0, 0.0), -Vector3::unit_y()),
-    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(-1.0f32, 0.0, 0.0), -Vector3::unit_y()),
-    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 1.0, 0.0), -Vector3::unit_z()),
-    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, -1.0, 0.0), Vector3::unit_z()),
-    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, 1.0), -Vector3::unit_y()),
-    cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, 1.0), -Vector3::unit_y()),
-  );
-
-  gl::UseProgram(projection_shader);
-}
-
-pub unsafe fn enable_depth_test() {
-  gl::Enable(gl::DEPTH_TEST)
-}
-
-pub unsafe fn use_shader(shader: u32) {
-  gl::UseProgram(shader);
-}
-
-pub unsafe fn active_texture(texture_slot_offset: u32) {
-  gl::ActiveTexture(gl::TEXTURE0 + texture_slot_offset);
-}
-
-pub unsafe fn bind_texture(texture: u32) {
-  gl::BindTexture(gl::TEXTURE_2D, texture);
-}
-
-pub unsafe fn uniform3f(shader: u32, name: &str, x: f32, y: f32, z: f32) {
-  let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
-  gl::Uniform3f(location, x, y, z);
-}
-
-pub unsafe fn uniform4f(shader: u32, name: &str, x: f32, y: f32, z: f32, q: f32) {
-  let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
-  gl::Uniform4f(location, x, y, z, q);
-}
-
-pub unsafe fn matrix4f(shader: u32, name: &str, ptr: *const f32) {
-  gl::UniformMatrix4fv(
-    gl::GetUniformLocation(shader, CString::new(name).unwrap().as_ptr()),
-    1,
-    gl::FALSE,
-    ptr
-  );
-}
