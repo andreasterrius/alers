@@ -13,14 +13,17 @@ mod game;
 #[async_std::main]
 async fn main() {
   // Initialize File Logging
-  alers::log::init();
+  alers::log::init_test();
+
+  // Initialize config
+  let display_info = game::Game::init_window();
 
   // Initialize the engine
   let mut engine = engine::Engine::new();
-  let mut window = engine.windows().new(DisplayInfo::new(800, 600));
+  let mut window = engine.windows().new(display_info);
 
   let mut context = renderer::opengl::Context::new();
-  let mut game = game::Game::load(&mut context);
+  let mut game = game::Game::load(&mut context, &window);
 
   let mut tick = engine::tick::WorldTick::FixedStep(FixedStep::new(0.01f32));
 
@@ -39,7 +42,7 @@ async fn main() {
     // Initialize render queue & assign render tasks
     let mut render_tasks = SimpleRenderTasks::new();
     game.render(&mut render_tasks);
-    render_tasks.render(&context);
+    render_tasks.render(&context).unwrap();
 
     window.swap_buffers();
   }

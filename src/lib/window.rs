@@ -101,4 +101,8 @@ impl Window {
         }
         inputs
     }
+
+    pub fn get_display_info(&self) -> &DisplayInfo {
+        &self.display_info
+    }
 }

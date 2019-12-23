@@ -23,7 +23,7 @@ impl Texture {
       width,
       height,
       channel_count,
-      texture_wrap: TextureWrap { x: TextureWrapType::Repeat, y: TextureWrapType::Repeat },
+      texture_wrap: TextureWrap { x: TextureWrapType::ClampToEdge, y: TextureWrapType::ClampToEdge },
       texture_magnification: TextureMagnification { min: TextureMagnificationType::Linear, max: TextureMagnificationType::Linear }
     }
   }

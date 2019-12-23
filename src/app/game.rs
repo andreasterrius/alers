@@ -12,17 +12,28 @@ use alers::resource::shader::ShaderFile;
 use alers::resource::static_mesh::StaticMesh;
 use alers::resource::texture::Texture;
 use alers::renderer::opengl::shader::{ShaderVariable, ShaderVariableType};
+use alers::resource::cubemap::Cubemap;
+use alers::data::display_info::DisplayInfo;
+use alers::window::Window;
 
 pub struct Game {
   fly_camera: FlyCamera,
   mesh: StaticMesh,
   lambert: ShaderFile,
+  equirect: ShaderFile,
+  skybox: ShaderFile,
+  cubemap: Cubemap,
   texture: Texture,
   transform: Transform,
 }
 
 impl Game {
-  pub fn load(context: &mut Context) -> Game {
+
+  pub fn init_window() -> DisplayInfo {
+    DisplayInfo::new(800, 600)
+  }
+
+  pub fn load(context: &mut Context, window: &Window) -> Game {
 
     let base_path = "/home/alether/Codes/Graphics/alers";
 
@@ -40,16 +51,24 @@ impl Game {
       fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.vert")).unwrap(),
       fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.frag")).unwrap()
     );
+    let skybox = resource::shader::ShaderFile::new(
+      fs::read_to_string(format!("{}/{}", base_path, "shaders/skybox.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "shaders/skybox.frag")).unwrap()
+    );
+
+    let cubemap = resource::cubemap::Cubemap::new();
 
     // Load textures
     let texture = resource::texture::Texture::load(
-      &format!("{}/{}", base_path, "resources/hdr/Newport_Loft_Env.hdr")).unwrap();
+      &format!("{}/{}", base_path, "resources/hdr/Newport_Loft_Ref.hdr")).unwrap();
 
+    context.cubemap(&cubemap).unwrap();
     context.static_mesh(&mesh).unwrap();
     context.shader(&lambert).unwrap();
+    context.shader(&equirect).unwrap();
+    context.shader(&skybox).unwrap();
     context.texture(&texture).unwrap();
     context.setup();
-
 
     // Conduct a render pass here for our equirect projection
     let mut render_tasks = SimpleRenderTasks::new();
@@ -57,6 +76,8 @@ impl Game {
       &equirect,
       &mesh,
       &texture,
+      &cubemap,
+      window.get_display_info(),
       vec!()
     );
     render_tasks.render(context);
@@ -69,6 +90,9 @@ impl Game {
       mesh,
       texture,
       lambert,
+      equirect,
+      skybox,
+      cubemap,
       transform: Transform::from_position(Vector3::new(0.0f32, 0.0, 0.0)),
     }
   }
@@ -87,6 +111,9 @@ impl Game {
     let light_color = ShaderVariable::new("light_color".to_owned(), ShaderVariableType::F32_3(Vector3::new(0.0, 0.0, 1.0)));
 
     render_tasks.queue_static_mesh(&self.lambert, &self.mesh, vec!(&self.texture), self.transform.matrix(),
-      self.fly_camera.camera_mut().camera_render_info(), vec![light_position, light_color]);
+                                   self.fly_camera.camera_mut().camera_render_info(), vec![light_position, light_color]);
+
+    render_tasks.queue_skybox(&self.skybox, &self.mesh, &self.cubemap,
+                              self.fly_camera.camera_mut().camera_render_info(), vec!())
   }
 }
