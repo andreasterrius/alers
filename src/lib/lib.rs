@@ -9,3 +9,4 @@ pub mod renderer;
 pub mod data;
 pub mod camera;
 pub mod input;
+pub mod entity;
