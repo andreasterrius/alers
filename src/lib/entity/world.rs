@@ -70,14 +70,16 @@ impl World {
                                      p.static_mesh_id,
                                      p.textures.clone(),
                                      p.transform.matrix(),
-                                     vec!());
+                                     p.shader_variables.clone());
     }
 
     if let Some(skybox) = &self.skybox {
       render_tasks.queue_skybox(skybox.shader_id,
                                 skybox.static_mesh_id,
-                                skybox.cubemap_id,
-                                vec!())
+                                skybox.rendered_cubemap_id,
+                                vec!());
+
+      render_tasks.with_skybox(skybox.irradiance_cubemap_id);
     }
   }
 }

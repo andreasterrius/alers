@@ -50,6 +50,11 @@ pub unsafe fn uniform1i(shader: u32, name: &str, num: i32) {
   gl::Uniform1i(location, num);
 }
 
+pub unsafe fn uniform1f(shader: u32, name: &str, num: f32) {
+  let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
+  gl::Uniform1f(location, num);
+}
+
 pub unsafe fn uniform3f(shader: u32, name: &str, x: f32, y: f32, z: f32) {
   let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
   gl::Uniform3f(location, x, y, z);

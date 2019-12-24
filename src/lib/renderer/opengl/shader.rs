@@ -24,6 +24,7 @@ impl ShaderDrawInfo {
   }
 }
 
+#[derive(Clone)]
 pub struct ShaderVariable {
   pub name: String,
   pub variable_type: ShaderVariableType,
@@ -38,7 +39,9 @@ impl ShaderVariable {
   }
 }
 
+#[derive(Clone)]
 pub enum ShaderVariableType {
+  F32_1(f32),
   F32_3(Vector3<f32>),
   F32_4(Vector4<f32>),
 }

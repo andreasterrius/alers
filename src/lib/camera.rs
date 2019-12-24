@@ -67,7 +67,8 @@ impl Camera {
   pub fn camera_render_info(&mut self) -> CameraRenderInfo {
     CameraRenderInfo {
       view: self.view_mat(),
-      projection: self.projection_mat()
+      projection: self.projection_mat(),
+      position: self.transform.position,
     }
   }
 }
@@ -76,6 +77,7 @@ impl Camera {
 pub struct CameraRenderInfo {
   pub view: Matrix4<f32>,
   pub projection: Matrix4<f32>,
+  pub position: Vector3<f32>,
 }
 
 

@@ -33,38 +33,40 @@ impl Game {
   }
 
   pub fn load(context: &mut Context, window: &Window) -> Game {
-    let base_path = "/home/alether/Codes/Graphics/alers";
+    let base_path = "/home/alether/Codes/Graphics/alers/resources/";
 
     // Load meshes
-    //let mesh = resource::fbx_convert::to_static_meshes(
-    //  resource::fbx::load(&format!("{}/{}", base_path, "resources/test/cube.fbx")).unwrap()).unwrap().remove(0);
+//    let mesh = resource::fbx_convert::to_static_meshes(
+//      resource::fbx::load(&format!("{}/{}", base_path, "test/monkey.fbx")).unwrap()).unwrap().remove(0);
     let mesh = resource::static_mesh::create_cube();
 
     // Load shaders
-    let lambert = resource::shader::ShaderFile::new(
-      fs::read_to_string(format!("{}/{}", base_path, "shaders/lambert.vert")).unwrap(),
-      fs::read_to_string(format!("{}/{}", base_path, "shaders/lambert.frag")).unwrap(),
-    );    // Load shaders
+    let pbr = resource::shader::ShaderFile::new(
+      fs::read_to_string(format!("{}/{}", base_path, "default/shader/pbr.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "default/shader/pbr.frag")).unwrap(),
+    );
     let equirect = resource::shader::ShaderFile::new(
-      fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.vert")).unwrap(),
-      fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.frag")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "default/shader/cubemap.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "default/shader/equirect.frag")).unwrap(),
     );
     let irradiance = resource::shader::ShaderFile::new(
-      fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.vert")).unwrap(),
-      fs::read_to_string(format!("{}/{}", base_path, "shaders/irradiance.frag")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "default/shader/cubemap.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "default/shader/irradiance.frag")).unwrap(),
     );
     let skybox = resource::shader::ShaderFile::new(
-      fs::read_to_string(format!("{}/{}", base_path, "shaders/skybox.vert")).unwrap(),
-      fs::read_to_string(format!("{}/{}", base_path, "shaders/skybox.frag")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "default/shader/skybox.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "default/shader/skybox.frag")).unwrap(),
     );
 
     // Load textures
     let texture = resource::texture::Texture::load(
-      &format!("{}/{}", base_path, "resources/hdr/Newport_Loft_Ref.hdr")).unwrap();
+      &format!("{}/{}", base_path, "hdr/Newport_Loft_Ref.hdr")).unwrap();
 
+    // Load cubemap
     let cubemap = resource::cubemap::Cubemap::new(Rect2d::new(512, 512));
     let convoluted_cubemap = resource::cubemap::Cubemap::new(Rect2d::new(32, 32));
 
+    // Load camera
     let fly_camera = FlyCamera::new(
       Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), 90.0f32, 800f32 / 600f32));
 
@@ -73,14 +75,21 @@ impl Game {
     world.add_pawn(PawnEntity {
       transform: Transform::new(),
       static_mesh_id: mesh.uid(),
-      shader_id: lambert.uid(),
-      textures: vec![texture.uid()],
+      shader_id: pbr.uid(),
+      textures: vec![],
+      shader_variables: vec![
+        ShaderVariable::new("albedo".to_owned(), ShaderVariableType::F32_3(Vector3::new(1.0f32, 0.0, 0.0))),
+        ShaderVariable::new("metallic".to_owned(), ShaderVariableType::F32_1(0.0f32)),
+        ShaderVariable::new("roughness".to_owned(), ShaderVariableType::F32_1(1.0f32)),
+        ShaderVariable::new("ao".to_owned(), ShaderVariableType::F32_1(1.0f32)),
+      ]
     });
 
     world.set_skybox(SkyboxEntity {
       static_mesh_id: mesh.uid(),
       shader_id: skybox.uid(),
-      cubemap_id: convoluted_cubemap.uid(),
+      rendered_cubemap_id: cubemap.uid(),
+      irradiance_cubemap_id: convoluted_cubemap.uid(),
     });
 
     world.set_camera(CameraEntity::FlyCamera(fly_camera));
@@ -88,7 +97,7 @@ impl Game {
     context.cubemap(&cubemap).unwrap();
     context.cubemap(&convoluted_cubemap).unwrap();
     context.static_mesh(&mesh).unwrap();
-    context.shader(&lambert).unwrap();
+    context.shader(&pbr).unwrap();
     context.shader(&equirect).unwrap();
     context.shader(&irradiance).unwrap();
     context.shader(&skybox).unwrap();
@@ -108,7 +117,7 @@ impl Game {
     );
     render_tasks.render(context);
 
-    // Conduct a render pass here for our equirect projection
+    // Do a projection again, this time convoluting the cubemap
     let mut render_tasks = SimpleRenderTasks::new();
     render_tasks.queue_cubemap_projection(
       irradiance.uid(),

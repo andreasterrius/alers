@@ -3,6 +3,7 @@ use std::fs::File;
 use image::{GenericImageView, ImageError};
 
 use crate::data::id::Id;
+use hdrldr::LoadError;
 
 pub struct Texture {
   id: Id,
@@ -30,7 +31,7 @@ impl Texture {
 
   pub fn load(path: &str) -> Result<Texture, LoadTextureError> {
     if path.ends_with(".hdr") {
-      let i = hdrldr::load(File::open(path).unwrap()).unwrap();
+      let i = hdrldr::load(File::open(path)?)?;
 
       let mut v = vec!();
       for p in i.data {
@@ -111,11 +112,24 @@ pub enum TexturePixel {
 #[derive(Debug)]
 pub enum LoadTextureError {
   ImageError(ImageError),
+  FileNotFound,
 }
 
 impl From<ImageError> for LoadTextureError {
   fn from(e: ImageError) -> Self {
     LoadTextureError::ImageError(e)
+  }
+}
+
+impl From<std::io::Error> for LoadTextureError {
+  fn from(e: std::io::Error) -> Self {
+    LoadTextureError::FileNotFound
+  }
+}
+
+impl From<hdrldr::LoadError> for LoadTextureError {
+  fn from(_: LoadError) -> Self {
+    LoadTextureError::FileNotFound
   }
 }
 
