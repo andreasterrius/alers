@@ -10,7 +10,6 @@ use crate::data::id::Id;
 use crate::data::id::Identifiable;
 use crate::renderer::constant::{MODEL, PROJECTION, VIEW};
 use crate::renderer::opengl::cubemap::{CubemapDrawInfo, CubemapError};
-use crate::renderer::opengl::framebuffer::{FramebufferDrawInfo, FramebufferError};
 use crate::renderer::opengl::renderbuffer::RenderbufferDrawInfo;
 use crate::renderer::opengl::RenderError::{UnregisteredCubemap, UnregisteredFramebuffer, UnregisteredMesh, UnregisteredShader, UnregisteredTexture, NoCameraSet};
 use crate::renderer::opengl::shader::{ShaderDrawInfo, ShaderError, ShaderVariable, ShaderVariableType};
@@ -20,6 +19,8 @@ use crate::resource::cubemap::Cubemap;
 use crate::resource::shader::ShaderFile;
 use crate::resource::static_mesh::StaticMesh;
 use crate::resource::texture::Texture;
+use crate::data::rect2d::Rect2d;
+use crate::renderer::opengl::framebuffer::{FramebufferDrawInfo, FramebufferError};
 
 pub mod static_mesh;
 pub mod renderbuffer;
@@ -73,7 +74,7 @@ impl Context {
 
   pub fn framebuffer(&mut self) -> Result<Id, FramebufferError> {
     let id = Id::new();
-    self.framebuffers.insert(id, FramebufferDrawInfo::new()?);
+    //self.framebuffers.insert(id, FramebufferDrawInfo::new()?);
     Ok(id)
   }
 
@@ -115,10 +116,11 @@ enum Renderable {
   EquirectCubemapProjection {
     equirect_shader_id: Id,
     cube_mesh_id: Id,
-    equirect_texture_id: Id,
+    projection_target: ProjectionTarget,
     cubemap_id: Id,
-    original_display_info: DisplayInfo,
-    shader_variables: Vec<ShaderVariable>,
+    projection_dimension: Rect2d,
+    original_dimension: Rect2d,
+    shader_variables: Vec<ShaderVariable>
   },
 
   Skybox {
@@ -143,10 +145,11 @@ pub trait RenderTasks {
   fn queue_cubemap_projection(&mut self,
                               equirect_shader_id: Id,
                               cube_mesh_id: Id,
-                              equirect_texture_id: Id,
+                              projection_target: ProjectionTarget,
                               cubemap_id: Id,
-                              display_info: &DisplayInfo,
-                              shader_vars: Vec<ShaderVariable>);
+                              projection_dimension: Rect2d,
+                              original_dimension: Rect2d,
+                              shader_variables: Vec<ShaderVariable>);
 
   fn queue_skybox(&mut self,
                   skybox_shader_id: Id,
@@ -193,17 +196,19 @@ impl RenderTasks for SimpleRenderTasks {
   fn queue_cubemap_projection(&mut self,
                               equirect_shader_id: Id,
                               cube_mesh_id: Id,
-                              equirect_texture_id: Id,
+                              projection_target: ProjectionTarget,
                               cubemap_id: Id,
-                              display_info: &DisplayInfo,
+                              projection_dimension: Rect2d,
+                              original_dimension: Rect2d,
                               shader_variables: Vec<ShaderVariable>)
   {
     self.renderables.push(Renderable::EquirectCubemapProjection {
       equirect_shader_id,
       cube_mesh_id,
-      equirect_texture_id,
+      projection_target,
       cubemap_id,
-      original_display_info: display_info.clone(),
+      projection_dimension,
+      original_dimension,
       shader_variables,
     });
   }
@@ -274,12 +279,11 @@ impl RenderTasks for SimpleRenderTasks {
           }
         }
         Renderable::EquirectCubemapProjection {
-          equirect_shader_id, cube_mesh_id, equirect_texture_id,
-          cubemap_id, original_display_info, shader_variables
+          equirect_shader_id, cube_mesh_id, projection_target,
+          cubemap_id, projection_dimension, original_dimension, shader_variables
         } => {
           let cube_mesh_draw_info = context.get_static_mesh(cube_mesh_id).ok_or(UnregisteredMesh(*cube_mesh_id))?;
           let shader_draw_info = context.get_shader(equirect_shader_id).ok_or(UnregisteredShader(*equirect_shader_id))?;
-          let texture_draw_info = context.get_texture(&equirect_texture_id).ok_or(UnregisteredTexture(*equirect_texture_id))?;
           let cubemap_draw_info = context.get_cubemap(&cubemap_id).ok_or(UnregisteredCubemap(*cubemap_id))?;
 
           let projection = cgmath::perspective(Deg(90.0f32), 1.0f32, 0.1f32, 10.0f32);
@@ -292,19 +296,28 @@ impl RenderTasks for SimpleRenderTasks {
             cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, -1.0), -Vector3::unit_y()),
           );
           let equirect_shader = shader_draw_info.shader;
-          let texture = texture_draw_info.texture;
 
           unsafe {
-            let (framebuffer, _) = raw::create_framebuffer();
+            let (framebuffer, _) = raw::create_framebuffer(projection_dimension.get_height(), projection_dimension.get_width());
 
             raw::use_shader(equirect_shader);
             raw::uniform1i(equirect_shader, "equirectangularMaps", 0);
             raw::matrix4f(equirect_shader, PROJECTION, projection.as_ptr());
 
             raw::active_texture(0);
-            raw::bind_texture(texture);
+            match projection_target {
+              ProjectionTarget::Cubemap(c) => {
+                let glid = context.get_cubemap(&c).ok_or(UnregisteredCubemap(*c))?.cubemap;
+                raw::bind_cubemap(glid);
+              },
+              ProjectionTarget::Texture2d(c) => {
+                let glid = context.get_texture(&c).ok_or(UnregisteredTexture(*c))?.texture;
+                raw::bind_texture(glid);
+              },
+            };
 
-            raw::set_viewport(0, 0, 512, 512);
+            raw::set_viewport(projection_dimension.get_x(), projection_dimension.get_y(),
+                              projection_dimension.get_width(), projection_dimension.get_height());
             raw::bind_framebuffer(framebuffer);
             for i in 0..6 {
               raw::matrix4f(equirect_shader, VIEW, views[i].as_ptr());
@@ -318,7 +331,7 @@ impl RenderTasks for SimpleRenderTasks {
             raw::bind_vao(0);
             // unbind framebuffer
             raw::bind_framebuffer(0);
-            raw::set_viewport(0, 0, original_display_info.width, original_display_info.height);
+            raw::set_viewport(0, 0, original_dimension.get_width(), original_dimension.get_height());
           }
         }
         Renderable::Skybox { skybox_shader_id, cube_mesh_id, cubemap_id, shader_variables } => {
@@ -347,6 +360,12 @@ impl RenderTasks for SimpleRenderTasks {
     }
     Ok(result)
   }
+}
+
+
+pub enum ProjectionTarget {
+  Cubemap(Id),
+  Texture2d(Id),
 }
 
 #[derive(Debug)]

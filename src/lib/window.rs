@@ -28,8 +28,8 @@ impl <'a> WindowCreator<'a> {
         // glfw window creation
         // --------------------
         let (mut glfw_window, glfw_events) = self.glfw.create_window(
-            display_info.width,
-            display_info.height,
+            display_info.get_dimension().get_width(),
+            display_info.get_dimension().get_height(),
             "LearnOpenGL",
             glfw::WindowMode::Windowed,
         ).expect("Failed to create GLFW window");
@@ -89,8 +89,8 @@ impl Window {
                         },
                         Some(mouse_position) => {
                             let result = Input::MouseMotion(
-                                (x - mouse_position.0) as f32 / self.display_info.width as f32,
-                                (y - mouse_position.1) as f32 / self.display_info.height as f32,);
+                                (x - mouse_position.0) as f32 / self.display_info.get_dimension().get_width() as f32,
+                                (y - mouse_position.1) as f32 / self.display_info.get_dimension().get_height() as f32,);
                             self.mouse_position = Some((x, y));
                             result
                         },

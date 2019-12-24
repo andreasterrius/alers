@@ -16,8 +16,8 @@ pub unsafe fn clear_buffer() {
   gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 }
 
-pub unsafe fn set_viewport(x: u32, y: u32, w: u32, h: u32) {
-  gl::Viewport(x as i32, y as i32, w as i32, h as i32);
+pub unsafe fn set_viewport(x: i32, y: i32, w: u32, h: u32) {
+  gl::Viewport(x, y, w as i32, h as i32);
 }
 
 pub unsafe fn enable_depth_test() {
@@ -275,7 +275,7 @@ fn texture_mag_to_gl(mag: &TextureMagnificationType) -> i32
   }
 }
 
-pub unsafe fn create_framebuffer() -> (u32, u32)
+pub unsafe fn create_framebuffer(w: u32, h : u32) -> (u32, u32)
 {
   let mut fbo = 0;
   gl::GenFramebuffers(1, &mut fbo);
@@ -286,19 +286,19 @@ pub unsafe fn create_framebuffer() -> (u32, u32)
   gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
   gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
 
-  gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT24, 512, 512);
+  gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT24, w as i32, h as i32);
   gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
 
   return (fbo, rbo);
 }
 
-pub unsafe fn create_cubemap() -> u32
+pub unsafe fn create_cubemap(w: u32, h : u32) -> u32
 {
   let mut cubemap = 0;
   gl::GenTextures(1, &mut cubemap);
   gl::BindTexture(gl::TEXTURE_CUBE_MAP, cubemap);
   for i in 0..6 {
-    gl::TexImage2D(gl::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl::RGB16F as i32, 512, 512, 0, gl::RGB, gl::FLOAT, null());
+    gl::TexImage2D(gl::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl::RGB16F as i32, w as i32, h as i32, 0, gl::RGB, gl::FLOAT, null());
   }
   gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
   gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);

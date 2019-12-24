@@ -1,20 +1,18 @@
+use crate::data::rect2d::Rect2d;
 
 #[derive(Clone)]
 pub struct DisplayInfo {
-  pub width: u32,
-  pub height: u32,
+  pub dimension: Rect2d,
 }
 
 impl DisplayInfo {
-  pub fn new(width: u32, height: u32) -> DisplayInfo {
+  pub fn new(dimension: Rect2d) -> DisplayInfo {
     DisplayInfo {
-      width,
-      height
+      dimension,
     }
   }
 
-  pub fn resize(&mut self, width: u32, height: u32) {
-    self.width = width;
-    self.height = height;
+  pub fn get_dimension(&self) -> &Rect2d {
+    &self.dimension
   }
 }

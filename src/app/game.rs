@@ -12,7 +12,7 @@ use alers::entity::skybox::SkyboxEntity;
 use alers::entity::world::World;
 use alers::input::Input;
 use alers::math::transform::Transform;
-use alers::renderer::opengl::{Context, RenderTasks, SimpleRenderTasks};
+use alers::renderer::opengl::{Context, RenderTasks, SimpleRenderTasks, ProjectionTarget};
 use alers::renderer::opengl::shader::{ShaderVariable, ShaderVariableType};
 use alers::resource::cubemap::Cubemap;
 use alers::resource::shader::ShaderFile;
@@ -21,6 +21,7 @@ use alers::resource::texture::Texture;
 use alers::window::Window;
 
 use crate::alers::data::id::Identifiable;
+use alers::data::rect2d::Rect2d;
 
 pub struct Game {
   world: World,
@@ -28,7 +29,7 @@ pub struct Game {
 
 impl Game {
   pub fn init_window() -> DisplayInfo {
-    DisplayInfo::new(800, 600)
+    DisplayInfo::new(Rect2d::new(800, 600))
   }
 
   pub fn load(context: &mut Context, window: &Window) -> Game {
@@ -48,6 +49,10 @@ impl Game {
       fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.vert")).unwrap(),
       fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.frag")).unwrap(),
     );
+    let irradiance = resource::shader::ShaderFile::new(
+      fs::read_to_string(format!("{}/{}", base_path, "shaders/equirect.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", base_path, "shaders/irradiance.frag")).unwrap(),
+    );
     let skybox = resource::shader::ShaderFile::new(
       fs::read_to_string(format!("{}/{}", base_path, "shaders/skybox.vert")).unwrap(),
       fs::read_to_string(format!("{}/{}", base_path, "shaders/skybox.frag")).unwrap(),
@@ -57,7 +62,8 @@ impl Game {
     let texture = resource::texture::Texture::load(
       &format!("{}/{}", base_path, "resources/hdr/Newport_Loft_Ref.hdr")).unwrap();
 
-    let cubemap = resource::cubemap::Cubemap::new();
+    let cubemap = resource::cubemap::Cubemap::new(Rect2d::new(512, 512));
+    let convoluted_cubemap = resource::cubemap::Cubemap::new(Rect2d::new(32, 32));
 
     let fly_camera = FlyCamera::new(
       Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), 90.0f32, 800f32 / 600f32));
@@ -74,15 +80,17 @@ impl Game {
     world.set_skybox(SkyboxEntity {
       static_mesh_id: mesh.uid(),
       shader_id: skybox.uid(),
-      cubemap_id: cubemap.uid(),
+      cubemap_id: convoluted_cubemap.uid(),
     });
 
     world.set_camera(CameraEntity::FlyCamera(fly_camera));
 
     context.cubemap(&cubemap).unwrap();
+    context.cubemap(&convoluted_cubemap).unwrap();
     context.static_mesh(&mesh).unwrap();
     context.shader(&lambert).unwrap();
     context.shader(&equirect).unwrap();
+    context.shader(&irradiance).unwrap();
     context.shader(&skybox).unwrap();
     context.texture(&texture).unwrap();
     context.setup();
@@ -92,10 +100,24 @@ impl Game {
     render_tasks.queue_cubemap_projection(
       equirect.uid(),
       mesh.uid(),
-      texture.uid(),
+      ProjectionTarget::Texture2d(texture.uid()),
       cubemap.uid(),
-      window.get_display_info(),
-      vec!(),
+      cubemap.get_dimension().clone(),
+      window.get_display_info().get_dimension().clone(),
+      vec!()
+    );
+    render_tasks.render(context);
+
+    // Conduct a render pass here for our equirect projection
+    let mut render_tasks = SimpleRenderTasks::new();
+    render_tasks.queue_cubemap_projection(
+      irradiance.uid(),
+      mesh.uid(),
+      ProjectionTarget::Cubemap(cubemap.uid()),
+      convoluted_cubemap.uid(),
+      convoluted_cubemap.get_dimension().clone(),
+      window.get_display_info().get_dimension().clone(),
+      vec!()
     );
     render_tasks.render(context);
 
