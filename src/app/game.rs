@@ -24,13 +24,6 @@ use crate::alers::data::id::Identifiable;
 
 pub struct Game {
   world: World,
-  mesh: StaticMesh,
-  lambert: ShaderFile,
-  equirect: ShaderFile,
-  skybox: ShaderFile,
-  cubemap: Cubemap,
-  texture: Texture,
-  transform: Transform,
 }
 
 impl Game {
@@ -108,13 +101,6 @@ impl Game {
 
     Game {
       world,
-      mesh,
-      texture,
-      lambert,
-      equirect,
-      skybox,
-      cubemap,
-      transform: Transform::from_position(Vector3::new(0.0f32, 0.0, 0.0)),
     }
   }
 
