@@ -13,7 +13,7 @@ mod game;
 #[async_std::main]
 async fn main() {
   // Initialize File Logging
-  alers::log::init_test();
+  alers::log::init();
 
   // Initialize config
   let display_info = game::Game::init_window();

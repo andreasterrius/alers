@@ -37,6 +37,15 @@ impl Transform {
     }
   }
 
+  pub fn from_all(position: Vector3<f32>, lcl_rotation: Quaternion<f32>, scale: Vector3<f32>) -> Transform {
+    Transform {
+      position,
+      scale,
+      lcl_rotation,
+      matrix: None,
+    }
+  }
+
   pub fn translate(&mut self, unit: Vector3<f32>) {
     self.position += unit;
     self.matrix = None; // Destroy matrix cache
@@ -50,7 +59,9 @@ impl Transform {
   pub fn matrix(&mut self) -> Matrix4<f32> {
     match self.matrix {
       None => {
-        let m = Matrix4::from(self.lcl_rotation) * Matrix4::from_translation(self.position);
+        let m = Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z)
+          * Matrix4::from(self.lcl_rotation)
+          * Matrix4::from_translation(self.position);
         self.matrix = Some(m);
       }
       Some(_) => (),

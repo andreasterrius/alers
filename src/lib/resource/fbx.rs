@@ -37,7 +37,6 @@ impl From<std::io::Error> for LoadError {
 
 impl From<fbxcel_dom::any::Error> for LoadError {
   fn from(test: fbxcel_dom::any::Error) -> Self {
-      println!("{:?}", test);
       return LoadError::BadParsing
   }
 }

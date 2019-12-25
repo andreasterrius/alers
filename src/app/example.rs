@@ -23,11 +23,24 @@ pub fn load_fbx_rigged_print_attributes() {
   use log::info;
   alers::log::init();
 
-  let fbx = alers::resource::fbx::load("resources/test/cube.fbx")
+  let fbx = alers::resource::fbx::load("resources/test/spheres.fbx")
     .expect("Fail to load rigged fbx");
 
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();
   info!("{}", alers::resource::fbx::get_node_info_recursively(&root, 0));
 
- // info!("{:#?}", fbx.tree());
+  //info!("{:#?}", fbx.tree());
 }
+
+#[test]
+pub fn load_fbx_rigged_convert_print_attributes() {
+  use log::info;
+  alers::log::init();
+
+  let fbx = alers::resource::fbx::load("resources/test/spheres.fbx")
+    .expect("Fail to load rigged fbx");
+
+  let converted = alers::resource::fbx_convert::to_static_meshes(fbx);
+
+}
+

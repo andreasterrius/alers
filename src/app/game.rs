@@ -36,9 +36,9 @@ impl Game {
     let base_path = "/home/alether/Codes/Graphics/alers/resources/";
 
     // Load meshes
-//    let mesh = resource::fbx_convert::to_static_meshes(
-//      resource::fbx::load(&format!("{}/{}", base_path, "test/monkey.fbx")).unwrap()).unwrap().remove(0);
-    let mesh = resource::static_mesh::create_cube();
+    let meshes = resource::fbx_convert::to_static_meshes(
+      resource::fbx::load(&format!("{}/{}", base_path, "test/spheres.fbx")).unwrap()).unwrap();
+    let cube_mesh = resource::static_mesh::create_cube();
 
     // Load shaders
     let pbr = resource::shader::ShaderFile::new(
@@ -72,21 +72,24 @@ impl Game {
 
     let mut world = World::new();
 
-    world.add_pawn(PawnEntity {
-      transform: Transform::new(),
-      static_mesh_id: mesh.uid(),
-      shader_id: pbr.uid(),
-      textures: vec![],
-      shader_variables: vec![
-        ShaderVariable::new("albedo".to_owned(), ShaderVariableType::F32_3(Vector3::new(1.0f32, 0.0, 0.0))),
-        ShaderVariable::new("metallic".to_owned(), ShaderVariableType::F32_1(0.0f32)),
-        ShaderVariable::new("roughness".to_owned(), ShaderVariableType::F32_1(1.0f32)),
-        ShaderVariable::new("ao".to_owned(), ShaderVariableType::F32_1(1.0f32)),
-      ]
-    });
+    for mesh in meshes {
+      world.add_pawn(PawnEntity {
+        transform: mesh.0,
+        static_mesh_id: mesh.1.uid(),
+        shader_id: pbr.uid(),
+        textures: vec![],
+        shader_variables: vec![
+          ShaderVariable::new("albedo".to_owned(), ShaderVariableType::F32_3(Vector3::new(1.0f32, 0.0, 0.0))),
+          ShaderVariable::new("metallic".to_owned(), ShaderVariableType::F32_1(0.0f32)),
+          ShaderVariable::new("roughness".to_owned(), ShaderVariableType::F32_1(1.0f32)),
+          ShaderVariable::new("ao".to_owned(), ShaderVariableType::F32_1(1.0f32)),
+        ]
+      });
+      context.static_mesh(&mesh.1).unwrap();
+    }
 
     world.set_skybox(SkyboxEntity {
-      static_mesh_id: mesh.uid(),
+      static_mesh_id: cube_mesh.uid(),
       shader_id: skybox.uid(),
       rendered_cubemap_id: cubemap.uid(),
       irradiance_cubemap_id: convoluted_cubemap.uid(),
@@ -96,7 +99,7 @@ impl Game {
 
     context.cubemap(&cubemap).unwrap();
     context.cubemap(&convoluted_cubemap).unwrap();
-    context.static_mesh(&mesh).unwrap();
+    context.static_mesh(&cube_mesh).unwrap();
     context.shader(&pbr).unwrap();
     context.shader(&equirect).unwrap();
     context.shader(&irradiance).unwrap();
@@ -108,7 +111,7 @@ impl Game {
     let mut render_tasks = SimpleRenderTasks::new();
     render_tasks.queue_cubemap_projection(
       equirect.uid(),
-      mesh.uid(),
+      cube_mesh.uid(),
       ProjectionTarget::Texture2d(texture.uid()),
       cubemap.uid(),
       cubemap.get_dimension().clone(),
@@ -121,7 +124,7 @@ impl Game {
     let mut render_tasks = SimpleRenderTasks::new();
     render_tasks.queue_cubemap_projection(
       irradiance.uid(),
-      mesh.uid(),
+      cube_mesh.uid(),
       ProjectionTarget::Cubemap(cubemap.uid()),
       convoluted_cubemap.uid(),
       convoluted_cubemap.get_dimension().clone(),

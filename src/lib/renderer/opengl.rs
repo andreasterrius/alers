@@ -9,7 +9,7 @@ use crate::data::display_info::DisplayInfo;
 use crate::data::id::Id;
 use crate::data::id::Identifiable;
 use crate::data::rect2d::Rect2d;
-use crate::renderer::constant::{MODEL, PROJECTION, VIEW, CAMERA_POSITION};
+use crate::renderer::constant::{CAMERA_POSITION, MODEL, PROJECTION, VIEW};
 use crate::renderer::opengl::cubemap::{CubemapDrawInfo, CubemapError};
 use crate::renderer::opengl::framebuffer::{FramebufferDrawInfo, FramebufferError};
 use crate::renderer::opengl::renderbuffer::RenderbufferDrawInfo;
@@ -158,7 +158,7 @@ pub trait RenderTasks {
                   shader_variables: Vec<ShaderVariable>);
 
   fn with_skybox(&mut self,
-                 cubemap_id : Id);
+                 cubemap_id: Id);
 
   fn render(&mut self, context: &Context) -> Result<Vec<RenderResult>, RenderError>;
 }
@@ -234,7 +234,7 @@ impl RenderTasks for SimpleRenderTasks {
   }
 
   fn with_skybox(&mut self,
-                 cubemap_id : Id)
+                 cubemap_id: Id)
   {
     self.skybox = Some(cubemap_id);
   }
@@ -270,7 +270,7 @@ impl RenderTasks for SimpleRenderTasks {
                 Some(x) => x,
               };
 
-              raw::active_texture((i+1) as u32);
+              raw::active_texture((i + 1) as u32);
               raw::bind_texture(texture_draw_info.texture);
             }
 
