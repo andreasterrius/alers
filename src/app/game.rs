@@ -19,6 +19,7 @@ use alers::resource::shader::ShaderFile;
 use alers::resource::static_mesh::StaticMesh;
 use alers::resource::texture::Texture;
 use alers::window::Window;
+use log::info;
 
 use crate::alers::data::id::Identifiable;
 use alers::data::rect2d::Rect2d;
@@ -39,6 +40,9 @@ impl Game {
     let meshes = resource::fbx_convert::to_static_meshes(
       resource::fbx::load(&format!("{}/{}", base_path, "test/spheres.fbx")).unwrap()).unwrap();
     let cube_mesh = resource::static_mesh::create_cube();
+
+    info!("loaded: {:?}", &meshes[0]);
+    info!("cm: {:?}", cube_mesh);
 
     // Load shaders
     let pbr = resource::shader::ShaderFile::new(
@@ -91,7 +95,7 @@ impl Game {
     world.set_skybox(SkyboxEntity {
       static_mesh_id: cube_mesh.uid(),
       shader_id: skybox.uid(),
-      rendered_cubemap_id: cubemap.uid(),
+      rendered_cubemap_id: convoluted_cubemap.uid(),
       irradiance_cubemap_id: convoluted_cubemap.uid(),
     });
 

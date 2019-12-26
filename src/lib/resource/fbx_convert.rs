@@ -64,6 +64,7 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
         scale = Vector3::new(ff, sf, tf);
       }
     }
+
     let transform = Transform::from_all(location, Quaternion::from(Euler {
       x : Deg(rotation.x), y : Deg(rotation.y), z : Deg(rotation.z)
     }), scale);
@@ -76,7 +77,7 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
   let mut meshes : Vec<(Transform, StaticMesh)> = vec!();
   for object in objects.children_by_name("Geometry") {
     let element_node = object.children_by_name("PolygonVertexIndex").nth(0);
-    let indices = match element_node {
+    let (indices, indices_con) = match element_node {
       None => { return Err(ConversionError::PolgyonVertexIndexNotFound); }
       Some(element_node) => {
         let indices = element_node.attributes().iter().nth(0).unwrap().get_arr_i32().unwrap();
@@ -101,13 +102,16 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
       Some(normal_node) => normal_node.children_by_name("Normals").nth(0).unwrap().attributes().iter().nth(0).unwrap().get_arr_f64().unwrap(),
     };
 
-    let vbuffer = construct_buffer(&indices, position_arr, uv_arr, normal_arr)?;
+    info!("pos {:?}", position_arr);
+    info!("nrm {:?}", normal_arr);
+    info!("idc {:?}", indices);
+
+    let vbuffer = construct_buffer(&indices, &indices_con, position_arr, uv_arr, normal_arr)?;
     //let name = object.attributes().iter().nth(1).unwrap().get_string().unwrap().split("\u{0}\u{1}").collect::<Vec<&str>>()[0];
     let id = object.attributes()[0].get_i64().unwrap();
     let model_id = connectivity[&id];
     let transform = transforms.get(&model_id).map(|x| x.clone()).unwrap_or(Transform::new());
 
-    info!("{:?}", transform);
     meshes.push((transform, StaticMesh::new(vbuffer, None)));
   };
 
@@ -115,20 +119,27 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
 }
 
 // Only receives tris or quads
-pub fn parse_indices(indices: &[i32]) -> Result<Vec<i32>, ConversionError> {
+pub fn parse_indices(indices: &[i32]) -> Result<(Vec<i32>, Vec<usize>), ConversionError> {
   let mut start = 0;
   let mut end = 0;
   let mut arr = vec!();
+  let mut con = Vec::new();
   for i in 0..indices.len() {
     if indices[i] < 0 {
       end = i;
       //println!("start {}, end {}, indices {}", start, end, i);
       if end - start == 2 { // 2 index apart
+        let last_idx  = arr.len() as i32;
         // 1 tri
         arr.push(indices[start]);
         arr.push(indices[start + 1]);
         arr.push(!indices[start + 2]); // flip last bit
+
+        con.push(start);
+        con.push(start + 1);
+        con.push(start + 2); // flip last bit
       } else if end - start == 3 { // 3 index apart
+        let last_idx  = arr.len() as i32;
         // Quad, convert to 2 tris
         arr.push(indices[start]);
         arr.push(indices[start + 1]);
@@ -137,6 +148,14 @@ pub fn parse_indices(indices: &[i32]) -> Result<Vec<i32>, ConversionError> {
         arr.push(indices[start]);
         arr.push(indices[start + 2]);
         arr.push(!indices[start + 3]);
+
+        con.push(start);
+        con.push(start + 1);
+        con.push(start + 2);
+
+        con.push(start);
+        con.push(start + 2);
+        con.push(start + 3);
       } else if end - start >= 4 {
         return Err(ConversionError::NGonNotSupported);
       }
@@ -157,10 +176,11 @@ pub fn parse_indices(indices: &[i32]) -> Result<Vec<i32>, ConversionError> {
     return Err(ConversionError::IncompleteLastPoly);
   }
 
-  Ok(arr)
+  Ok((arr, con))
 }
 
 pub fn construct_buffer(indices: &[i32],
+                        indices_con: &Vec<usize>,
                         position_arr: &[f64],
                         uv_arr: &[f64],
                         normal_arr: &[f64]) -> Result<Buffer<f32>, ConversionError>
@@ -168,6 +188,9 @@ pub fn construct_buffer(indices: &[i32],
   let mut position_vec = vec!();
   let mut uv_vec = vec!();
   let mut normal_vec = vec!();
+
+  info!("idcon {:?}", indices_con);
+
   for i in 0..indices.len() {
 
     // calculate offsets
@@ -180,9 +203,10 @@ pub fn construct_buffer(indices: &[i32],
     position_vec.push(position_arr[index_3 + 2] as f32);
 
     if normal_arr.len() != 0 {
-      normal_vec.push(normal_arr[index_3] as f32);
-      normal_vec.push(normal_arr[index_3 + 1] as f32);
-      normal_vec.push(normal_arr[index_3 + 2] as f32);
+      let idx = indices_con[i];
+      normal_vec.push(normal_arr[idx*3] as f32);
+      normal_vec.push(normal_arr[(idx*3)+1] as f32);
+      normal_vec.push(normal_arr[(idx*3)+2] as f32);
     } else {
       normal_vec.push(0.0f32);
       normal_vec.push(0.0f32);
@@ -197,10 +221,6 @@ pub fn construct_buffer(indices: &[i32],
       uv_vec.push(0.0f32);
     }
   }
-
-//  println!("{:?}", position_vec);
-//  println!("{:?}", uv_vec);
-//  println!("{:?}", normal_vec);
 
   let vbuffer = SeparateBufferBuilder::new()
     .info("position", 3, position_vec)
