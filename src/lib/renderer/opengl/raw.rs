@@ -134,7 +134,7 @@ pub unsafe fn create_buffer(vertices: &Buffer<f32>,
   let mut start = 0;
   let total_row_size = (vertices.total_row_size() * mem::size_of::<GLfloat>()) as GLsizeiptr;
   for element in vertices.elements() {
-    //println!("{:?} {:?}", start, count);
+    println!("{:?} {:?}", start, count);
     let stride = (start * mem::size_of::<GLfloat>()) as *const c_void;
     gl::VertexAttribPointer(count, element.size.try_into().unwrap(),
                             gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);

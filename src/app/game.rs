@@ -39,7 +39,7 @@ impl Game {
 
     // Load meshes
     let meshes = resource::fbx_convert::to_static_meshes(
-      resource::fbx::load(&format!("{}/{}", resource_base_path, "test/cube.fbx")).unwrap()).unwrap();
+      resource::fbx::load(&format!("{}/{}", resource_base_path, "test/scene.fbx")).unwrap()).unwrap();
     let cube_mesh = resource::static_mesh::create_cube();
 
     info!("loaded: {:?}", &meshes[0]);
@@ -84,8 +84,8 @@ impl Game {
         shader_id: pbr.uid(),
         textures: vec![],
         shader_variables: vec![
-          ShaderVariable::new("albedo".to_owned(), ShaderVariableType::F32_3(Vector3::new(1.0f32, 0.0, 0.0))),
-          ShaderVariable::new("metallic".to_owned(), ShaderVariableType::F32_1(0.5f32)),
+          ShaderVariable::new("albedo".to_owned(), ShaderVariableType::F32_3(Vector3::new(0.7f32, 0.7, 0.7))),
+          ShaderVariable::new("metallic".to_owned(), ShaderVariableType::F32_1(0.0f32)),
           ShaderVariable::new("roughness".to_owned(), ShaderVariableType::F32_1(0.5f32)),
           ShaderVariable::new("ao".to_owned(), ShaderVariableType::F32_1(0.5f32)),
         ]

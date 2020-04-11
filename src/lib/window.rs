@@ -30,7 +30,7 @@ impl <'a> WindowCreator<'a> {
         let (mut glfw_window, glfw_events) = self.glfw.create_window(
             display_info.get_dimension().get_width(),
             display_info.get_dimension().get_height(),
-            "LearnOpenGL",
+            "Alers",
             glfw::WindowMode::Windowed,
         ).expect("Failed to create GLFW window");
 

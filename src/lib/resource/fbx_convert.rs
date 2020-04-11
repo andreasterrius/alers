@@ -106,7 +106,7 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
     info!("nrm {:?}", normal_arr);
     info!("idc {:?}", indices);
 
-    let vbuffer = construct_buffer(&indices, &indices_con, position_arr, uv_arr, normal_arr)?;
+    let vbuffer = construct_buffer_flat(&indices, &indices_con, position_arr, uv_arr, normal_arr)?;
     //let name = object.attributes().iter().nth(1).unwrap().get_string().unwrap().split("\u{0}\u{1}").collect::<Vec<&str>>()[0];
     let id = object.attributes()[0].get_i64().unwrap();
     let model_id = connectivity[&id];
@@ -124,6 +124,7 @@ pub fn parse_indices(indices: &[i32]) -> Result<(Vec<i32>, Vec<usize>), Conversi
   let mut end = 0;
   let mut arr = vec!();
   let mut con = Vec::new();
+  println!("bb: {:?}", indices);
   for i in 0..indices.len() {
     if indices[i] < 0 {
       end = i;
@@ -137,7 +138,7 @@ pub fn parse_indices(indices: &[i32]) -> Result<(Vec<i32>, Vec<usize>), Conversi
 
         con.push(start);
         con.push(start + 1);
-        con.push(start + 2); // flip last bit
+        con.push(start + 2);
       } else if end - start == 3 { // 3 index apart
         let last_idx  = arr.len() as i32;
         // Quad, convert to 2 tris
@@ -145,17 +146,17 @@ pub fn parse_indices(indices: &[i32]) -> Result<(Vec<i32>, Vec<usize>), Conversi
         arr.push(indices[start + 1]);
         arr.push(indices[start + 2]);
 
+        arr.push(indices[start+2]);
+        arr.push(!indices[start+3]);
         arr.push(indices[start]);
-        arr.push(indices[start + 2]);
-        arr.push(!indices[start + 3]);
 
         con.push(start);
         con.push(start + 1);
         con.push(start + 2);
 
+        con.push(start+2);
+        con.push(start+3);
         con.push(start);
-        con.push(start + 2);
-        con.push(start + 3);
       } else if end - start >= 4 {
         return Err(ConversionError::NGonNotSupported);
       }
@@ -227,9 +228,79 @@ pub fn construct_buffer(indices: &[i32],
 
   let vbuffer = SeparateBufferBuilder::new()
     .info("position", 3, position_vec)
+    .info("uv", 2, uv_vec)
+    .info("normal", 3, normal_vec)
+    .build().unwrap();
+  Ok(vbuffer)
+}
+
+pub fn construct_buffer_flat(indices: &[i32],
+                        indices_con: &Vec<usize>,
+                        position_arr: &[f64],
+                        uv_arr: &[f64],
+                        normal_arr: &[f64]) -> Result<Buffer<f32>, ConversionError>
+{
+  let mut position_vec = vec!();
+  let mut uv_vec = vec!();
+  let mut normal_vec = vec!();
+
+  info!("idcon {:?}", indices_con);
+  println!("bb_t : {:?}", indices);
+
+  println!("{} {} {} {}", indices_con.len(), position_arr.len(), normal_arr.len(), uv_arr.len());
+
+  for i in 0..indices.len() {
+    let idx = indices[i];
+
+    // calculate offsets
+    let index_3 = (idx * 3) as usize;
+    let index_2 = (idx * 2) as usize;
+
+    // Push vertices
+    position_vec.push(position_arr[index_3] as f32);
+    position_vec.push(position_arr[index_3 + 1] as f32);
+    position_vec.push(position_arr[index_3 + 2] as f32);
+
+//    if normal_arr.len() != 0 {
+//      normal_vec.push(normal_arr[i] as f32);
+//      normal_vec.push(normal_arr[i + 1] as f32);
+//      normal_vec.push(normal_arr[i + 2] as f32);
+//    } else {
+//      normal_vec.push(0.0f32);
+//      normal_vec.push(0.0f32);
+//      normal_vec.push(0.0f32);
+//    }
+
+    if uv_arr.len() != 0 {
+      uv_vec.push(uv_arr[index_2] as f32);
+      uv_vec.push(uv_arr[index_2 + 1] as f32);
+    } else {
+      uv_vec.push(0.0f32);
+      uv_vec.push(0.0f32);
+    }
+  }
+
+  for i in 0..indices_con.len(){
+    let idx = indices_con[i]*3;
+    normal_vec.push(normal_arr[idx] as f32);
+    normal_vec.push(normal_arr[idx + 1] as f32);
+    normal_vec.push(normal_arr[idx + 2] as f32);
+  }
+
+
+  println!("pos_arr: {:?}",position_arr);
+
+  println!("pos: {:?}",position_vec);
+  println!("nrm: {:?}",normal_vec);
+
+  let vbuffer = SeparateBufferBuilder::new()
+    .info("position", 3, position_vec)
     .info("normal", 3, normal_vec)
     .info("uv", 2, uv_vec)
     .build().unwrap();
+
+  //println!("{:#?}", vbuffer);
+
   Ok(vbuffer)
 }
 
