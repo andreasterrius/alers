@@ -34,11 +34,12 @@ impl Game {
   }
 
   pub fn load(context: &mut Context, window: &Window) -> Game {
-    let base_path = "/home/alether/Codes/Graphics/alers/resources/";
+    let resource_base_path = "E:\\Codes\\Repos\\alers\\resources";
+    let shader_base_path = "E:\\Codes\\Repos\\alers\\shaders";
 
     // Load meshes
     let meshes = resource::fbx_convert::to_static_meshes(
-      resource::fbx::load(&format!("{}/{}", base_path, "test/spheres.fbx")).unwrap()).unwrap();
+      resource::fbx::load(&format!("{}/{}", resource_base_path, "test/cube.fbx")).unwrap()).unwrap();
     let cube_mesh = resource::static_mesh::create_cube();
 
     info!("loaded: {:?}", &meshes[0]);
@@ -46,25 +47,25 @@ impl Game {
 
     // Load shaders
     let pbr = resource::shader::ShaderFile::new(
-      fs::read_to_string(format!("{}/{}", base_path, "default/shader/pbr.vert")).unwrap(),
-      fs::read_to_string(format!("{}/{}", base_path, "default/shader/pbr.frag")).unwrap(),
+      fs::read_to_string(format!("{}/{}", shader_base_path, "pbr.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", shader_base_path, "pbr.frag")).unwrap(),
     );
     let equirect = resource::shader::ShaderFile::new(
-      fs::read_to_string(format!("{}/{}", base_path, "default/shader/cubemap.vert")).unwrap(),
-      fs::read_to_string(format!("{}/{}", base_path, "default/shader/equirect.frag")).unwrap(),
+      fs::read_to_string(format!("{}/{}", shader_base_path, "cubemap.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", shader_base_path, "equirect.frag")).unwrap(),
     );
     let irradiance = resource::shader::ShaderFile::new(
-      fs::read_to_string(format!("{}/{}", base_path, "default/shader/cubemap.vert")).unwrap(),
-      fs::read_to_string(format!("{}/{}", base_path, "default/shader/irradiance.frag")).unwrap(),
+      fs::read_to_string(format!("{}/{}", shader_base_path, "cubemap.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", shader_base_path, "irradiance.frag")).unwrap(),
     );
     let skybox = resource::shader::ShaderFile::new(
-      fs::read_to_string(format!("{}/{}", base_path, "default/shader/skybox.vert")).unwrap(),
-      fs::read_to_string(format!("{}/{}", base_path, "default/shader/skybox.frag")).unwrap(),
+      fs::read_to_string(format!("{}/{}", shader_base_path, "skybox.vert")).unwrap(),
+      fs::read_to_string(format!("{}/{}", shader_base_path, "skybox.frag")).unwrap(),
     );
 
     // Load textures
     let texture = resource::texture::Texture::load(
-      &format!("{}/{}", base_path, "hdr/Newport_Loft_Ref.hdr")).unwrap();
+      &format!("{}/{}", resource_base_path, "test/hdr/GravelPlaza_Env.hdr")).unwrap();
 
     // Load cubemap
     let cubemap = resource::cubemap::Cubemap::new(Rect2d::new(512, 512));
@@ -84,9 +85,9 @@ impl Game {
         textures: vec![],
         shader_variables: vec![
           ShaderVariable::new("albedo".to_owned(), ShaderVariableType::F32_3(Vector3::new(1.0f32, 0.0, 0.0))),
-          ShaderVariable::new("metallic".to_owned(), ShaderVariableType::F32_1(0.0f32)),
-          ShaderVariable::new("roughness".to_owned(), ShaderVariableType::F32_1(1.0f32)),
-          ShaderVariable::new("ao".to_owned(), ShaderVariableType::F32_1(1.0f32)),
+          ShaderVariable::new("metallic".to_owned(), ShaderVariableType::F32_1(0.5f32)),
+          ShaderVariable::new("roughness".to_owned(), ShaderVariableType::F32_1(0.5f32)),
+          ShaderVariable::new("ao".to_owned(), ShaderVariableType::F32_1(0.5f32)),
         ]
       });
       context.static_mesh(&mesh.1).unwrap();

@@ -204,9 +204,12 @@ pub fn construct_buffer(indices: &[i32],
 
     if normal_arr.len() != 0 {
       let idx = indices_con[i];
-      normal_vec.push(normal_arr[idx*3] as f32);
-      normal_vec.push(normal_arr[(idx*3)+1] as f32);
-      normal_vec.push(normal_arr[(idx*3)+2] as f32);
+//      normal_vec.push(normal_arr[idx*3] as f32);
+//      normal_vec.push(normal_arr[(idx*3)+1] as f32);
+//      normal_vec.push(normal_arr[(idx*3)+2] as f32);
+      normal_vec.push(normal_arr[index_3] as f32);
+      normal_vec.push(normal_arr[index_3 + 1] as f32);
+      normal_vec.push(normal_arr[index_3 + 2] as f32);
     } else {
       normal_vec.push(0.0f32);
       normal_vec.push(0.0f32);

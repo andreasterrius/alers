@@ -1,3 +1,5 @@
+use alers::resource::fbx_convert::CreateStaticMesh;
+
 #[test]
 pub fn load_fbx_simple_get_vertices(){
   use log::info;
