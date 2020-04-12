@@ -2,15 +2,15 @@ use crate::data::buffer::{Buffer, BufferBuilder};
 use crate::data::id::Id;
 
 #[derive(Debug)]
-pub struct StaticMesh {
+pub struct Mesh {
   pub id: Id,
   pub vertices: Buffer<f32>,
   pub indices: Option<Buffer<i32>>,
 }
 
-impl StaticMesh {
-  pub fn new(vertices: Buffer<f32>, indices: Option<Buffer<i32>>) -> StaticMesh {
-    StaticMesh {
+impl Mesh {
+  pub fn new(vertices: Buffer<f32>, indices: Option<Buffer<i32>>) -> Mesh {
+    Mesh {
       id: Id::new(),
       vertices,
       indices,
@@ -18,10 +18,10 @@ impl StaticMesh {
   }
 }
 
-impl_id!(StaticMesh, id);
+impl_id!(Mesh, id);
 
 
-pub fn create_cube() -> StaticMesh {
+pub fn create_cube() -> Mesh {
   let vertices = BufferBuilder::new(vec!(
     // back face
     -1.0f32, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // bottom-left
@@ -71,8 +71,5 @@ pub fn create_cube() -> StaticMesh {
     .build()
     .unwrap();
 
-  StaticMesh::new(vertices, None)
+  Mesh::new(vertices, None)
 }
-
-/*
-*/

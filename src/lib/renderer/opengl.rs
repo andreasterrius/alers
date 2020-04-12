@@ -19,7 +19,7 @@ use crate::renderer::opengl::static_mesh::{StaticMeshDrawInfo, StaticMeshError};
 use crate::renderer::opengl::texture::{TextureDrawInfo, TextureError};
 use crate::resource::cubemap::Cubemap;
 use crate::resource::shader::ShaderFile;
-use crate::resource::static_mesh::StaticMesh;
+use crate::resource::mesh::Mesh;
 use crate::resource::texture::Texture;
 
 pub mod static_mesh;
@@ -57,7 +57,7 @@ impl Context {
     }
   }
 
-  pub fn static_mesh(&mut self, mesh: &StaticMesh) -> Result<(), StaticMeshError> {
+  pub fn static_mesh(&mut self, mesh: &Mesh) -> Result<(), StaticMeshError> {
     self.static_meshes.insert(mesh.uid(), StaticMeshDrawInfo::new(mesh)?);
     Ok(())
   }

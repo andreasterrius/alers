@@ -24,7 +24,7 @@ pub fn load_fbx_rigged_print_attributes() {
   use log::info;
   alers::log::init();
 
-  let fbx = alers::resource::fbx::load("resources/test/cube.fbx")
+  let fbx = alers::resource::fbx::load("resources/test/anim_simple.fbx")
     .expect("Fail to load rigged fbx");
 
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();

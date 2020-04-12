@@ -1,7 +1,7 @@
 use crate::data::id::{Id, Identifiable};
 use crate::resource::cubemap::Cubemap;
 use crate::resource::shader::ShaderFile;
-use crate::resource::static_mesh::StaticMesh;
+use crate::resource::mesh::Mesh;
 
 pub struct SkyboxEntity {
   pub static_mesh_id: Id,

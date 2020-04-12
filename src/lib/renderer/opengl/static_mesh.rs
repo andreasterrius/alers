@@ -1,4 +1,4 @@
-use crate::resource::static_mesh::StaticMesh;
+use crate::resource::mesh::Mesh;
 use crate::renderer::opengl::raw::{CreateBufferError, create_buffer};
 
 pub struct StaticMeshDrawInfo {
@@ -9,7 +9,7 @@ pub struct StaticMeshDrawInfo {
 }
 
 impl StaticMeshDrawInfo {
-  pub fn new(mesh: &StaticMesh) -> Result<StaticMeshDrawInfo, StaticMeshError> {
+  pub fn new(mesh: &Mesh) -> Result<StaticMeshDrawInfo, StaticMeshError> {
     let (vao, vbo, ebo, draw_size) = unsafe { create_buffer(&mesh.vertices, &mesh.indices)? };
     Ok(StaticMeshDrawInfo { vao, _vbo: vbo, ebo, draw_size })
   }

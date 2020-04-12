@@ -10,7 +10,7 @@ use crate::input::Input;
 use crate::math::transform::Transform;
 use crate::renderer::opengl::RenderTasks;
 use crate::resource::shader::ShaderFile;
-use crate::resource::static_mesh::StaticMesh;
+use crate::resource::mesh::Mesh;
 
 pub struct World {
   // List of pawns in the world

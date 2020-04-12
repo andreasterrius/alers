@@ -1,7 +1,7 @@
 use log::info;
 
 use crate::data::buffer::{Buffer, SeparateBufferBuilder};
-use crate::resource::static_mesh::StaticMesh;
+use crate::resource::mesh::Mesh;
 use cgmath::{Vector3, Quaternion, Euler, Deg};
 use crate::math::transform::Transform;
 use std::collections::HashMap;
@@ -14,7 +14,7 @@ pub enum ConversionError {
   PolgyonVertexIndexNotFound,
 }
 
-pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transform, StaticMesh)>, ConversionError> {
+pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transform, Mesh)>, ConversionError> {
 
   //Get root node
   let root = fbx.scenes().nth(0).unwrap().node().tree().root();
@@ -74,7 +74,7 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
   }
 
   // Get geometries
-  let mut meshes : Vec<(Transform, StaticMesh)> = vec!();
+  let mut meshes : Vec<(Transform, Mesh)> = vec!();
   for object in objects.children_by_name("Geometry") {
     let element_node = object.children_by_name("PolygonVertexIndex").nth(0);
     let (indices, indices_con) = match element_node {
@@ -112,10 +112,14 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
     let model_id = connectivity[&id];
     let transform = transforms.get(&model_id).map(|x| x.clone()).unwrap_or(Transform::new());
 
-    meshes.push((transform, StaticMesh::new(vbuffer, None)));
+    meshes.push((transform, Mesh::new(vbuffer, None)));
   };
 
   Ok(meshes)
+}
+
+pub fn to_skeletal_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transform, Mesh)>, ConversionError> {
+  Ok(vec!())
 }
 
 // Only receives tris or quads
@@ -178,60 +182,6 @@ pub fn parse_indices(indices: &[i32]) -> Result<(Vec<i32>, Vec<usize>), Conversi
   }
 
   Ok((arr, con))
-}
-
-pub fn construct_buffer(indices: &[i32],
-                        indices_con: &Vec<usize>,
-                        position_arr: &[f64],
-                        uv_arr: &[f64],
-                        normal_arr: &[f64]) -> Result<Buffer<f32>, ConversionError>
-{
-  let mut position_vec = vec!();
-  let mut uv_vec = vec!();
-  let mut normal_vec = vec!();
-
-  info!("idcon {:?}", indices_con);
-
-  for i in 0..indices.len() {
-
-    // calculate offsets
-    let index_3 = (indices[i] * 3) as usize;
-    let index_2 = (indices[i] * 2) as usize;
-
-    // Push vertices
-    position_vec.push(position_arr[index_3] as f32);
-    position_vec.push(position_arr[index_3 + 1] as f32);
-    position_vec.push(position_arr[index_3 + 2] as f32);
-
-    if normal_arr.len() != 0 {
-      let idx = indices_con[i];
-//      normal_vec.push(normal_arr[idx*3] as f32);
-//      normal_vec.push(normal_arr[(idx*3)+1] as f32);
-//      normal_vec.push(normal_arr[(idx*3)+2] as f32);
-      normal_vec.push(normal_arr[index_3] as f32);
-      normal_vec.push(normal_arr[index_3 + 1] as f32);
-      normal_vec.push(normal_arr[index_3 + 2] as f32);
-    } else {
-      normal_vec.push(0.0f32);
-      normal_vec.push(0.0f32);
-      normal_vec.push(0.0f32);
-    }
-
-    if uv_arr.len() != 0 {
-      uv_vec.push(uv_arr[index_2] as f32);
-      uv_vec.push(uv_arr[index_2 + 1] as f32);
-    } else {
-      uv_vec.push(0.0f32);
-      uv_vec.push(0.0f32);
-    }
-  }
-
-  let vbuffer = SeparateBufferBuilder::new()
-    .info("position", 3, position_vec)
-    .info("uv", 2, uv_vec)
-    .info("normal", 3, normal_vec)
-    .build().unwrap();
-  Ok(vbuffer)
 }
 
 pub fn construct_buffer_flat(indices: &[i32],

@@ -16,7 +16,7 @@ use alers::renderer::opengl::{Context, RenderTasks, SimpleRenderTasks, Projectio
 use alers::renderer::opengl::shader::{ShaderVariable, ShaderVariableType};
 use alers::resource::cubemap::Cubemap;
 use alers::resource::shader::ShaderFile;
-use alers::resource::static_mesh::StaticMesh;
+use alers::resource::mesh::Mesh;
 use alers::resource::texture::Texture;
 use alers::window::Window;
 use log::info;
@@ -40,7 +40,11 @@ impl Game {
     // Load meshes
     let meshes = resource::fbx_convert::to_static_meshes(
       resource::fbx::load(&format!("{}/{}", resource_base_path, "test/scene.fbx")).unwrap()).unwrap();
-    let cube_mesh = resource::static_mesh::create_cube();
+    let cube_mesh = resource::mesh::create_cube();
+
+    // Load skeletal meshes
+    let skeletal_meshes = resource::fbx_convert::to_skeletal_meshes(
+      resource::fbx::load(&format!("{}/{}", resource_base_path, "test/anim_begin.fbx")).unwrap()).unwrap();
 
     info!("loaded: {:?}", &meshes[0]);
     info!("cm: {:?}", cube_mesh);
