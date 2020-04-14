@@ -1,11 +1,14 @@
+use std::collections::HashMap;
+
+use cgmath::{Deg, Euler, Quaternion, Vector3};
+use cgmath::prelude::*;
 use log::info;
 
 use crate::data::buffer::{Buffer, SeparateBufferBuilder};
-use crate::resource::mesh::Mesh;
-use cgmath::{Vector3, Quaternion, Euler, Deg};
 use crate::math::transform::Transform;
-use std::collections::HashMap;
-use cgmath::prelude::*;
+use crate::resource::mesh::Mesh;
+use crate::resource::skin::Skin;
+use crate::resource::bone::Bone;
 
 #[derive(Debug)]
 pub enum ConversionError {
@@ -73,6 +76,11 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
     transforms.insert(id, transform);
   }
 
+  //Get skin information
+  for deformers in objects.children_by_name("Deformer"){
+    let root_bone = crawl_deformers(&fbx)?;
+  }
+
   // Get geometries
   let mut meshes : Vec<(Transform, Mesh)> = vec!();
   for object in objects.children_by_name("Geometry") {
@@ -102,10 +110,6 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
       Some(normal_node) => normal_node.children_by_name("Normals").nth(0).unwrap().attributes().iter().nth(0).unwrap().get_arr_f64().unwrap(),
     };
 
-    info!("pos {:?}", position_arr);
-    info!("nrm {:?}", normal_arr);
-    info!("idc {:?}", indices);
-
     let vbuffer = construct_buffer_flat(&indices, &indices_con, position_arr, uv_arr, normal_arr)?;
     //let name = object.attributes().iter().nth(1).unwrap().get_string().unwrap().split("\u{0}\u{1}").collect::<Vec<&str>>()[0];
     let id = object.attributes()[0].get_i64().unwrap();
@@ -118,7 +122,7 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
   Ok(meshes)
 }
 
-pub fn to_skeletal_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transform, Mesh)>, ConversionError> {
+pub fn to_skeletal_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transform, Mesh, Skin)>, ConversionError> {
   Ok(vec!())
 }
 
@@ -134,7 +138,7 @@ pub fn parse_indices(indices: &[i32]) -> Result<(Vec<i32>, Vec<usize>), Conversi
       end = i;
       //println!("start {}, end {}, indices {}", start, end, i);
       if end - start == 2 { // 2 index apart
-        let last_idx  = arr.len() as i32;
+        let last_idx = arr.len() as i32;
         // 1 tri
         arr.push(indices[start]);
         arr.push(indices[start + 1]);
@@ -144,22 +148,22 @@ pub fn parse_indices(indices: &[i32]) -> Result<(Vec<i32>, Vec<usize>), Conversi
         con.push(start + 1);
         con.push(start + 2);
       } else if end - start == 3 { // 3 index apart
-        let last_idx  = arr.len() as i32;
+        let last_idx = arr.len() as i32;
         // Quad, convert to 2 tris
         arr.push(indices[start]);
         arr.push(indices[start + 1]);
         arr.push(indices[start + 2]);
 
-        arr.push(indices[start+2]);
-        arr.push(!indices[start+3]);
+        arr.push(indices[start + 2]);
+        arr.push(!indices[start + 3]);
         arr.push(indices[start]);
 
         con.push(start);
         con.push(start + 1);
         con.push(start + 2);
 
-        con.push(start+2);
-        con.push(start+3);
+        con.push(start + 2);
+        con.push(start + 3);
         con.push(start);
       } else if end - start >= 4 {
         return Err(ConversionError::NGonNotSupported);
@@ -185,19 +189,14 @@ pub fn parse_indices(indices: &[i32]) -> Result<(Vec<i32>, Vec<usize>), Conversi
 }
 
 pub fn construct_buffer_flat(indices: &[i32],
-                        indices_con: &Vec<usize>,
-                        position_arr: &[f64],
-                        uv_arr: &[f64],
-                        normal_arr: &[f64]) -> Result<Buffer<f32>, ConversionError>
+                             indices_con: &Vec<usize>,
+                             position_arr: &[f64],
+                             uv_arr: &[f64],
+                             normal_arr: &[f64]) -> Result<Buffer<f32>, ConversionError>
 {
   let mut position_vec = vec!();
   let mut uv_vec = vec!();
   let mut normal_vec = vec!();
-
-  info!("idcon {:?}", indices_con);
-  println!("bb_t : {:?}", indices);
-
-  println!("{} {} {} {}", indices_con.len(), position_arr.len(), normal_arr.len(), uv_arr.len());
 
   for i in 0..indices.len() {
     let idx = indices[i];
@@ -230,18 +229,12 @@ pub fn construct_buffer_flat(indices: &[i32],
     }
   }
 
-  for i in 0..indices_con.len(){
-    let idx = indices_con[i]*3;
+  for i in 0..indices_con.len() {
+    let idx = indices_con[i] * 3;
     normal_vec.push(normal_arr[idx] as f32);
     normal_vec.push(normal_arr[idx + 1] as f32);
     normal_vec.push(normal_arr[idx + 2] as f32);
   }
-
-
-  println!("pos_arr: {:?}",position_arr);
-
-  println!("pos: {:?}",position_vec);
-  println!("nrm: {:?}",normal_vec);
 
   let vbuffer = SeparateBufferBuilder::new()
     .info("position", 3, position_vec)
@@ -252,6 +245,10 @@ pub fn construct_buffer_flat(indices: &[i32],
   //println!("{:#?}", vbuffer);
 
   Ok(vbuffer)
+}
+
+pub fn crawl_deformers(fbx: &fbxcel_dom::v7400::Document) -> Result<Vec<Bone>, ConversionError> {
+  Ok(vec!())
 }
 
 #[test]

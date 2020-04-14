@@ -4,3 +4,5 @@ pub mod shader;
 pub mod mesh;
 pub mod texture;
 pub mod cubemap;
+pub mod skin;
+pub mod bone;
