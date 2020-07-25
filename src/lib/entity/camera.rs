@@ -1,5 +1,5 @@
-use crate::camera::{Camera, CameraRenderInfo};
 use crate::camera::flycamera::FlyCamera;
+use crate::camera::{Camera, CameraRenderInfo};
 use crate::input::Input;
 
 pub enum CameraEntity {
@@ -19,7 +19,7 @@ impl CameraEntity {
 
   pub fn tick(&mut self, delta_time: f32) {
     match self {
-      CameraEntity::FlyCamera(c) => { c.tick(delta_time) }
+      CameraEntity::FlyCamera(c) => c.tick(delta_time),
       CameraEntity::Camera(_) => {}
       CameraEntity::None => {}
     }
@@ -27,9 +27,9 @@ impl CameraEntity {
 
   pub fn get_camera_render_info(&mut self) -> Option<CameraRenderInfo> {
     match self {
-      CameraEntity::FlyCamera(c) => { Some(c.camera_mut().camera_render_info()) }
-      CameraEntity::Camera(c) => { Some(c.camera_render_info()) }
-      CameraEntity::None => { None }
+      CameraEntity::FlyCamera(c) => Some(c.camera_mut().camera_render_info()),
+      CameraEntity::Camera(c) => Some(c.camera_render_info()),
+      CameraEntity::None => None,
     }
   }
 }

@@ -3,12 +3,9 @@ use std::convert::TryInto;
 use std::ffi::{c_void, CString};
 use std::ptr::null;
 
-use cgmath::{Deg, Point3, Vector3};
-use cgmath::prelude::*;
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
 
 use crate::data::buffer::Buffer;
-use crate::renderer::constant::{PROJECTION, VIEW};
 use crate::resource::texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 
 pub unsafe fn clear_buffer() {
@@ -74,9 +71,14 @@ pub unsafe fn matrix4f(shader: u32, name: &str, ptr: *const f32) {
   );
 }
 
-
 pub unsafe fn framebuffer_texture2d(offset: u32, cubemap: u32, mipmap: i32) {
-  gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_CUBE_MAP_POSITIVE_X + offset, cubemap, mipmap);
+  gl::FramebufferTexture2D(
+    gl::FRAMEBUFFER,
+    gl::COLOR_ATTACHMENT0,
+    gl::TEXTURE_CUBE_MAP_POSITIVE_X + offset,
+    cubemap,
+    mipmap,
+  );
 }
 
 pub unsafe fn bind_vao(vao: u32) {
@@ -94,9 +96,10 @@ pub unsafe fn draw_elements(draw_size: u32) {
 #[derive(Debug)]
 pub struct CreateBufferError {}
 
-pub unsafe fn create_buffer(vertices: &Buffer<f32>,
-                            indices: &Option<Buffer<i32>>) -> Result<(u32, u32, Option<u32>, u32), CreateBufferError>
-{
+pub unsafe fn create_buffer(
+  vertices: &Buffer<f32>,
+  indices: &Option<Buffer<i32>>,
+) -> Result<(u32, u32, Option<u32>, u32), CreateBufferError> {
   let (mut vao, mut vbo) = (0, 0);
   let mut draw_size = vertices.len() as u32;
   gl::GenVertexArrays(1, &mut vao);
@@ -136,8 +139,14 @@ pub unsafe fn create_buffer(vertices: &Buffer<f32>,
   for element in vertices.elements() {
     println!("{:?} {:?}", start, count);
     let stride = (start * mem::size_of::<GLfloat>()) as *const c_void;
-    gl::VertexAttribPointer(count, element.size.try_into().unwrap(),
-                            gl::FLOAT, gl::FALSE, total_row_size.try_into().unwrap(), stride);
+    gl::VertexAttribPointer(
+      count,
+      element.size.try_into().unwrap(),
+      gl::FLOAT,
+      gl::FALSE,
+      total_row_size.try_into().unwrap(),
+      stride,
+    );
     gl::EnableVertexAttribArray(count);
     start += element.size;
     count += 1;
@@ -161,9 +170,10 @@ pub enum CreateShaderError {
   LinkingShaderError(String),
 }
 
-pub unsafe fn create_shader(vertex_shader_source: &str,
-                            fragment_shader_source: &str) -> Result<u32, CreateShaderError>
-{
+pub unsafe fn create_shader(
+  vertex_shader_source: &str,
+  fragment_shader_source: &str,
+) -> Result<u32, CreateShaderError> {
   // vertex shader
   let vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
   let c_str_vert = CString::new(vertex_shader_source.as_bytes()).unwrap();
@@ -182,8 +192,10 @@ pub unsafe fn create_shader(vertex_shader_source: &str,
       ptr::null_mut(),
       info_log.as_mut_ptr() as *mut GLchar,
     );
-    return Err(CreateShaderError::VertexShaderError(format!("Vertex Shader compilation failed: {}",
-                                                            String::from_utf8_lossy(&info_log))));
+    return Err(CreateShaderError::VertexShaderError(format!(
+      "Vertex Shader compilation failed: {}",
+      String::from_utf8_lossy(&info_log)
+    )));
   }
 
   // fragment shader
@@ -200,8 +212,10 @@ pub unsafe fn create_shader(vertex_shader_source: &str,
       ptr::null_mut(),
       info_log.as_mut_ptr() as *mut GLchar,
     );
-    return Err(CreateShaderError::FragmentShaderError(format!("Fragment shader compilation failed: {}",
-                                                              String::from_utf8_lossy(&info_log))));
+    return Err(CreateShaderError::FragmentShaderError(format!(
+      "Fragment shader compilation failed: {}",
+      String::from_utf8_lossy(&info_log)
+    )));
   }
 
   // link shaders
@@ -218,8 +232,10 @@ pub unsafe fn create_shader(vertex_shader_source: &str,
       ptr::null_mut(),
       info_log.as_mut_ptr() as *mut GLchar,
     );
-    return Err(CreateShaderError::LinkingShaderError(format!("Linking shader failed: {}",
-                                                             String::from_utf8_lossy(&info_log))));
+    return Err(CreateShaderError::LinkingShaderError(format!(
+      "Linking shader failed: {}",
+      String::from_utf8_lossy(&info_log)
+    )));
   }
   gl::DeleteShader(vertex_shader);
   gl::DeleteShader(fragment_shader);
@@ -230,22 +246,37 @@ pub unsafe fn create_shader(vertex_shader_source: &str,
 #[derive(Debug)]
 pub struct CreateTextureError {}
 
-pub unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureError>
-{
+pub unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureError> {
   let mut gl_texture = 0;
   gl::GenTextures(1, &mut gl_texture);
   gl::BindTexture(gl::TEXTURE_2D, gl_texture);
 
-  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, texture_wrap_to_gl(&texture.get_wrap().x));
-  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, texture_wrap_to_gl(&texture.get_wrap().y));
+  gl::TexParameteri(
+    gl::TEXTURE_2D,
+    gl::TEXTURE_WRAP_S,
+    texture_wrap_to_gl(&texture.get_wrap().x),
+  );
+  gl::TexParameteri(
+    gl::TEXTURE_2D,
+    gl::TEXTURE_WRAP_T,
+    texture_wrap_to_gl(&texture.get_wrap().y),
+  );
 
-  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, texture_mag_to_gl(&texture.get_magnification().min));
-  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, texture_mag_to_gl(&texture.get_magnification().max));
+  gl::TexParameteri(
+    gl::TEXTURE_2D,
+    gl::TEXTURE_MIN_FILTER,
+    texture_mag_to_gl(&texture.get_magnification().min),
+  );
+  gl::TexParameteri(
+    gl::TEXTURE_2D,
+    gl::TEXTURE_MAG_FILTER,
+    texture_mag_to_gl(&texture.get_magnification().max),
+  );
 
   let byte = texture.get_data();
   let (internal_format, pixel_format, ptr) = match byte {
-    TexturePixel::RgbF8(v) => { (gl::RGB as i32, gl::UNSIGNED_BYTE, v.as_ptr() as *const c_void) }
-    TexturePixel::RgbF32(v) => { (gl::RGB16F as i32, gl::FLOAT, v.as_ptr() as *const c_void) }
+    TexturePixel::RgbF8(v) => (gl::RGB as i32, gl::UNSIGNED_BYTE, v.as_ptr() as *const c_void),
+    TexturePixel::RgbF32(v) => (gl::RGB16F as i32, gl::FLOAT, v.as_ptr() as *const c_void),
   };
 
   gl::TexImage2D(
@@ -263,8 +294,7 @@ pub unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureErro
   return Ok(gl_texture);
 }
 
-fn texture_wrap_to_gl(wrap: &TextureWrapType) -> i32
-{
+fn texture_wrap_to_gl(wrap: &TextureWrapType) -> i32 {
   match wrap {
     TextureWrapType::ClampToEdge => gl::CLAMP_TO_EDGE as i32,
     TextureWrapType::MirroredRepeat => gl::MIRRORED_REPEAT as i32,
@@ -272,16 +302,14 @@ fn texture_wrap_to_gl(wrap: &TextureWrapType) -> i32
   }
 }
 
-fn texture_mag_to_gl(mag: &TextureMagnificationType) -> i32
-{
+fn texture_mag_to_gl(mag: &TextureMagnificationType) -> i32 {
   match mag {
     TextureMagnificationType::Nearest => gl::NEAREST as i32,
     TextureMagnificationType::Linear => gl::LINEAR as i32,
   }
 }
 
-pub unsafe fn create_framebuffer(w: u32, h : u32) -> (u32, u32)
-{
+pub unsafe fn create_framebuffer(w: u32, h: u32) -> (u32, u32) {
   let mut fbo = 0;
   gl::GenFramebuffers(1, &mut fbo);
 
@@ -297,13 +325,22 @@ pub unsafe fn create_framebuffer(w: u32, h : u32) -> (u32, u32)
   return (fbo, rbo);
 }
 
-pub unsafe fn create_cubemap(w: u32, h : u32) -> u32
-{
+pub unsafe fn create_cubemap(w: u32, h: u32) -> u32 {
   let mut cubemap = 0;
   gl::GenTextures(1, &mut cubemap);
   gl::BindTexture(gl::TEXTURE_CUBE_MAP, cubemap);
   for i in 0..6 {
-    gl::TexImage2D(gl::TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl::RGB16F as i32, w as i32, h as i32, 0, gl::RGB, gl::FLOAT, null());
+    gl::TexImage2D(
+      gl::TEXTURE_CUBE_MAP_POSITIVE_X + i,
+      0,
+      gl::RGB16F as i32,
+      w as i32,
+      h as i32,
+      0,
+      gl::RGB,
+      gl::FLOAT,
+      null(),
+    );
   }
   gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
   gl::TexParameteri(gl::TEXTURE_CUBE_MAP, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
@@ -313,4 +350,3 @@ pub unsafe fn create_cubemap(w: u32, h : u32) -> u32
 
   return cubemap;
 }
-

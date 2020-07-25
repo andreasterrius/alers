@@ -3,15 +3,13 @@ use crate::window::WindowCreator;
 pub mod tick;
 
 pub struct Engine {
-  glfw: glfw::Glfw
+  glfw: glfw::Glfw,
 }
 
 impl Engine {
   pub fn new() -> Engine {
     let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
-    Engine {
-      glfw
-    }
+    Engine { glfw }
   }
 
   pub fn windows(&mut self) -> WindowCreator {

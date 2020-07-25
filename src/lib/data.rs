@@ -1,4 +1,4 @@
 pub mod buffer;
-pub mod id;
+pub mod color;
 pub mod display_info;
-pub mod rect2d;
+pub mod id;

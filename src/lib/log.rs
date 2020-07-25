@@ -1,17 +1,20 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-use simplelog::{CombinedLogger, TermLogger, Config, TerminalMode, WriteLogger, LevelFilter};
+use simplelog::{CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode, WriteLogger};
 use std::fs::File;
+use std::time::{SystemTime, UNIX_EPOCH};
 
-pub fn init(){
+pub fn init() {
   let now_ms = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis();
-  CombinedLogger::init(
-    vec![
-      TermLogger::new(LevelFilter::Warn, Config::default(), TerminalMode::Mixed).unwrap(),
-      WriteLogger::new(LevelFilter::Info, Config::default(), File::create(format!("alers-{}.log", now_ms)).unwrap()),
-    ]
-  ).unwrap();
+  CombinedLogger::init(vec![
+    TermLogger::new(LevelFilter::Warn, Config::default(), TerminalMode::Mixed).unwrap(),
+    WriteLogger::new(
+      LevelFilter::Info,
+      Config::default(),
+      File::create(format!("alers-{}.log", now_ms)).unwrap(),
+    ),
+  ])
+  .unwrap();
 }
 
-pub fn init_test(){
+pub fn init_test() {
   TermLogger::init(LevelFilter::Info, Config::default(), TerminalMode::Mixed).unwrap();
 }

@@ -17,15 +17,21 @@ pub struct Texture {
 }
 
 impl Texture {
-  pub fn new(data: TexturePixel, width: u32, height: u32, channel_count: u32, ) -> Texture {
+  pub fn new(data: TexturePixel, width: u32, height: u32, channel_count: u32) -> Texture {
     Texture {
       id: Id::new(),
       data,
       width,
       height,
       channel_count,
-      texture_wrap: TextureWrap { x: TextureWrapType::ClampToEdge, y: TextureWrapType::ClampToEdge },
-      texture_magnification: TextureMagnification { min: TextureMagnificationType::Linear, max: TextureMagnificationType::Linear }
+      texture_wrap: TextureWrap {
+        x: TextureWrapType::ClampToEdge,
+        y: TextureWrapType::ClampToEdge,
+      },
+      texture_magnification: TextureMagnification {
+        min: TextureMagnificationType::Linear,
+        max: TextureMagnificationType::Linear,
+      },
     }
   }
 
@@ -33,7 +39,7 @@ impl Texture {
     if path.ends_with(".hdr") {
       let i = hdrldr::load(File::open(path)?)?;
 
-      let mut v = vec!();
+      let mut v = vec![];
       for p in i.data {
         v.push(p.r);
         v.push(p.g);
@@ -122,7 +128,7 @@ impl From<ImageError> for LoadTextureError {
 }
 
 impl From<std::io::Error> for LoadTextureError {
-  fn from(e: std::io::Error) -> Self {
+  fn from(_e: std::io::Error) -> Self {
     LoadTextureError::FileNotFound
   }
 }
@@ -136,7 +142,7 @@ impl From<hdrldr::LoadError> for LoadTextureError {
 fn flip_byte_vertically<T: Clone>(v: &Vec<T>, width: u32, height: u32, channel_count: u32) -> Vec<T> {
   let column_size = (width * channel_count) as usize;
   let row_size = height as usize;
-  let mut flipped = vec!();
+  let mut flipped = vec![];
   for row in (0..row_size).rev() {
     let first_row_idx = row * column_size;
     flipped.extend_from_slice(&v[first_row_idx..first_row_idx + column_size]);
@@ -146,20 +152,15 @@ fn flip_byte_vertically<T: Clone>(v: &Vec<T>, width: u32, height: u32, channel_c
 
 #[test]
 fn test_flip_image_vertically() {
-  let k =
-    vec!(
-      0.0f32, 1.0, 2.0, 3.0, 4.0, 5.0,
-      6.0f32, 7.0, 8.0, 9.0, 10.0, 11.0,
-      12.0f32, 13.0, 14.0, 15.0, 16.0, 17.0,
-    );
+  let k = vec![
+    0.0f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0f32, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0f32, 13.0, 14.0, 15.0, 16.0, 17.0,
+  ];
 
   let _t = Texture::new(TexturePixel::RgbF32(k), 2, 3, 3);
 
-  let k =
-    vec!(
-      0.0f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-      9.0f32, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
-    );
+  let k = vec![
+    0.0f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0f32, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
+  ];
 
   let t = Texture::new(TexturePixel::RgbF32(k), 3, 2, 3);
   println!("{:?}", t.clone_data_flip_vertically());

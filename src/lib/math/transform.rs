@@ -1,5 +1,5 @@
-use cgmath::{Matrix4, One, Quaternion, Vector3};
 use cgmath::prelude::*;
+use cgmath::{Matrix4, One, Quaternion, Vector3};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Transform {

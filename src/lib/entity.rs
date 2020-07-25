@@ -1,4 +1,4 @@
-pub mod world;
+pub mod camera;
 pub mod pawn;
 pub mod skybox;
-pub mod camera;
+pub mod world;

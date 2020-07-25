@@ -13,4 +13,3 @@ impl Id {
 pub trait Identifiable {
   fn uid(&self) -> Id;
 }
-

@@ -1,7 +1,5 @@
 #[derive(Debug)]
-pub struct Skin {
-
-}
+pub struct Skin {}
 
 impl Skin {
   pub fn new() -> Skin {

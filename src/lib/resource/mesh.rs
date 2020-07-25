@@ -20,9 +20,8 @@ impl Mesh {
 
 impl_id!(Mesh, id);
 
-
 pub fn create_cube() -> Mesh {
-  let vertices = BufferBuilder::new(vec!(
+  let vertices = BufferBuilder::new(vec![
     // back face
     -1.0f32, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // bottom-left
     1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0, // top-right
@@ -64,12 +63,13 @@ pub fn create_cube() -> Mesh {
     1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 1.0, 1.0, // top-right
     1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom-right
     -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, // top-left
-    -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0  // bottom-left
-  )).info("vertex", 3)
-    .info("normal", 3)
-    .info("uv", 2)
-    .build()
-    .unwrap();
+    -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, // bottom-left
+  ])
+  .info("vertex", 3)
+  .info("normal", 3)
+  .info("uv", 2)
+  .build()
+  .unwrap();
 
   Mesh::new(vertices, None)
 }

@@ -1,7 +1,8 @@
-use crate::camera::Camera;
-use crate::input::{Input, Key, Action};
-use cgmath::{Vector3, Vector2, Deg, Quaternion};
 use cgmath::prelude::*;
+use cgmath::{Deg, Quaternion, Vector2, Vector3};
+
+use crate::camera::Camera;
+use crate::input::{Action, Input, Key};
 
 pub struct FlyCamera {
   camera: Camera,
@@ -28,20 +29,22 @@ impl FlyCamera {
     &self.camera
   }
 
-  pub fn camera_mut(&mut self) -> &mut Camera{
+  pub fn camera_mut(&mut self) -> &mut Camera {
     &mut self.camera
   }
 
-  pub fn input(&mut self, inputs : &Vec<Input>) {
+  pub fn input(&mut self, inputs: &Vec<Input>) {
     for input in inputs {
       self.camera_input(&input);
     }
 
-    self.camera.set_rotation(Quaternion::from_angle_y(-Deg(self.rotate_input.x * self.camera_rotate_speed))
-      * Quaternion::from_angle_x(-Deg(self.rotate_input.y * self.camera_rotate_speed)));
+    self.camera.set_rotation(
+      Quaternion::from_angle_y(-Deg(self.rotate_input.x * self.camera_rotate_speed))
+        * Quaternion::from_angle_x(-Deg(self.rotate_input.y * self.camera_rotate_speed)),
+    );
   }
 
-  pub fn tick(&mut self, delta_time : f32) {
+  pub fn tick(&mut self, delta_time: f32) {
     self.camera.translate(self.move_input * self.camera_speed * delta_time);
   }
 
@@ -54,7 +57,7 @@ impl FlyCamera {
       Input::Key(Key::S, _, Action::Press, _) => self.move_input.z += -1.0f32,
       Input::Key(Key::A, _, Action::Release, _) => self.move_input.x += 1.0f32,
       Input::Key(Key::D, _, Action::Release, _) => self.move_input.x += -1.0f32,
-      Input::Key(Key::W, _, Action::Release, _ ) => self.move_input.z += -1.0f32,
+      Input::Key(Key::W, _, Action::Release, _) => self.move_input.z += -1.0f32,
       Input::Key(Key::S, _, Action::Release, _) => self.move_input.z += 1.0f32,
 
       Input::MouseMotion(x, y) => {

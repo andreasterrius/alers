@@ -1,10 +1,10 @@
-use crate::renderer::opengl::raw::{CreateShaderError, create_shader};
+use crate::renderer::opengl::raw::{create_shader, CreateShaderError};
 use crate::resource::shader::ShaderFile;
 use cgmath::{Vector3, Vector4};
 
 #[derive(Debug)]
 pub enum ShaderError {
-  CompilationError(CreateShaderError)
+  CompilationError(CreateShaderError),
 }
 
 impl From<CreateShaderError> for ShaderError {
@@ -32,10 +32,7 @@ pub struct ShaderVariable {
 
 impl ShaderVariable {
   pub fn new(name: String, variable_type: ShaderVariableType) -> ShaderVariable {
-    ShaderVariable {
-      name,
-      variable_type,
-    }
+    ShaderVariable { name, variable_type }
   }
 }
 

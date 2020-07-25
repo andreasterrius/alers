@@ -8,11 +8,13 @@ pub struct CubemapDrawInfo {
 impl CubemapDrawInfo {
   pub fn new(cubemap: &Cubemap) -> Result<CubemapDrawInfo, CubemapError> {
     let cubemap_internal = unsafe {
-      raw::create_cubemap(cubemap.get_dimension().get_width(),
-                          cubemap.get_dimension().get_height())
+      raw::create_cubemap(
+        cubemap.get_dimension().get_width(),
+        cubemap.get_dimension().get_height(),
+      )
     };
     Ok(CubemapDrawInfo {
-      cubemap: cubemap_internal
+      cubemap: cubemap_internal,
     })
   }
 }

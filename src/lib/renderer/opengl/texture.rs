@@ -1,4 +1,4 @@
-use crate::renderer::opengl::raw::{CreateTextureError, create_texture};
+use crate::renderer::opengl::raw::{create_texture, CreateTextureError};
 use crate::resource::texture::Texture;
 
 #[derive(Debug)]

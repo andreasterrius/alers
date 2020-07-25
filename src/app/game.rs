@@ -1,28 +1,21 @@
 use std::fs;
 
-use cgmath::Vector3;
-
-use alers::{camera, resource};
-use alers::camera::{Camera, CameraRenderInfo};
+use crate::alers::data::id::Identifiable;
 use alers::camera::flycamera::FlyCamera;
+use alers::camera::Camera;
 use alers::data::display_info::DisplayInfo;
 use alers::entity::camera::CameraEntity;
 use alers::entity::pawn::PawnEntity;
 use alers::entity::skybox::SkyboxEntity;
 use alers::entity::world::World;
 use alers::input::Input;
-use alers::math::transform::Transform;
-use alers::renderer::opengl::{Context, RenderTasks, SimpleRenderTasks, ProjectionTarget};
+use alers::math::rect::Rect;
 use alers::renderer::opengl::shader::{ShaderVariable, ShaderVariableType};
-use alers::resource::cubemap::Cubemap;
-use alers::resource::shader::ShaderFile;
-use alers::resource::mesh::Mesh;
-use alers::resource::texture::Texture;
+use alers::renderer::opengl::{Context, ProjectionTarget, RenderTasks, SimpleRenderTasks};
+use alers::resource;
 use alers::window::Window;
+use cgmath::Vector3;
 use log::info;
-
-use crate::alers::data::id::Identifiable;
-use alers::data::rect2d::Rect2d;
 
 pub struct Game {
   world: World,
@@ -30,7 +23,7 @@ pub struct Game {
 
 impl Game {
   pub fn init_window() -> DisplayInfo {
-    DisplayInfo::new(Rect2d::new(800, 600))
+    DisplayInfo::new(Rect::new(800, 600))
   }
 
   pub fn load(context: &mut Context, window: &Window) -> Game {
@@ -38,13 +31,13 @@ impl Game {
     let shader_base_path = "E:\\Codes\\Repos\\alers\\shaders";
 
     // Load meshes
-    let meshes = resource::fbx_convert::to_static_meshes(
-      resource::fbx::load(&format!("{}/{}", resource_base_path, "test/scene.fbx")).unwrap()).unwrap();
+    let meshes =
+      resource::fbx_convert::to_static_meshes(resource::fbx::load(&format!("{}/{}", resource_base_path, "test/scene.fbx")).unwrap()).unwrap();
     let cube_mesh = resource::mesh::create_cube();
 
     // Load skeletal meshes
-    let skeletal_meshes = resource::fbx_convert::to_skeletal_meshes(
-      resource::fbx::load(&format!("{}/{}", resource_base_path, "test/anim_begin.fbx")).unwrap()).unwrap();
+    let _skeletal_meshes =
+      resource::fbx_convert::to_skeletal_meshes(resource::fbx::load(&format!("{}/{}", resource_base_path, "test/anim_begin.fbx")).unwrap()).unwrap();
 
     info!("loaded: {:?}", &meshes[0]);
     info!("cm: {:?}", cube_mesh);
@@ -68,16 +61,14 @@ impl Game {
     );
 
     // Load textures
-    let texture = resource::texture::Texture::load(
-      &format!("{}/{}", resource_base_path, "test/hdr/GravelPlaza_Env.hdr")).unwrap();
+    let texture = resource::texture::Texture::load(&format!("{}/{}", resource_base_path, "test/hdr/GravelPlaza_Env.hdr")).unwrap();
 
     // Load cubemap
-    let cubemap = resource::cubemap::Cubemap::new(Rect2d::new(512, 512));
-    let convoluted_cubemap = resource::cubemap::Cubemap::new(Rect2d::new(32, 32));
+    let cubemap = resource::cubemap::Cubemap::new(Rect::new(512, 512));
+    let convoluted_cubemap = resource::cubemap::Cubemap::new(Rect::new(32, 32));
 
     // Load camera
-    let fly_camera = FlyCamera::new(
-      Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), 90.0f32, 800f32 / 600f32));
+    let fly_camera = FlyCamera::new(Camera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), 90.0f32, 800f32 / 600f32));
 
     let mut world = World::new();
 
@@ -92,7 +83,7 @@ impl Game {
           ShaderVariable::new("metallic".to_owned(), ShaderVariableType::F32_1(0.0f32)),
           ShaderVariable::new("roughness".to_owned(), ShaderVariableType::F32_1(0.5f32)),
           ShaderVariable::new("ao".to_owned(), ShaderVariableType::F32_1(0.5f32)),
-        ]
+        ],
       });
       context.static_mesh(&mesh.1).unwrap();
     }
@@ -125,9 +116,9 @@ impl Game {
       cubemap.uid(),
       cubemap.get_dimension().clone(),
       window.get_display_info().get_dimension().clone(),
-      vec!()
+      vec![],
     );
-    render_tasks.render(context);
+    render_tasks.render(context).unwrap();
 
     // Do a projection again, this time convoluting the cubemap
     let mut render_tasks = SimpleRenderTasks::new();
@@ -138,13 +129,11 @@ impl Game {
       convoluted_cubemap.uid(),
       convoluted_cubemap.get_dimension().clone(),
       window.get_display_info().get_dimension().clone(),
-      vec!()
+      vec![],
     );
-    render_tasks.render(context);
+    render_tasks.render(context).unwrap();
 
-    Game {
-      world,
-    }
+    Game { world }
   }
 
   pub fn input(&mut self, inputs: Vec<Input>) {

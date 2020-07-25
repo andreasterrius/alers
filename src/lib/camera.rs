@@ -1,5 +1,5 @@
-use cgmath::{Deg, Matrix4, Quaternion, Rotation, Vector3};
 use cgmath::prelude::*;
+use cgmath::{Deg, Matrix4, Quaternion, Rotation, Vector3};
 
 use crate::math::transform::Transform;
 
@@ -31,7 +31,7 @@ impl Camera {
     self.transform.translate(forward_dir * translation.z + right_dir * translation.x);
   }
 
-  pub fn set_rotation(&mut self, rotation : Quaternion<f32>){
+  pub fn set_rotation(&mut self, rotation: Quaternion<f32>) {
     self.transform.set_rotation(rotation);
     self.view_mat = None;
   }
@@ -47,10 +47,9 @@ impl Camera {
   fn view_mat(&mut self) -> Matrix4<f32> {
     match self.view_mat {
       None => {
-        self.view_mat = Some(Matrix4::from(self.transform.lcl_rotation.invert()) *
-          Matrix4::from_translation(self.transform.position));
-      },
-      Some(_) => ()
+        self.view_mat = Some(Matrix4::from(self.transform.lcl_rotation.invert()) * Matrix4::from_translation(self.transform.position));
+      }
+      Some(_) => (),
     }
 
     self.view_mat.unwrap()
@@ -59,7 +58,7 @@ impl Camera {
   fn projection_mat(&mut self) -> Matrix4<f32> {
     match self.projection_mat {
       None => self.projection_mat = Some(cgmath::perspective(Deg(self.fov), self.aspect_ratio, 0.1f32, 100.0f32)),
-      Some(_) => ()
+      Some(_) => (),
     }
     self.projection_mat.unwrap()
   }
@@ -79,5 +78,3 @@ pub struct CameraRenderInfo {
   pub projection: Matrix4<f32>,
   pub position: Vector3<f32>,
 }
-
-

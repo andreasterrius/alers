@@ -1,4 +1,4 @@
-use glfw::{Key, Action};
+use glfw::{Action, Key};
 
 use crate::input;
 
@@ -142,11 +142,23 @@ pub fn translate_action(glfw_action: glfw::Action) -> input::Action {
 
 pub fn translate_modifier(glfw_modifier: glfw::Modifiers) -> input::Modifier {
   let mut modifier = input::Modifier::empty();
-  if glfw_modifier.contains(glfw::Modifiers::Shift){ modifier.insert(input::Modifier::SHIFT); }
-  if glfw_modifier.contains(glfw::Modifiers::Control){ modifier.insert(input::Modifier::CONTROL); }
-  if glfw_modifier.contains(glfw::Modifiers::Alt){ modifier.insert(input::Modifier::ALT); }
-  if glfw_modifier.contains(glfw::Modifiers::Super){ modifier.insert(input::Modifier::SUPER); }
-  if glfw_modifier.contains(glfw::Modifiers::CapsLock){ modifier.insert(input::Modifier::CAPSLOCK); }
-  if glfw_modifier.contains(glfw::Modifiers::NumLock){ modifier.insert(input::Modifier::NUMLOCK); }
+  if glfw_modifier.contains(glfw::Modifiers::Shift) {
+    modifier.insert(input::Modifier::SHIFT);
+  }
+  if glfw_modifier.contains(glfw::Modifiers::Control) {
+    modifier.insert(input::Modifier::CONTROL);
+  }
+  if glfw_modifier.contains(glfw::Modifiers::Alt) {
+    modifier.insert(input::Modifier::ALT);
+  }
+  if glfw_modifier.contains(glfw::Modifiers::Super) {
+    modifier.insert(input::Modifier::SUPER);
+  }
+  if glfw_modifier.contains(glfw::Modifiers::CapsLock) {
+    modifier.insert(input::Modifier::CAPSLOCK);
+  }
+  if glfw_modifier.contains(glfw::Modifiers::NumLock) {
+    modifier.insert(input::Modifier::NUMLOCK);
+  }
   modifier
 }

@@ -1,5 +1,5 @@
+use crate::renderer::opengl::raw::{create_buffer, CreateBufferError};
 use crate::resource::mesh::Mesh;
-use crate::renderer::opengl::raw::{CreateBufferError, create_buffer};
 
 pub struct StaticMeshDrawInfo {
   pub vao: u32,
@@ -11,13 +11,18 @@ pub struct StaticMeshDrawInfo {
 impl StaticMeshDrawInfo {
   pub fn new(mesh: &Mesh) -> Result<StaticMeshDrawInfo, StaticMeshError> {
     let (vao, vbo, ebo, draw_size) = unsafe { create_buffer(&mesh.vertices, &mesh.indices)? };
-    Ok(StaticMeshDrawInfo { vao, _vbo: vbo, ebo, draw_size })
+    Ok(StaticMeshDrawInfo {
+      vao,
+      _vbo: vbo,
+      ebo,
+      draw_size,
+    })
   }
 }
 
 #[derive(Debug)]
 pub enum StaticMeshError {
-  CreateBufferError(CreateBufferError)
+  CreateBufferError(CreateBufferError),
 }
 
 impl From<CreateBufferError> for StaticMeshError {

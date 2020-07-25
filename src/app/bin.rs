@@ -2,10 +2,9 @@ extern crate alers;
 extern crate cgmath;
 extern crate log;
 
-use alers::*;
-use alers::data::display_info::DisplayInfo;
 use alers::engine::tick::FixedStep;
 use alers::renderer::opengl::{RenderTasks, SimpleRenderTasks};
+use alers::{engine, renderer};
 
 mod example;
 mod game;

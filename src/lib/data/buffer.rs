@@ -17,7 +17,6 @@ pub struct Buffer<T: Clone> {
 }
 
 impl<T: Clone> Buffer<T> {
-
   pub fn elements(&self) -> &Vec<BufferElementInfo> {
     &self.element_info
   }
@@ -32,7 +31,7 @@ impl<T: Clone> Buffer<T> {
           offset: self.total_row_size - info.size,
           ctr: 0,
           size: info.size,
-          index: size_now
+          index: size_now,
         });
       }
       size_now += self.element_info[i].size;
@@ -56,7 +55,7 @@ impl<T: Clone> Buffer<T> {
 
 #[derive(Debug)]
 pub enum BufferBuildError {
-  BadElementSize
+  BadElementSize,
 }
 
 pub struct BufferBuilder<T: Clone> {
@@ -70,7 +69,7 @@ impl<T: Clone> BufferBuilder<T> {
     BufferBuilder {
       data,
       total_row_size: 0,
-      element_info: vec![]
+      element_info: vec![],
     }
   }
 
@@ -86,7 +85,7 @@ impl<T: Clone> BufferBuilder<T> {
       data: self.data,
       element_info: self.element_info,
       total_row_size: self.total_row_size,
-      size
+      size,
     })
   }
 }
@@ -102,7 +101,7 @@ impl<T: Clone> SeparateBufferBuilder<T> {
     SeparateBufferBuilder {
       element_data: vec![],
       element_info: vec![],
-      total_row_size: 0
+      total_row_size: 0,
     }
   }
 
@@ -125,7 +124,7 @@ impl<T: Clone> SeparateBufferBuilder<T> {
       }
     }
 
-    let mut data : Vec<T> = vec!();
+    let mut data: Vec<T> = vec![];
     for i in 0..column_size {
       for j in 0..self.element_info.len() {
         let start = i * self.element_info[j].size;
@@ -138,7 +137,7 @@ impl<T: Clone> SeparateBufferBuilder<T> {
       data,
       element_info: self.element_info,
       total_row_size: self.total_row_size,
-      size: column_size
+      size: column_size,
     })
   }
 }
@@ -152,7 +151,7 @@ pub struct BufferElementIterator<'a, T> {
   // If ctr == size-1, do offset then reset to 0
   pub ctr: usize,
   pub size: usize,
-  pub index: usize
+  pub index: usize,
 }
 
 impl<'a, T: Clone> Iterator for BufferElementIterator<'a, T> {
@@ -182,9 +181,7 @@ pub fn test_buffers() {
 
   let data: Vec<f32> = vec![
     // vertices (3), uv(2), normals(3)
-    1.0, 1.0, 1.0, 10.0, 10.0, -1.0, -1.0, -1.0,
-    2.0, 2.0, 2.0, 20.0, 20.0, -2.0, -2.0, -3.0,
-    3.0, 3.0, 3.0, 30.0, 30.0, -2.0, -2.0, -3.0,
+    1.0, 1.0, 1.0, 10.0, 10.0, -1.0, -1.0, -1.0, 2.0, 2.0, 2.0, 20.0, 20.0, -2.0, -2.0, -3.0, 3.0, 3.0, 3.0, 30.0, 30.0, -2.0, -2.0, -3.0,
   ];
 
   let buffer: Buffer<f32> = BufferBuilder::new(data)
@@ -194,29 +191,23 @@ pub fn test_buffers() {
     .build()
     .unwrap();
 
-  let vertices_expected = vec!(
-    1.0, 1.0, 1.0,
-    2.0, 2.0, 2.0,
-    3.0, 3.0, 3.0,
-  );
+  let vertices_expected = vec![1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
   let vertices: Vec<f32> = buffer.element_iter("vertex").unwrap().collect();
-  for i in 0..vertices.len() { relative_eq!(vertices[i], vertices_expected[i]); }
+  for i in 0..vertices.len() {
+    relative_eq!(vertices[i], vertices_expected[i]);
+  }
 
-  let uvs_expected = vec!(
-    10.0, 10.0,
-    20.0, 20.0,
-    30.0, 30.0,
-  );
+  let uvs_expected = vec![10.0, 10.0, 20.0, 20.0, 30.0, 30.0];
   let uvs: Vec<f32> = buffer.element_iter("uv").unwrap().collect();
-  for i in 0..uvs.len() { relative_eq!(uvs[i], uvs_expected[i]); }
+  for i in 0..uvs.len() {
+    relative_eq!(uvs[i], uvs_expected[i]);
+  }
 
-  let normals_expected = vec!(
-    -1.0, -1.0, -1.0,
-    -2.0, -2.0, -2.0,
-    -3.0, -3.0, -3.0,
-  );
+  let normals_expected = vec![-1.0, -1.0, -1.0, -2.0, -2.0, -2.0, -3.0, -3.0, -3.0];
   let normals: Vec<f32> = buffer.element_iter("normal").unwrap().collect();
-  for i in 0..normals.len() { relative_eq!(normals[i], normals_expected[i]); }
+  for i in 0..normals.len() {
+    relative_eq!(normals[i], normals_expected[i]);
+  }
 }
 
 #[test]
@@ -238,7 +229,13 @@ pub fn test_separate_buffers() {
   let uvs: Vec<f64> = buffer.element_iter("uv").unwrap().collect();
   let normals: Vec<f64> = buffer.element_iter("normal").unwrap().collect();
 
-  for i in 0..vertices.len() { relative_eq!(vertices[i], vertices_data[i]); }
-  for i in 0..uvs.len() { relative_eq!(uvs[i], uvs_data[i]); }
-  for i in 0..normals.len() { relative_eq!(normals[i], normals_data[i]); }
+  for i in 0..vertices.len() {
+    relative_eq!(vertices[i], vertices_data[i]);
+  }
+  for i in 0..uvs.len() {
+    relative_eq!(uvs[i], uvs_data[i]);
+  }
+  for i in 0..normals.len() {
+    relative_eq!(normals[i], normals_data[i]);
+  }
 }

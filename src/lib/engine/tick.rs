@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 pub enum WorldTick {
-  FixedStep(FixedStep)
+  FixedStep(FixedStep),
 }
 
 impl WorldTick {
@@ -44,7 +44,7 @@ impl FixedStep {
       frame_step,
       delta_time: 0.0,
       previous_time: Instant::now(),
-      accumulator: 0.0
+      accumulator: 0.0,
     }
   }
 
@@ -61,9 +61,7 @@ impl FixedStep {
   }
 
   pub fn prepare_tick(&mut self) {
-    self.delta_time = (Instant::now()
-      .duration_since(self.previous_time)
-      .subsec_nanos() as f64 / 1000000000.0f64) as f32;
+    self.delta_time = (Instant::now().duration_since(self.previous_time).subsec_nanos() as f64 / 1000000000.0f64) as f32;
     self.previous_time = Instant::now();
     self.accumulator = self.delta_time;
   }
@@ -72,4 +70,3 @@ impl FixedStep {
     self.delta_time
   }
 }
-
