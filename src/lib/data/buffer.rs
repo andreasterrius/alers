@@ -74,7 +74,10 @@ impl<T: Clone> BufferBuilder<T> {
   }
 
   pub fn info(mut self, name: &str, size: usize) -> BufferBuilder<T> {
-    self.element_info.push(BufferElementInfo { name: name.to_owned(), size });
+    self.element_info.push(BufferElementInfo {
+      name: name.to_owned(),
+      size,
+    });
     self.total_row_size += size;
     self
   }
@@ -107,7 +110,10 @@ impl<T: Clone> SeparateBufferBuilder<T> {
 
   pub fn info(mut self, name: &str, size: usize, data: Vec<T>) -> SeparateBufferBuilder<T> {
     self.element_data.push(data);
-    self.element_info.push(BufferElementInfo { name: name.to_owned(), size });
+    self.element_info.push(BufferElementInfo {
+      name: name.to_owned(),
+      size,
+    });
     self.total_row_size += size;
     self
   }
@@ -181,7 +187,8 @@ pub fn test_buffers() {
 
   let data: Vec<f32> = vec![
     // vertices (3), uv(2), normals(3)
-    1.0, 1.0, 1.0, 10.0, 10.0, -1.0, -1.0, -1.0, 2.0, 2.0, 2.0, 20.0, 20.0, -2.0, -2.0, -3.0, 3.0, 3.0, 3.0, 30.0, 30.0, -2.0, -2.0, -3.0,
+    1.0, 1.0, 1.0, 10.0, 10.0, -1.0, -1.0, -1.0, 2.0, 2.0, 2.0, 20.0, 20.0, -2.0, -2.0, -3.0, 3.0, 3.0, 3.0, 30.0, 30.0,
+    -2.0, -2.0, -3.0,
   ];
 
   let buffer: Buffer<f32> = BufferBuilder::new(data)

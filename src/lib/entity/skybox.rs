@@ -1,8 +1,10 @@
-use crate::data::id::Id;
+use crate::resource::cubemap::CubemapId;
+use crate::resource::mesh::MeshId;
+use crate::resource::shader::ShaderFileId;
 
 pub struct SkyboxEntity {
-  pub static_mesh_id: Id,
-  pub shader_id: Id,
-  pub rendered_cubemap_id: Id,
-  pub irradiance_cubemap_id: Id,
+  pub static_mesh_id: MeshId,
+  pub shader_id: ShaderFileId,
+  pub rendered_cubemap_id: CubemapId,
+  pub irradiance_cubemap_id: CubemapId,
 }

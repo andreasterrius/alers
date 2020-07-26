@@ -1,6 +1,7 @@
 use crate::entity::camera::CameraEntity;
 use crate::entity::pawn::PawnEntity;
 use crate::entity::skybox::SkyboxEntity;
+use crate::entity::ui::UIEntity;
 use crate::input::Input;
 use crate::renderer::opengl::RenderTasks;
 
@@ -13,6 +14,8 @@ pub struct World {
 
   // Active skybox
   skybox: Option<SkyboxEntity>,
+
+  ui: Option<UIEntity>,
 }
 
 impl World {
@@ -21,6 +24,7 @@ impl World {
       pawns: vec![],
       camera: CameraEntity::None,
       skybox: None,
+      ui: None,
     }
   }
 
@@ -34,6 +38,10 @@ impl World {
 
   pub fn set_camera(&mut self, camera: CameraEntity) {
     self.camera = camera;
+  }
+
+  pub fn set_ui(&mut self, ui: UIEntity) {
+    self.ui = Some(ui);
   }
 
   pub fn input(&mut self, inputs: &Vec<Input>) {
@@ -50,10 +58,15 @@ impl World {
       None => {
         return;
       }
-      Some(cri) => cri,
+      Some(cri) => render_tasks.with_camera(cri),
     };
 
-    render_tasks.with_camera(camera_render_info.clone());
+    //    match &self.ui {
+    //      None => {}
+    //      Some(ui_root) => render_tasks.queue_ui(ui_root.get_ui_render_info()),
+    //    }
+
+    //    render_tasks.queue_ui(self.ui.get);
 
     for p in &mut self.pawns {
       render_tasks.queue_static_mesh(
@@ -66,7 +79,12 @@ impl World {
     }
 
     if let Some(skybox) = &self.skybox {
-      render_tasks.queue_skybox(skybox.shader_id, skybox.static_mesh_id, skybox.rendered_cubemap_id, vec![]);
+      render_tasks.queue_skybox(
+        skybox.shader_id,
+        skybox.static_mesh_id,
+        skybox.rendered_cubemap_id,
+        vec![],
+      );
 
       render_tasks.with_skybox(skybox.irradiance_cubemap_id);
     }

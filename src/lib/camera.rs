@@ -28,7 +28,9 @@ impl Camera {
   pub fn translate(&mut self, translation: Vector3<f32>) {
     let forward_dir = self.forward_dir();
     let right_dir = self.right_dir();
-    self.transform.translate(forward_dir * translation.z + right_dir * translation.x);
+    self
+      .transform
+      .translate(forward_dir * translation.z + right_dir * translation.x);
   }
 
   pub fn set_rotation(&mut self, rotation: Quaternion<f32>) {
@@ -47,7 +49,9 @@ impl Camera {
   fn view_mat(&mut self) -> Matrix4<f32> {
     match self.view_mat {
       None => {
-        self.view_mat = Some(Matrix4::from(self.transform.lcl_rotation.invert()) * Matrix4::from_translation(self.transform.position));
+        self.view_mat = Some(
+          Matrix4::from(self.transform.lcl_rotation.invert()) * Matrix4::from_translation(self.transform.position),
+        );
       }
       Some(_) => (),
     }
@@ -72,7 +76,7 @@ impl Camera {
   }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CameraRenderInfo {
   pub view: Matrix4<f32>,
   pub projection: Matrix4<f32>,

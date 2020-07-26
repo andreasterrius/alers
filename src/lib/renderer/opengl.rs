@@ -4,8 +4,7 @@ use cgmath::prelude::*;
 use cgmath::{Deg, Matrix, Matrix4, Point3, Vector3};
 
 use crate::camera::CameraRenderInfo;
-use crate::data::id::Id;
-use crate::data::id::Identifiable;
+use crate::data::color::Color;
 use crate::math::rect::Rect;
 use crate::renderer::constant::{CAMERA_POSITION, MODEL, PROJECTION, VIEW};
 use crate::renderer::opengl::cubemap::{CubemapDrawInfo, CubemapError};
@@ -16,10 +15,11 @@ use crate::renderer::opengl::texture::{TextureDrawInfo, TextureError};
 use crate::renderer::opengl::RenderError::{
   NoCameraSet, UnregisteredCubemap, UnregisteredMesh, UnregisteredShader, UnregisteredTexture,
 };
-use crate::resource::cubemap::Cubemap;
-use crate::resource::mesh::Mesh;
-use crate::resource::shader::ShaderFile;
-use crate::resource::texture::Texture;
+use crate::resource::cubemap::{Cubemap, CubemapId};
+use crate::resource::mesh::{Mesh, MeshId};
+use crate::resource::shader::{ShaderFile, ShaderFileId};
+use crate::resource::texture::{Texture, TextureId};
+use crate::ui::UIRenderInfo;
 
 pub mod cubemap;
 pub mod framebuffer;
@@ -29,23 +29,23 @@ pub mod shader;
 pub mod static_mesh;
 pub mod texture;
 
-pub struct Context {
-  static_meshes: HashMap<Id, StaticMeshDrawInfo>,
-  shaders: HashMap<Id, ShaderDrawInfo>,
-  textures: HashMap<Id, TextureDrawInfo>,
+pub struct RenderContext {
+  static_meshes: HashMap<MeshId, StaticMeshDrawInfo>,
+  shaders: HashMap<ShaderFileId, ShaderDrawInfo>,
+  textures: HashMap<TextureId, TextureDrawInfo>,
 
   //internal context
-  framebuffers: HashMap<Id, FramebufferDrawInfo>,
-  cubemap: HashMap<Id, CubemapDrawInfo>,
+  //framebuffers: HashMap<Id, FramebufferDrawInfo>,
+  cubemap: HashMap<CubemapId, CubemapDrawInfo>,
 }
 
-impl Context {
-  pub fn new() -> Context {
-    Context {
+impl RenderContext {
+  pub fn new() -> RenderContext {
+    RenderContext {
       static_meshes: HashMap::new(),
       shaders: HashMap::new(),
       textures: HashMap::new(),
-      framebuffers: HashMap::new(),
+      //framebuffers: HashMap::new(),
       cubemap: HashMap::new(),
     }
   }
@@ -71,52 +71,52 @@ impl Context {
     Ok(())
   }
 
-  pub fn framebuffer(&mut self) -> Result<Id, FramebufferError> {
-    let id = Id::new();
-    //self.framebuffers.insert(id, FramebufferDrawInfo::new()?);
-    Ok(id)
-  }
+  //  pub fn framebuffer(&mut self) -> Result<Id, FramebufferError> {
+  //    //let id = Id::new();
+  //    //self.framebuffers.insert(id, FramebufferDrawInfo::new()?);
+  //    Ok(id)
+  //  }
 
   pub fn cubemap(&mut self, cubemap: &Cubemap) -> Result<(), CubemapError> {
     self.cubemap.insert(cubemap.uid(), CubemapDrawInfo::new(&cubemap)?);
     Ok(())
   }
 
-  pub fn get_static_mesh(&self, mesh_id: &Id) -> Option<&StaticMeshDrawInfo> {
+  pub fn get_static_mesh(&self, mesh_id: &MeshId) -> Option<&StaticMeshDrawInfo> {
     self.static_meshes.get(&mesh_id)
   }
 
-  pub fn get_shader(&self, shader_id: &Id) -> Option<&ShaderDrawInfo> {
+  pub fn get_shader(&self, shader_id: &ShaderFileId) -> Option<&ShaderDrawInfo> {
     self.shaders.get(&shader_id)
   }
 
-  pub fn get_texture(&self, texture_id: &Id) -> Option<&TextureDrawInfo> {
+  pub fn get_texture(&self, texture_id: &TextureId) -> Option<&TextureDrawInfo> {
     self.textures.get(&texture_id)
   }
 
-  pub fn get_framebuffer(&self, framebuffer: &Id) -> Option<&FramebufferDrawInfo> {
-    self.framebuffers.get(&framebuffer)
-  }
+  //  pub fn get_framebuffer(&self, framebuffer: &Id) -> Option<&FramebufferDrawInfo> {
+  //    self.framebuffers.get(&framebuffer)
+  //  }
 
-  pub fn get_cubemap(&self, cubemap: &Id) -> Option<&CubemapDrawInfo> {
+  pub fn get_cubemap(&self, cubemap: &CubemapId) -> Option<&CubemapDrawInfo> {
     self.cubemap.get(&cubemap)
   }
 }
 
 enum Renderable {
   StaticMesh {
-    shader_id: Id,
-    mesh_id: Id,
-    texture_ids: Vec<Id>,
+    shader_id: ShaderFileId,
+    mesh_id: MeshId,
+    texture_ids: Vec<TextureId>,
     transform: Matrix4<f32>,
     shader_variables: Vec<ShaderVariable>,
   },
 
   EquirectCubemapProjection {
-    equirect_shader_id: Id,
-    cube_mesh_id: Id,
+    equirect_shader_id: ShaderFileId,
+    cube_mesh_id: MeshId,
     projection_target: ProjectionTarget,
-    cubemap_id: Id,
+    cubemap_id: CubemapId,
     projection_dimension: Rect,
     original_dimension: Rect,
 
@@ -125,33 +125,42 @@ enum Renderable {
   },
 
   Skybox {
-    skybox_shader_id: Id,
-    cube_mesh_id: Id,
-    rendered_cubemap_id: Id,
+    skybox_shader_id: ShaderFileId,
+    cube_mesh_id: MeshId,
+    rendered_cubemap_id: CubemapId,
 
     #[allow(dead_code)]
     shader_variables: Vec<ShaderVariable>,
+  },
+
+  Button {
+    background_color: Color,
+    on_hover_color: Color,
+    on_click_color: Color,
+    position: Rect,
   },
 }
 
 pub trait RenderTasks {
   fn with_camera(&mut self, camera_render_info: CameraRenderInfo);
 
+  fn queue_ui(&mut self, ui_render_infos: Vec<UIRenderInfo>);
+
   fn queue_static_mesh(
     &mut self,
-    shader_id: Id,
-    mesh_id: Id,
-    texture_ids: Vec<Id>,
+    shader_id: ShaderFileId,
+    mesh_id: MeshId,
+    texture_ids: Vec<TextureId>,
     transform: Matrix4<f32>,
     shader_vars: Vec<ShaderVariable>,
   );
 
   fn queue_cubemap_projection(
     &mut self,
-    equirect_shader_id: Id,
-    cube_mesh_id: Id,
+    equirect_shader_id: ShaderFileId,
+    cube_mesh_id: MeshId,
     projection_target: ProjectionTarget,
-    cubemap_id: Id,
+    cubemap_id: CubemapId,
     projection_dimension: Rect,
     original_dimension: Rect,
     shader_variables: Vec<ShaderVariable>,
@@ -159,24 +168,25 @@ pub trait RenderTasks {
 
   fn queue_skybox(
     &mut self,
-    skybox_shader_id: Id,
-    cube_mesh_id: Id,
-    rendered_cubemap_id: Id,
+    skybox_shader_id: ShaderFileId,
+    cube_mesh_id: MeshId,
+    rendered_cubemap_id: CubemapId,
     shader_variables: Vec<ShaderVariable>,
   );
 
-  fn with_skybox(&mut self, cubemap_id: Id);
+  fn with_skybox(&mut self, cubemap_id: CubemapId);
 
-  fn render(&mut self, context: &Context) -> Result<Vec<RenderResult>, RenderError>;
+  fn render(&mut self, context: &RenderContext) -> Result<Vec<RenderResult>, RenderError>;
 }
 
 pub struct SimpleRenderTasks {
   renderables: Vec<Renderable>,
 
-  // CubemapId
-  skybox: Option<Id>,
+  skybox: Option<CubemapId>,
 
   camera_render_info: Option<CameraRenderInfo>,
+
+  ui_render_infos: Vec<UIRenderInfo>,
 }
 
 impl SimpleRenderTasks {
@@ -185,6 +195,7 @@ impl SimpleRenderTasks {
       renderables: vec![],
       skybox: None,
       camera_render_info: None {},
+      ui_render_infos: vec![],
     }
   }
 }
@@ -194,11 +205,15 @@ impl RenderTasks for SimpleRenderTasks {
     self.camera_render_info = Some(camera_render_info);
   }
 
+  fn queue_ui(&mut self, ui_render_infos: Vec<UIRenderInfo>) {
+    self.ui_render_infos = ui_render_infos;
+  }
+
   fn queue_static_mesh(
     &mut self,
-    shader_id: Id,
-    mesh_id: Id,
-    texture_ids: Vec<Id>,
+    shader_id: ShaderFileId,
+    mesh_id: MeshId,
+    texture_ids: Vec<TextureId>,
     transform: Matrix4<f32>,
     shader_variables: Vec<ShaderVariable>,
   ) {
@@ -213,10 +228,10 @@ impl RenderTasks for SimpleRenderTasks {
 
   fn queue_cubemap_projection(
     &mut self,
-    equirect_shader_id: Id,
-    cube_mesh_id: Id,
+    equirect_shader_id: ShaderFileId,
+    cube_mesh_id: MeshId,
     projection_target: ProjectionTarget,
-    cubemap_id: Id,
+    cubemap_id: CubemapId,
     projection_dimension: Rect,
     original_dimension: Rect,
     shader_variables: Vec<ShaderVariable>,
@@ -234,9 +249,9 @@ impl RenderTasks for SimpleRenderTasks {
 
   fn queue_skybox(
     &mut self,
-    skybox_shader_id: Id,
-    cube_mesh_id: Id,
-    rendered_cubemap_id: Id,
+    skybox_shader_id: ShaderFileId,
+    cube_mesh_id: MeshId,
+    rendered_cubemap_id: CubemapId,
     shader_variables: Vec<ShaderVariable>,
   ) {
     self.renderables.push(Renderable::Skybox {
@@ -247,11 +262,11 @@ impl RenderTasks for SimpleRenderTasks {
     });
   }
 
-  fn with_skybox(&mut self, cubemap_id: Id) {
+  fn with_skybox(&mut self, cubemap_id: CubemapId) {
     self.skybox = Some(cubemap_id);
   }
 
-  fn render(&mut self, context: &Context) -> Result<Vec<RenderResult>, RenderError> {
+  fn render(&mut self, context: &RenderContext) -> Result<Vec<RenderResult>, RenderError> {
     // Clear the screen buffer
     unsafe {
       raw::clear_buffer();
@@ -450,6 +465,12 @@ impl RenderTasks for SimpleRenderTasks {
             }
           }
         }
+        Renderable::Button {
+          background_color: _,
+          on_hover_color: _,
+          on_click_color: _,
+          position: _,
+        } => {}
       }
     }
     Ok(result)
@@ -457,18 +478,18 @@ impl RenderTasks for SimpleRenderTasks {
 }
 
 pub enum ProjectionTarget {
-  Cubemap(Id),
-  Texture2d(Id),
+  Cubemap(CubemapId),
+  Texture2d(TextureId),
 }
 
 #[derive(Debug)]
 pub enum RenderError {
   NoCameraSet,
-  UnregisteredMesh(Id),
-  UnregisteredShader(Id),
-  UnregisteredTexture(Id),
-  UnregisteredFramebuffer(Id),
-  UnregisteredCubemap(Id),
+  UnregisteredMesh(MeshId),
+  UnregisteredShader(ShaderFileId),
+  UnregisteredTexture(TextureId),
+  //UnregisteredFramebuffer(Id),
+  UnregisteredCubemap(CubemapId),
 }
 
 pub enum RenderResult {}

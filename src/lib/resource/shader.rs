@@ -1,7 +1,5 @@
-use crate::data::id::Id;
-
 pub struct ShaderFile {
-  pub id: Id,
+  pub id: ShaderFileId,
   pub vertex_shader: String,
   pub fragment_shader: String,
 }
@@ -9,11 +7,12 @@ pub struct ShaderFile {
 impl ShaderFile {
   pub fn new(vertex_shader: String, fragment_shader: String) -> ShaderFile {
     ShaderFile {
-      id: Id::new(),
+      id: ShaderFileId::new(),
       vertex_shader,
       fragment_shader,
     }
   }
 }
 
-impl_id!(ShaderFile, id);
+struct_id!(ShaderFileId);
+struct_id_impl!(ShaderFileId, ShaderFile, id);

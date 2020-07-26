@@ -20,7 +20,7 @@ fn main() {
   let mut engine = engine::Engine::new();
   let mut window = engine.windows().new(display_info);
 
-  let mut context = renderer::opengl::Context::new();
+  let mut context = renderer::opengl::RenderContext::new();
   let mut game = game::Game::load(&mut context, &window);
 
   let mut tick = engine::tick::WorldTick::FixedStep(FixedStep::new(0.01f32));

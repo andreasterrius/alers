@@ -1,12 +1,10 @@
 use std::fs::File;
 
+use hdrldr::LoadError;
 use image::{GenericImageView, ImageError};
 
-use crate::data::id::Id;
-use hdrldr::LoadError;
-
 pub struct Texture {
-  id: Id,
+  id: TextureId,
   data: TexturePixel,
   width: u32,
   height: u32,
@@ -16,10 +14,13 @@ pub struct Texture {
   texture_magnification: TextureMagnification,
 }
 
+struct_id!(TextureId);
+struct_id_impl!(TextureId, Texture, id);
+
 impl Texture {
   pub fn new(data: TexturePixel, width: u32, height: u32, channel_count: u32) -> Texture {
     Texture {
-      id: Id::new(),
+      id: TextureId::new(),
       data,
       width,
       height,
@@ -47,7 +48,12 @@ impl Texture {
       }
 
       let v = flip_byte_vertically(&v, i.width as u32, i.height as u32, 3);
-      Ok(Texture::new(TexturePixel::RgbF32(v), i.width as u32, i.height as u32, 3))
+      Ok(Texture::new(
+        TexturePixel::RgbF32(v),
+        i.width as u32,
+        i.height as u32,
+        3,
+      ))
     } else {
       let i = image::open(path)?;
 
@@ -67,8 +73,12 @@ impl Texture {
 
   pub fn clone_data_flip_vertically(&self) -> TexturePixel {
     match &self.data {
-      TexturePixel::RgbF8(v) => TexturePixel::RgbF8(flip_byte_vertically(v, self.width, self.height, self.channel_count)),
-      TexturePixel::RgbF32(v) => TexturePixel::RgbF32(flip_byte_vertically(v, self.width, self.height, self.channel_count)),
+      TexturePixel::RgbF8(v) => {
+        TexturePixel::RgbF8(flip_byte_vertically(v, self.width, self.height, self.channel_count))
+      }
+      TexturePixel::RgbF32(v) => {
+        TexturePixel::RgbF32(flip_byte_vertically(v, self.width, self.height, self.channel_count))
+      }
     }
   }
 
@@ -84,8 +94,6 @@ impl Texture {
     &self.data
   }
 }
-
-impl_id!(Texture, id);
 
 pub struct TextureWrap {
   pub x: TextureWrapType,

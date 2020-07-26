@@ -165,7 +165,7 @@ pub fn parse_indices(indices: &[i32]) -> Result<(Vec<i32>, Vec<usize>), Conversi
   let mut end = 0;
   let mut arr = vec![];
   let mut con = Vec::new();
-  println!("bb: {:?}", indices);
+  //println!("bb: {:?}", indices);
   for i in 0..indices.len() {
     if indices[i] < 0 {
       end = i;

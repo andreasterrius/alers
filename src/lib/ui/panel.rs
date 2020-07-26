@@ -1,12 +1,12 @@
 use crate::data::color::Color;
 use crate::math::rect::Rect;
-use crate::ui::UI;
+use crate::ui::{UIRenderInfo, UI};
 
 pub struct Panel {
   rect: Rect,
   background_color: Color,
 
-  childs: Vec<UI>,
+  is_hidden: bool,
 }
 
 impl Panel {
@@ -14,11 +14,23 @@ impl Panel {
     Panel {
       rect,
       background_color,
-      childs: vec![],
+      is_hidden: false,
     }
   }
 
-  pub fn add_child(&mut self, ui: UI) {
-    self.childs.push(ui);
-  }
+  //  pub fn get_ui_render_info(&self) -> Vec<UIRenderInfo> {
+  //    let mut render_infos = vec![];
+  //
+  //    if !self.is_hidden {
+  //      for child in self.childs {
+  //        render_infos.append(&mut child.get_ui_render_info());
+  //      }
+  //      render_infos.push(UIRenderInfo {
+  //        rect: self.rect.clone(),
+  //        color: self.background_color,
+  //      })
+  //    }
+  //
+  //    return render_infos;
+  //  }
 }

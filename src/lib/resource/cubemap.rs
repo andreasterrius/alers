@@ -1,14 +1,16 @@
-use crate::data::id::Id;
 use crate::math::rect::Rect;
 
 pub struct Cubemap {
-  id: Id,
+  id: CubemapId,
   dimension: Rect,
 }
 
 impl Cubemap {
   pub fn new(dimension: Rect) -> Cubemap {
-    Cubemap { id: Id::new(), dimension }
+    Cubemap {
+      id: CubemapId::new(),
+      dimension,
+    }
   }
 
   pub fn get_dimension(&self) -> &Rect {
@@ -16,4 +18,5 @@ impl Cubemap {
   }
 }
 
-impl_id!(Cubemap, id);
+struct_id!(CubemapId);
+struct_id_impl!(CubemapId, Cubemap, id);
