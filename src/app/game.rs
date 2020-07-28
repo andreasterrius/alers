@@ -7,6 +7,7 @@ use alers::data::display_info::DisplayInfo;
 use alers::entity::camera::CameraEntity;
 use alers::entity::pawn::PawnEntity;
 use alers::entity::skybox::SkyboxEntity;
+use alers::entity::ui::UIEntity;
 use alers::entity::world::World;
 use alers::input::Input;
 use alers::math::rect::Rect;
@@ -112,10 +113,16 @@ impl Game {
       irradiance_cubemap_id: convoluted_cubemap.uid(),
     });
 
-    let ui = UI::Panel(Panel::new(Rect::new(300, 300), Color::from_rgb(1.0, 1.0, 1.0)));
+    world.add_ui(UIEntity {
+      ui: UI::Panel(Panel::new(
+        Rect::from_xy(400, 300, 200, 150),
+        Color::from_rgb(1.0, 1.0, 1.0),
+      )),
+      mesh_id: plane_mesh.uid(),
+      shader_id: ui_shader.uid(),
+    });
 
     world.set_camera(CameraEntity::FlyCamera(fly_camera));
-    //world.set_ui(ui);
 
     // Cube map registration
     context.cubemap(&cubemap).unwrap();

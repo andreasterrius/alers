@@ -27,7 +27,7 @@ impl Rect {
     }
   }
 
-  pub fn new_with_xy(x: i32, y: i32, width: u32, height: u32) -> Rect {
+  pub fn from_xy(x: i32, y: i32, width: u32, height: u32) -> Rect {
     Rect {
       x,
       y,

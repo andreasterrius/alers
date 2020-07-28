@@ -1,11 +1,9 @@
+use crate::resource::mesh::MeshId;
+use crate::resource::shader::ShaderFileId;
 use crate::ui::UI;
 
 pub struct UIEntity {
-  id: UIEntityId,
-  ui: UI,
+  pub ui: UI,
+  pub mesh_id: MeshId,
+  pub shader_id: ShaderFileId,
 }
-
-struct_id!(UIEntityId);
-struct_id_impl!(UIEntityId, UIEntity, id);
-
-impl UIEntity {}

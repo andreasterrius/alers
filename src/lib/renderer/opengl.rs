@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use cgmath::prelude::*;
-use cgmath::{Deg, Matrix, Matrix4, Point3, Vector3};
+use cgmath::{Deg, Matrix, Matrix4, Point3, Vector3, Vector4};
 
 use crate::camera::CameraRenderInfo;
 use crate::data::color::Color;
@@ -133,18 +133,17 @@ enum Renderable {
     shader_variables: Vec<ShaderVariable>,
   },
 
-  Button {
-    background_color: Color,
-    on_hover_color: Color,
-    on_click_color: Color,
-    position: Rect,
+  UIElement {
+    ui_shader_id: ShaderFileId,
+    plane_mesh_id: MeshId,
+    ui_render_info: UIRenderInfo,
   },
 }
 
 pub trait RenderTasks {
   fn with_camera(&mut self, camera_render_info: CameraRenderInfo);
 
-  fn queue_ui(&mut self, ui_render_infos: Vec<UIRenderInfo>);
+  fn queue_ui(&mut self, ui_shader_id: ShaderFileId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo);
 
   fn queue_static_mesh(
     &mut self,
@@ -185,8 +184,6 @@ pub struct SimpleRenderTasks {
   skybox: Option<CubemapId>,
 
   camera_render_info: Option<CameraRenderInfo>,
-
-  ui_render_infos: Vec<UIRenderInfo>,
 }
 
 impl SimpleRenderTasks {
@@ -195,7 +192,6 @@ impl SimpleRenderTasks {
       renderables: vec![],
       skybox: None,
       camera_render_info: None {},
-      ui_render_infos: vec![],
     }
   }
 }
@@ -205,8 +201,12 @@ impl RenderTasks for SimpleRenderTasks {
     self.camera_render_info = Some(camera_render_info);
   }
 
-  fn queue_ui(&mut self, ui_render_infos: Vec<UIRenderInfo>) {
-    self.ui_render_infos = ui_render_infos;
+  fn queue_ui(&mut self, ui_shader_id: ShaderFileId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo) {
+    self.renderables.push(Renderable::UIElement {
+      ui_shader_id,
+      plane_mesh_id,
+      ui_render_info,
+    });
   }
 
   fn queue_static_mesh(
@@ -465,12 +465,44 @@ impl RenderTasks for SimpleRenderTasks {
             }
           }
         }
-        Renderable::Button {
-          background_color: _,
-          on_hover_color: _,
-          on_click_color: _,
-          position: _,
-        } => {}
+        Renderable::UIElement {
+          ui_shader_id,
+          plane_mesh_id,
+          ui_render_info,
+        } => {
+          let shader_draw_info = context
+            .get_shader(&ui_shader_id)
+            .ok_or(UnregisteredShader(*ui_shader_id))?;
+          let mesh_draw_info = context
+            .get_static_mesh(&plane_mesh_id)
+            .ok_or(UnregisteredMesh(*plane_mesh_id))?;
+          let camera_render_info = self.camera_render_info.as_ref().ok_or(NoCameraSet)?;
+
+          unsafe {
+            raw::bind_vao(mesh_draw_info.vao);
+            raw::use_shader(shader_draw_info.shader);
+            raw::uniform4f(
+              shader_draw_info.shader,
+              "possize",
+              ui_render_info.rect.get_x() as f32,
+              ui_render_info.rect.get_y() as f32,
+              ui_render_info.rect.get_width() as f32,
+              ui_render_info.rect.get_height() as f32,
+            );
+            let (r, g, b, a) = ui_render_info.color.get_rgba();
+            raw::uniform4f(shader_draw_info.shader, "color", r, g, b, a);
+            raw::matrix4f(shader_draw_info.shader, VIEW, camera_render_info.view.as_ptr());
+            raw::matrix4f(
+              shader_draw_info.shader,
+              PROJECTION,
+              camera_render_info.orthographic.as_ptr(),
+            );
+            match mesh_draw_info.ebo {
+              None => raw::draw_arrays(0, mesh_draw_info.draw_size),
+              Some(_) => raw::draw_elements(mesh_draw_info.draw_size),
+            }
+          }
+        }
       }
     }
     Ok(result)

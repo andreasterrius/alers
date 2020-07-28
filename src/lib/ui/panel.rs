@@ -1,10 +1,13 @@
 use crate::data::color::Color;
+use crate::input::Input;
 use crate::math::rect::Rect;
+use crate::resource::shader::ShaderFileId;
 use crate::ui::{UIRenderInfo, UI};
+use std::rc::Rc;
 
 pub struct Panel {
   rect: Rect,
-  background_color: Color,
+  color: Color,
 
   is_hidden: bool,
 }
@@ -13,24 +16,17 @@ impl Panel {
   pub fn new(rect: Rect, background_color: Color) -> Panel {
     Panel {
       rect,
-      background_color,
+      color: background_color,
       is_hidden: false,
     }
   }
 
-  //  pub fn get_ui_render_info(&self) -> Vec<UIRenderInfo> {
-  //    let mut render_infos = vec![];
-  //
-  //    if !self.is_hidden {
-  //      for child in self.childs {
-  //        render_infos.append(&mut child.get_ui_render_info());
-  //      }
-  //      render_infos.push(UIRenderInfo {
-  //        rect: self.rect.clone(),
-  //        color: self.background_color,
-  //      })
-  //    }
-  //
-  //    return render_infos;
-  //  }
+  pub fn input(&mut self, input: &Vec<Input>) {}
+
+  pub fn get_ui_render_info(&self) -> UIRenderInfo {
+    UIRenderInfo {
+      color: self.color.clone(),
+      rect: self.rect.clone(),
+    }
+  }
 }

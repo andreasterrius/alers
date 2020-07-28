@@ -57,9 +57,9 @@ pub unsafe fn uniform3f(shader: u32, name: &str, x: f32, y: f32, z: f32) {
   gl::Uniform3f(location, x, y, z);
 }
 
-pub unsafe fn uniform4f(shader: u32, name: &str, x: f32, y: f32, z: f32, q: f32) {
+pub unsafe fn uniform4f(shader: u32, name: &str, x: f32, y: f32, z: f32, w: f32) {
   let location = gl::GetUniformLocation(shader, CString::new(name.clone()).unwrap().as_ptr() as *const i8);
-  gl::Uniform4f(location, x, y, z, q);
+  gl::Uniform4f(location, x, y, z, w);
 }
 
 pub unsafe fn matrix4f(shader: u32, name: &str, ptr: *const f32) {
@@ -155,9 +155,9 @@ pub unsafe fn create_buffer(
   gl::BindBuffer(gl::ARRAY_BUFFER, 0);
   gl::BindVertexArray(0);
 
-  //println!("{:?} {:?} {:?} {:?}", vao, vbo, ebo, draw_size);
-  //println!("vertices {:?}", vertices);
-  //println!("indices {:?}", indices);
+  println!("{:?} {:?} {:?} {:?}", vao, vbo, ebo, draw_size);
+  println!("vertices {:?}", vertices);
+  println!("indices {:?}", indices);
 
   Ok((vao, vbo, ebo, draw_size))
 }

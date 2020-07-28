@@ -75,17 +75,10 @@ pub fn create_cube() -> Mesh {
 }
 
 pub fn create_plane() -> Mesh {
-  let vertices = BufferBuilder::new(vec![
-    -1.0, -1.0, // bottom-left
-    1.0, -1.0, // bottom-right
-    1.0, 1.0, // top-right
-    1.0, 1.0, // top-right
-    -1.0, 1.0, // top-left
-    -1.0, -1.0, // bottom-left
-  ])
-  .info("vertex", 2)
-  .build()
-  .unwrap();
+  let vertices = BufferBuilder::new(vec![0.0f32, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0])
+    .info("vertex", 2)
+    .build()
+    .unwrap();
 
   Mesh::new(vertices, None)
 }

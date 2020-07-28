@@ -11,6 +11,7 @@ pub struct Camera {
   aspect_ratio: f32,
 
   projection_mat: Option<Matrix4<f32>>,
+  orthographic_mat: Option<Matrix4<f32>>,
   view_mat: Option<Matrix4<f32>>,
 }
 
@@ -21,6 +22,7 @@ impl Camera {
       fov,
       aspect_ratio,
       projection_mat: None,
+      orthographic_mat: None,
       view_mat: None,
     }
   }
@@ -67,10 +69,19 @@ impl Camera {
     self.projection_mat.unwrap()
   }
 
+  fn orthographic_mat(&mut self) -> Matrix4<f32> {
+    match self.orthographic_mat {
+      None => self.orthographic_mat = Some(cgmath::ortho(0.0f32, 800.0, 600.0, 0.0, -1.0, 1.0f32)),
+      Some(_) => (),
+    }
+    self.orthographic_mat.unwrap()
+  }
+
   pub fn camera_render_info(&mut self) -> CameraRenderInfo {
     CameraRenderInfo {
       view: self.view_mat(),
       projection: self.projection_mat(),
+      orthographic: self.orthographic_mat(),
       position: self.transform.position,
     }
   }
@@ -80,5 +91,6 @@ impl Camera {
 pub struct CameraRenderInfo {
   pub view: Matrix4<f32>,
   pub projection: Matrix4<f32>,
+  pub orthographic: Matrix4<f32>,
   pub position: Vector3<f32>,
 }

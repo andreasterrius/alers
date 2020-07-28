@@ -1,9 +1,12 @@
+use crate::data::color::Color;
 use crate::entity::camera::CameraEntity;
 use crate::entity::pawn::PawnEntity;
 use crate::entity::skybox::SkyboxEntity;
 use crate::entity::ui::UIEntity;
 use crate::input::Input;
+use crate::math::rect::Rect;
 use crate::renderer::opengl::RenderTasks;
+use crate::ui::UI;
 
 pub struct World {
   // List of pawns in the world
@@ -15,7 +18,8 @@ pub struct World {
   // Active skybox
   skybox: Option<SkyboxEntity>,
 
-  ui: Option<UIEntity>,
+  // Active UI
+  ui: Vec<UIEntity>,
 }
 
 impl World {
@@ -24,7 +28,7 @@ impl World {
       pawns: vec![],
       camera: CameraEntity::None,
       skybox: None,
-      ui: None,
+      ui: vec![],
     }
   }
 
@@ -40,12 +44,15 @@ impl World {
     self.camera = camera;
   }
 
-  pub fn set_ui(&mut self, ui: UIEntity) {
-    self.ui = Some(ui);
+  pub fn add_ui(&mut self, ui: UIEntity) {
+    self.ui.push(ui)
   }
 
   pub fn input(&mut self, inputs: &Vec<Input>) {
     self.camera.input(inputs);
+    //    for ui in &mut self.ui {
+    //      ui.input(inputs)
+    //    }
   }
 
   pub fn tick(&mut self, delta_time: f32) {
@@ -61,12 +68,11 @@ impl World {
       Some(cri) => render_tasks.with_camera(cri),
     };
 
-    //    match &self.ui {
-    //      None => {}
-    //      Some(ui_root) => render_tasks.queue_ui(ui_root.get_ui_render_info()),
-    //    }
-
-    //    render_tasks.queue_ui(self.ui.get);
+    // If UI exist, then we render the UI too
+    for uie in &self.ui {
+      let ui_render_info = uie.ui.get_ui_render_info();
+      render_tasks.queue_ui(uie.shader_id, uie.mesh_id, ui_render_info);
+    }
 
     for p in &mut self.pawns {
       render_tasks.queue_static_mesh(
