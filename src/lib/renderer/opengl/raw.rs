@@ -155,9 +155,9 @@ pub unsafe fn create_buffer(
   gl::BindBuffer(gl::ARRAY_BUFFER, 0);
   gl::BindVertexArray(0);
 
-  println!("{:?} {:?} {:?} {:?}", vao, vbo, ebo, draw_size);
-  println!("vertices {:?}", vertices);
-  println!("indices {:?}", indices);
+  //  println!("{:?} {:?} {:?} {:?}", vao, vbo, ebo, draw_size);
+  //  println!("vertices {:?}", vertices);
+  //  println!("indices {:?}", indices);
 
   Ok((vao, vbo, ebo, draw_size))
 }

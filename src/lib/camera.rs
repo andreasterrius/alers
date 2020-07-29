@@ -1,7 +1,9 @@
 use cgmath::prelude::*;
 use cgmath::{Deg, Matrix4, Quaternion, Rotation, Vector3};
 
+use crate::data::display_info::DisplayInfo;
 use crate::math::transform::Transform;
+use std::sync::Arc;
 
 pub mod flycamera;
 
@@ -9,6 +11,7 @@ pub struct Camera {
   transform: Transform,
   fov: f32,
   aspect_ratio: f32,
+  display_info: DisplayInfo,
 
   projection_mat: Option<Matrix4<f32>>,
   orthographic_mat: Option<Matrix4<f32>>,
@@ -16,11 +19,15 @@ pub struct Camera {
 }
 
 impl Camera {
-  pub fn new(position: Vector3<f32>, fov: f32, aspect_ratio: f32) -> Camera {
+  pub fn new(position: Vector3<f32>, display_info: DisplayInfo, fov: f32) -> Camera {
+    let aspect_ratio =
+      display_info.get_dimension().get_width() as f32 / display_info.get_dimension().get_height() as f32;
+
     Camera {
       transform: Transform::from_position_rotation(position, Quaternion::one()),
       fov,
       aspect_ratio,
+      display_info,
       projection_mat: None,
       orthographic_mat: None,
       view_mat: None,
@@ -28,14 +35,23 @@ impl Camera {
   }
 
   pub fn translate(&mut self, translation: Vector3<f32>) {
+    if translation.is_zero() {
+      return;
+    }
+
     let forward_dir = self.forward_dir();
     let right_dir = self.right_dir();
     self
       .transform
       .translate(forward_dir * translation.z + right_dir * translation.x);
+    self.view_mat = None;
   }
 
   pub fn set_rotation(&mut self, rotation: Quaternion<f32>) {
+    if rotation.is_zero() {
+      return;
+    }
+
     self.transform.set_rotation(rotation);
     self.view_mat = None;
   }
@@ -46,6 +62,12 @@ impl Camera {
 
   pub fn right_dir(&self) -> Vector3<f32> {
     return self.forward_dir().cross(Vector3::unit_y()).normalize();
+  }
+
+  fn recalculate_matrices(&mut self) {
+    self.orthographic_mat = None;
+    self.projection_mat = None;
+    self.view_mat = None;
   }
 
   fn view_mat(&mut self) -> Matrix4<f32> {
@@ -71,7 +93,16 @@ impl Camera {
 
   fn orthographic_mat(&mut self) -> Matrix4<f32> {
     match self.orthographic_mat {
-      None => self.orthographic_mat = Some(cgmath::ortho(0.0f32, 800.0, 600.0, 0.0, -1.0, 1.0f32)),
+      None => {
+        self.orthographic_mat = Some(cgmath::ortho(
+          0.0f32,
+          self.display_info.get_dimension().get_width() as f32,
+          self.display_info.get_dimension().get_height() as f32,
+          0.0,
+          -1.0,
+          1.0f32,
+        ))
+      }
       Some(_) => (),
     }
     self.orthographic_mat.unwrap()

@@ -11,7 +11,7 @@ mod game;
 
 fn main() {
   // Initialize File Logging
-  alers::log::init();
+  alers::log::init_term();
 
   // Initialize config
   let display_info = game::Game::init_window();

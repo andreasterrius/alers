@@ -138,6 +138,10 @@ enum Renderable {
     plane_mesh_id: MeshId,
     ui_render_info: UIRenderInfo,
   },
+
+  UIText {
+    ui_shader_id: ShaderFileId,
+  },
 }
 
 pub trait RenderTasks {

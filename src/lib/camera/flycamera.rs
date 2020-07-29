@@ -4,9 +4,12 @@ use cgmath::{Deg, Quaternion, Vector2, Vector3};
 use crate::camera::Camera;
 use crate::input::{Action, Input, Key};
 
+pub const SMALL_NUMBERF32: f32 = 1e-12;
+
 pub struct FlyCamera {
   camera: Camera,
 
+  delta_rotate_input: Vector2<f32>,
   rotate_input: Vector2<f32>,
   move_input: Vector3<f32>,
 
@@ -18,6 +21,7 @@ impl FlyCamera {
   pub fn new(camera: Camera) -> FlyCamera {
     FlyCamera {
       camera,
+      delta_rotate_input: Vector2::zero(),
       rotate_input: Vector2::zero(),
       move_input: Vector3::zero(),
       camera_speed: 10.0,
@@ -34,14 +38,17 @@ impl FlyCamera {
   }
 
   pub fn input(&mut self, inputs: &Vec<Input>) {
+    self.delta_rotate_input = Vector2::zero();
     for input in inputs {
       self.camera_input(&input);
     }
 
-    self.camera.set_rotation(
-      Quaternion::from_angle_y(-Deg(self.rotate_input.x * self.camera_rotate_speed))
-        * Quaternion::from_angle_x(-Deg(self.rotate_input.y * self.camera_rotate_speed)),
-    );
+    if !self.delta_rotate_input.is_zero() {
+      self.camera.set_rotation(
+        Quaternion::from_angle_y(-Deg(self.rotate_input.x * self.camera_rotate_speed))
+          * Quaternion::from_angle_x(-Deg(self.rotate_input.y * self.camera_rotate_speed)),
+      );
+    }
   }
 
   pub fn tick(&mut self, delta_time: f32) {
@@ -63,6 +70,8 @@ impl FlyCamera {
       Input::MouseMotion(x, y) => {
         self.rotate_input.x += *x;
         self.rotate_input.y += *y;
+        self.delta_rotate_input.x = *x;
+        self.delta_rotate_input.y = *y;
       }
       _ => {}
     }

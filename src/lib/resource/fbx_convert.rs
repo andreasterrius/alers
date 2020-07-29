@@ -290,7 +290,7 @@ pub fn crawl_deformers(_fbx: &fbxcel_dom::v7400::Document) -> Result<Vec<Bone>, 
 
 #[test]
 pub fn fbx_to_buffers_should_properly_parse() {
-  crate::log::init_test();
+  crate::log::init_term();
 
   let fbx = crate::resource::fbx::load("resources/test/geom/basic_blender.fbx").expect("Fail to load rigged fbx");
 

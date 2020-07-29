@@ -1,7 +1,7 @@
 #[test]
 pub fn load_fbx_simple_get_vertices() {
   use log::info;
-  alers::log::init_test();
+  alers::log::init_term();
 
   let cube_fbx = alers::resource::fbx::load("resources/test/data/basic_blender.fbx").expect("Fail to load cube fbx");
 

@@ -81,8 +81,8 @@ impl Game {
     // Load camera
     let fly_camera = FlyCamera::new(Camera::new(
       Vector3::new(0.0f32, 0.0f32, -10.0f32),
+      window.get_display_info().clone(),
       90.0f32,
-      800f32 / 600f32,
     ));
 
     let mut world = World::new();
