@@ -25,11 +25,15 @@ git = "https://github.com/bjz/glfw-rs.git"
 version = "1.0.0"
 features = ["attributes"]
 
+[dependencies.gltf]
+version = "0.15"
+features = ["extras", "names"]
+
 [dependencies]
 fbxcel-dom = "0.0.4"
-cgmath = "0.14.1"
+cgmath = "0.17.0"
 gl = "0.6.2"
-image = "0.23.0-preview.0"
+image = "0.23.*"
 time = "0.1"
 rand = "0.3"
 rodio = "0.5.2"

@@ -18,7 +18,7 @@ struct_id!(TextureId);
 struct_id_impl!(TextureId, Texture, id);
 
 impl Texture {
-  pub fn new(data: TexturePixel, width: u32, height: u32, channel_count: u32) -> Texture {
+  pub fn from_data(data: TexturePixel, width: u32, height: u32, channel_count: u32) -> Texture {
     Texture {
       id: TextureId::new(),
       data,
@@ -48,7 +48,7 @@ impl Texture {
       }
 
       let v = flip_byte_vertically(&v, i.width as u32, i.height as u32, 3);
-      Ok(Texture::new(
+      Ok(Texture::from_data(
         TexturePixel::RgbF32(v),
         i.width as u32,
         i.height as u32,
@@ -58,8 +58,8 @@ impl Texture {
       let i = image::open(path)?;
 
       // TODO: i.raw_pixels() clones underlying bytes, find a way that doesn't
-      let v = flip_byte_vertically(&i.raw_pixels(), i.width() as u32, i.height() as u32, 3);
-      Ok(Texture::new(TexturePixel::RgbF8(v), i.width(), i.height(), 3))
+      let v = flip_byte_vertically(&i.to_bytes(), i.width() as u32, i.height() as u32, 3);
+      Ok(Texture::from_data(TexturePixel::RgbF8(v), i.width(), i.height(), 3))
     }
   }
 
@@ -164,12 +164,12 @@ fn test_flip_image_vertically() {
     0.0f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0f32, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0f32, 13.0, 14.0, 15.0, 16.0, 17.0,
   ];
 
-  let _t = Texture::new(TexturePixel::RgbF32(k), 2, 3, 3);
+  let _t = Texture::from_data(TexturePixel::RgbF32(k), 2, 3, 3);
 
   let k = vec![
     0.0f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0f32, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
   ];
 
-  let t = Texture::new(TexturePixel::RgbF32(k), 3, 2, 3);
+  let t = Texture::from_data(TexturePixel::RgbF32(k), 3, 2, 3);
   println!("{:?}", t.clone_data_flip_vertically());
 }
