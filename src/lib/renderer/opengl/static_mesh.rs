@@ -1,5 +1,5 @@
 use crate::renderer::opengl::raw::{create_buffer, CreateBufferError};
-use crate::resource::mesh::Mesh;
+use ale_mesh::Mesh;
 
 pub struct StaticMeshDrawInfo {
   pub vao: u32,

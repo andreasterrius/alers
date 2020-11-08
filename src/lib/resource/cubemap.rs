@@ -1,4 +1,5 @@
 use crate::math::rect::Rect;
+use ale_autoid::*;
 
 pub struct Cubemap {
   id: CubemapId,

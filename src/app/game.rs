@@ -1,5 +1,7 @@
 use std::fs;
 
+use ale_gltf::ale_gltf_load;
+use ale_mesh::{ale_mesh_new_cube, ale_mesh_new_plane};
 use alers::camera::flycamera::FlyCamera;
 use alers::camera::Camera;
 use alers::data::color::Color;
@@ -34,19 +36,21 @@ impl Game {
     let shader_base_path = "E:\\Codes\\Repos\\alers\\shaders";
 
     // Load meshes
-    let meshes = resource::fbx_convert::to_static_meshes(
-      resource::fbx::load(&format!("{}/{}", resource_base_path, "test/scene.fbx")).unwrap(),
-    )
-    .unwrap();
+    // let meshes = resource::fbx_convert::to_static_meshes(
+    //   resource::fbx::load(&format!("{}/{}", resource_base_path, "test/scene.fbx")).unwrap(),
+    // )
+    // .unwrap();
 
-    let cube_mesh = resource::mesh::create_cube();
-    let plane_mesh = resource::mesh::create_plane();
+    let meshes = ale_gltf_load(&format!("{}/{}", resource_base_path, "test/sceneg.gltf"));
+
+    let cube_mesh = ale_mesh_new_cube();
+    let plane_mesh = ale_mesh_new_plane();
 
     // Load skeletal meshes
-    let _skeletal_meshes = resource::fbx_convert::to_skeletal_meshes(
-      resource::fbx::load(&format!("{}/{}", resource_base_path, "test/anim_begin.fbx")).unwrap(),
-    )
-    .unwrap();
+    // let _skeletal_meshes = resource::fbx_convert::to_skeletal_meshes(
+    //   resource::fbx::load(&format!("{}/{}", resource_base_path, "test/anim_begin.fbx")).unwrap(),
+    // )
+    // .unwrap();
 
     // Load shaders
     let pbr_shader = resource::shader::ShaderFile::new(
@@ -113,14 +117,14 @@ impl Game {
       irradiance_cubemap_id: convoluted_cubemap.uid(),
     });
 
-    world.add_ui(UIEntity {
-      ui: UI::Panel(Panel::new(
-        Rect::from_xy(400, 300, 200, 150),
-        Color::from_rgb(1.0, 1.0, 1.0),
-      )),
-      mesh_id: plane_mesh.uid(),
-      shader_id: ui_shader.uid(),
-    });
+    // world.add_ui(UIEntity {
+    //   ui: UI::Panel(Panel::new(
+    //     Rect::from_xy(400, 300, 200, 150),
+    //     Color::from_rgb(1.0, 1.0, 1.0),
+    //   )),
+    //   mesh_id: plane_mesh.uid(),
+    //   shader_id: ui_shader.uid(),
+    // });
 
     world.set_camera(CameraEntity::FlyCamera(fly_camera));
 

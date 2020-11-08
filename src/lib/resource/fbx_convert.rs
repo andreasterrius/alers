@@ -3,18 +3,12 @@ use std::collections::HashMap;
 use cgmath::prelude::*;
 use cgmath::{Deg, Euler, Quaternion, Vector3};
 
-use crate::data::buffer::{Buffer, SeparateBufferBuilder};
-use crate::math::transform::Transform;
+use ale_math::transform::Transform;
 use crate::resource::bone::Bone;
-use crate::resource::mesh::Mesh;
 use crate::resource::skin::Skin;
+use ale_mesh::buffer::{Buffer, SeparateBufferBuilder};
+use ale_mesh::{ale_mesh_new, Mesh};
 
-#[derive(Debug)]
-pub enum ConversionError {
-  NGonNotSupported,
-  IncompleteLastPoly,
-  PolgyonVertexIndexNotFound,
-}
 
 pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transform, Mesh)>, ConversionError> {
   //Get root node
@@ -149,7 +143,7 @@ pub fn to_static_meshes(fbx: fbxcel_dom::v7400::Document) -> Result<Vec<(Transfo
     let model_id = connectivity[&id];
     let transform = transforms.get(&model_id).map(|x| x.clone()).unwrap_or(Transform::new());
 
-    meshes.push((transform, Mesh::new(vbuffer, None)));
+    meshes.push((transform, ale_mesh_new(vbuffer, None)));
   }
 
   Ok(meshes)
@@ -292,7 +286,8 @@ pub fn crawl_deformers(_fbx: &fbxcel_dom::v7400::Document) -> Result<Vec<Bone>, 
 pub fn fbx_to_buffers_should_properly_parse() {
   crate::log::init_term();
 
-  let fbx = crate::resource::fbx::load("resources/test/geom/basic_blender.fbx").expect("Fail to load rigged fbx");
+  let fbx =
+    crate::resource::fbx::load("resources/test_resources/geom/basic_blender.fbx").expect("Fail to load rigged fbx");
 
   let meshes = to_static_meshes(fbx);
   println!("{:#?}", meshes);

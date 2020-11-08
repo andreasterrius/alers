@@ -1,3 +1,5 @@
+use ale_autoid::*;
+
 pub struct ShaderFile {
   pub id: ShaderFileId,
   pub vertex_shader: String,

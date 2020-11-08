@@ -5,8 +5,8 @@ use std::ptr::null;
 
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
 
-use crate::data::buffer::Buffer;
 use crate::resource::texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
+use ale_mesh::buffer::Buffer;
 
 pub unsafe fn clear_buffer() {
   gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);

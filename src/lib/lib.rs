@@ -1,5 +1,4 @@
 #[macro_use]
-pub mod macros;
 pub mod camera;
 pub mod data;
 pub mod engine;

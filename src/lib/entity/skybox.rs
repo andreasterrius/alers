@@ -1,6 +1,6 @@
 use crate::resource::cubemap::CubemapId;
-use crate::resource::mesh::MeshId;
 use crate::resource::shader::ShaderFileId;
+use ale_mesh::MeshId;
 
 pub struct SkyboxEntity {
   pub static_mesh_id: MeshId,

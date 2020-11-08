@@ -2,7 +2,7 @@ use cgmath::prelude::*;
 use cgmath::{Deg, Matrix4, Quaternion, Rotation, Vector3};
 
 use crate::data::display_info::DisplayInfo;
-use crate::math::transform::Transform;
+use ale_math::transform::Transform;
 use std::sync::Arc;
 
 pub mod flycamera;

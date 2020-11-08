@@ -15,7 +15,7 @@ pub fn load(path: &str) -> Result<Document, LoadError> {
 
 pub fn get_node_info_recursively(node: &fbxcel_dom::fbxcel::tree::v7400::NodeHandle, space: usize) -> String {
   let mut text = format!(
-    "{}{}: {:?}\n",
+    "{}{}: {:?}\n",N
     repeat(' ').take(space).collect::<String>(),
     node.name(),
     node.attributes()

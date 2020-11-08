@@ -1,5 +1,6 @@
 use std::fs::File;
 
+use ale_autoid::*;
 use hdrldr::LoadError;
 use image::{GenericImageView, ImageError};
 

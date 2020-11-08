@@ -16,10 +16,10 @@ use crate::renderer::opengl::RenderError::{
   NoCameraSet, UnregisteredCubemap, UnregisteredMesh, UnregisteredShader, UnregisteredTexture,
 };
 use crate::resource::cubemap::{Cubemap, CubemapId};
-use crate::resource::mesh::{Mesh, MeshId};
 use crate::resource::shader::{ShaderFile, ShaderFileId};
 use crate::resource::texture::{Texture, TextureId};
 use crate::ui::UIRenderInfo;
+use ale_mesh::{Mesh, MeshId};
 
 pub mod cubemap;
 pub mod framebuffer;

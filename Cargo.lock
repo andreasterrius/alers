@@ -13,9 +13,43 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d2e7343e7fc9de883d1b0341e0b13970f764c14101234857d2ddafa1cb1cac2"
 
 [[package]]
+name = "ale_autoid"
+version = "0.1.0"
+dependencies = [
+ "snowflake",
+]
+
+[[package]]
+name = "ale_gltf"
+version = "0.1.0"
+dependencies = [
+ "ale_math",
+ "ale_mesh",
+ "gltf",
+]
+
+[[package]]
+name = "ale_math"
+version = "0.1.0"
+dependencies = [
+ "cgmath 0.17.0",
+]
+
+[[package]]
+name = "ale_mesh"
+version = "0.1.0"
+dependencies = [
+ "ale_autoid",
+]
+
+[[package]]
 name = "alers"
 version = "0.1.1"
 dependencies = [
+ "ale_autoid",
+ "ale_gltf",
+ "ale_math",
+ "ale_mesh",
  "approx 0.3.2",
  "async-std",
  "bitflags",
@@ -31,7 +65,6 @@ dependencies = [
  "rodio",
  "rusttype",
  "simplelog",
- "snowflake",
  "time",
  "unicode-normalization",
 ]
