@@ -11,7 +11,7 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
 
   let mut nodes = HashMap::new();
   for node in gltf.nodes() {
-    println!("Node #{} {:?}", node.index(), node.name());
+    //println!("Node #{} {:?}", node.index(), node.name());
 
     match node.transform() {
       gltf::scene::Transform::Matrix { .. } => {}
@@ -28,9 +28,9 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
 
   let mut objects = vec![];
   for mesh in gltf.meshes() {
-    println!("Mesh #{}", mesh.index());
+    //println!("Mesh #{}", mesh.index());
     for primitive in mesh.primitives() {
-      println!("- Primitive #{}", primitive.index());
+      //println!("- Primitive #{}", primitive.index());
       let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
 
       let positions = intern_get_positions(&reader);

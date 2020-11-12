@@ -3,7 +3,6 @@ use std::fs;
 use ale_font::{ale_font_load, Font};
 use ale_gltf::ale_gltf_load;
 use ale_mesh::{ale_mesh_new_cube, ale_mesh_new_plane};
-use ale_opengl::ale_opengl_text_render;
 use alers::camera::flycamera::FlyCamera;
 use alers::camera::Camera;
 use alers::data::color::Color;
@@ -179,8 +178,6 @@ impl Game {
       vec![],
     );
     render_tasks.render(context).unwrap();
-
-    ale_opengl_text_render(&inconsolata_font, 24, Vector2::new(0.0, 0.0), "some string");
 
     Game {
       world,
