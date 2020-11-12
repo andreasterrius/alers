@@ -3,7 +3,8 @@ pub fn load_fbx_simple_get_vertices() {
   use log::info;
   alers::log::init_term();
 
-  let cube_fbx = alers::resource::fbx::load("resources/test_resources/data/basic_blender.fbx").expect("Fail to load cube fbx");
+  let cube_fbx =
+    alers::resource::fbx::load("resources/test_resources/data/basic_blender.fbx").expect("Fail to load cube fbx");
 
   let cube_object = cube_fbx
     .objects()

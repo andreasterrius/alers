@@ -1,24 +1,52 @@
 use ale_math::transform::Transform;
-use ale_mesh::Mesh;
-use gltf::mesh::util::ReadTexCoords;
+use ale_mesh::buffer::{Buffer, SeparateBufferBuilder};
+use ale_mesh::{ale_mesh_new, Mesh};
+use gltf::mesh::util::{ReadIndices, ReadTexCoords};
 use gltf::mesh::Reader;
 use gltf::Gltf;
+use std::collections::HashMap;
 
 pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
   let (gltf, buffers, _) = gltf::import(path).unwrap();
+
+  let mut nodes = HashMap::new();
+  for node in gltf.nodes() {
+    println!("Node #{} {:?}", node.index(), node.name());
+
+    match node.transform() {
+      gltf::scene::Transform::Matrix { .. } => {}
+      gltf::scene::Transform::Decomposed {
+        translation,
+        rotation,
+        scale,
+      } => {
+        let transform = Transform::from_all(translation.into(), rotation.into(), scale.into());
+        nodes.insert(node.index(), transform);
+      }
+    }
+  }
+
+  let mut objects = vec![];
   for mesh in gltf.meshes() {
     println!("Mesh #{}", mesh.index());
     for primitive in mesh.primitives() {
       println!("- Primitive #{}", primitive.index());
       let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
 
-      intern_get_positions(&reader);
-      intern_get_normals(&reader);
-      intern_get_tex_coords(&reader);
+      let positions = intern_get_positions(&reader);
+      let normals = intern_get_normals(&reader);
+      let tex_coords = intern_get_tex_coords(&reader);
+      let indices = intern_get_indices(&reader);
+
+      let vbuffer = intern_construct_vertices_buffer(positions, normals, tex_coords);
+      let ibuffer = intern_construct_indices_buffer(indices);
+
+      let ale_mesh = ale_mesh_new(vbuffer, Some(ibuffer));
+      objects.push((nodes.remove(&mesh.index()).unwrap(), ale_mesh));
     }
   }
 
-  return vec![];
+  return objects;
 }
 
 fn intern_get_positions<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>
@@ -79,6 +107,51 @@ where
     }
   }
   return tex_coords;
+}
+
+fn intern_get_indices<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<i32>
+where
+  F: Clone + Fn(gltf::Buffer<'a>) -> Option<&'s [u8]>,
+{
+  let mut indices: Vec<i32> = vec![];
+  if let Some(read_indices) = reader.read_indices() {
+    match read_indices {
+      ReadIndices::U8(iter) => {
+        for i in iter {
+          indices.push(i as i32)
+        }
+      }
+      ReadIndices::U16(iter) => {
+        for i in iter {
+          indices.push(i as i32)
+        }
+      }
+      ReadIndices::U32(iter) => {
+        for i in iter {
+          indices.push(i as i32)
+        }
+      }
+    }
+  }
+
+  return indices;
+}
+
+fn intern_construct_vertices_buffer(positions: Vec<f32>, normals: Vec<f32>, tex_coords: Vec<f32>) -> Buffer<f32> {
+  let vbuffer = SeparateBufferBuilder::new()
+    .info("position", 3, positions)
+    .info("normal", 3, normals)
+    .info("uv", 2, tex_coords)
+    .build()
+    .unwrap();
+
+  return vbuffer;
+}
+
+fn intern_construct_indices_buffer(indices: Vec<i32>) -> Buffer<i32> {
+  let ibuffer = SeparateBufferBuilder::new().info("index", 3, indices).build().unwrap();
+
+  return ibuffer;
 }
 
 #[test]

@@ -34,6 +34,8 @@ ale_gltf = { path = "crates/ale_gltf" }
 ale_mesh = { path = "crates/ale_mesh" }
 ale_autoid = { path = "crates/ale_autoid" }
 ale_math = { path = "crates/ale_math" }
+ale_font = { path = "crates/ale_font" }
+ale_opengl = { path = "crates/ale_opengl" }
 fbxcel-dom = "0.0.4"
 cgmath = "0.17.0"
 gl = "0.6.2"

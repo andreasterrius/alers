@@ -61,7 +61,7 @@ impl World {
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut dyn RenderTasks) {
     // No camera = nothing rendered
-    let camera_render_info = match self.camera.get_camera_render_info() {
+    match self.camera.get_camera_render_info() {
       None => {
         return;
       }

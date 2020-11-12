@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use cgmath::prelude::*;
-use cgmath::{Deg, Matrix, Matrix4, Point3, Vector3, Vector4};
+use cgmath::{Deg, Matrix, Matrix4, Point3, Vector2, Vector3, Vector4};
 
 use crate::camera::CameraRenderInfo;
 use crate::data::color::Color;
@@ -19,6 +19,7 @@ use crate::resource::cubemap::{Cubemap, CubemapId};
 use crate::resource::shader::{ShaderFile, ShaderFileId};
 use crate::resource::texture::{Texture, TextureId};
 use crate::ui::UIRenderInfo;
+use ale_font::Font;
 use ale_mesh::{Mesh, MeshId};
 
 pub mod cubemap;
@@ -503,6 +504,7 @@ impl RenderTasks for SimpleRenderTasks {
             }
           }
         }
+        _ => {}
       }
     }
     Ok(result)

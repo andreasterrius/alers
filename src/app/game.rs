@@ -1,7 +1,9 @@
 use std::fs;
 
+use ale_font::{ale_font_load, Font};
 use ale_gltf::ale_gltf_load;
 use ale_mesh::{ale_mesh_new_cube, ale_mesh_new_plane};
+use ale_opengl::ale_opengl_text_render;
 use alers::camera::flycamera::FlyCamera;
 use alers::camera::Camera;
 use alers::data::color::Color;
@@ -19,11 +21,13 @@ use alers::resource;
 use alers::ui::panel::Panel;
 use alers::ui::UI;
 use alers::window::Window;
-use cgmath::Vector3;
+use cgmath::{Vector2, Vector3};
 use log::info;
 
 pub struct Game {
   world: World,
+
+  inconsolata_font: Font,
 }
 
 impl Game {
@@ -82,6 +86,9 @@ impl Game {
     let cubemap = resource::cubemap::Cubemap::new(Rect::new(512, 512));
     let convoluted_cubemap = resource::cubemap::Cubemap::new(Rect::new(32, 32));
 
+    // Load fonts
+    let inconsolata_font = ale_font_load("resources/font/Inconsolata/static/Inconsolata-Regular.ttf");
+
     // Load camera
     let fly_camera = FlyCamera::new(Camera::new(
       Vector3::new(0.0f32, 0.0f32, -10.0f32),
@@ -117,14 +124,14 @@ impl Game {
       irradiance_cubemap_id: convoluted_cubemap.uid(),
     });
 
-    // world.add_ui(UIEntity {
-    //   ui: UI::Panel(Panel::new(
-    //     Rect::from_xy(400, 300, 200, 150),
-    //     Color::from_rgb(1.0, 1.0, 1.0),
-    //   )),
-    //   mesh_id: plane_mesh.uid(),
-    //   shader_id: ui_shader.uid(),
-    // });
+    world.add_ui(UIEntity {
+      ui: UI::Panel(Panel::new(
+        Rect::from_xy(400, 300, 200, 150),
+        Color::from_rgb(1.0, 1.0, 1.0),
+      )),
+      mesh_id: plane_mesh.uid(),
+      shader_id: ui_shader.uid(),
+    });
 
     world.set_camera(CameraEntity::FlyCamera(fly_camera));
 
@@ -173,7 +180,12 @@ impl Game {
     );
     render_tasks.render(context).unwrap();
 
-    Game { world }
+    ale_opengl_text_render(&inconsolata_font, 24, Vector2::new(0.0, 0.0), "some string");
+
+    Game {
+      world,
+      inconsolata_font,
+    }
   }
 
   pub fn input(&mut self, inputs: Vec<Input>) {
