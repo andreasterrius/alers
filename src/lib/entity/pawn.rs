@@ -1,8 +1,8 @@
 use ale_math::transform::Transform;
 use crate::renderer::opengl::shader::ShaderVariable;
 use crate::resource::shader::ShaderFileId;
-use crate::resource::texture::TextureId;
 use ale_mesh::MeshId;
+use ale_texture::TextureId;
 
 pub struct PawnEntity {
   pub transform: Transform,

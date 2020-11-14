@@ -1,5 +1,5 @@
-use crate::renderer::opengl::raw;
 use crate::resource::cubemap::Cubemap;
+use ale_opengl::raw;
 
 pub struct CubemapDrawInfo {
   pub cubemap: u32,

@@ -29,6 +29,7 @@ dependencies = [
 name = "ale_font"
 version = "0.1.0"
 dependencies = [
+ "ale_texture",
  "rusttype 0.9.2",
 ]
 
@@ -61,6 +62,18 @@ version = "0.1.0"
 dependencies = [
  "ale_font",
  "ale_math",
+ "ale_mesh",
+ "ale_texture",
+ "gl",
+]
+
+[[package]]
+name = "ale_texture"
+version = "0.1.0"
+dependencies = [
+ "ale_autoid",
+ "hdrldr",
+ "image",
 ]
 
 [[package]]
@@ -73,16 +86,14 @@ dependencies = [
  "ale_math",
  "ale_mesh",
  "ale_opengl",
+ "ale_texture",
  "approx 0.3.2",
  "async-std",
  "bitflags",
  "cgmath 0.17.0",
  "fbxcel-dom",
- "gl",
  "glfw",
  "gltf",
- "hdrldr",
- "image",
  "log 0.4.8",
  "rand 0.3.23",
  "rodio",

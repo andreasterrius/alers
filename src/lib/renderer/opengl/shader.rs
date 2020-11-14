@@ -1,5 +1,5 @@
-use crate::renderer::opengl::raw::{create_shader, CreateShaderError};
 use crate::resource::shader::ShaderFile;
+use ale_opengl::raw::{CreateShaderError, create_shader};
 use cgmath::{Vector3, Vector4};
 
 #[derive(Debug)]

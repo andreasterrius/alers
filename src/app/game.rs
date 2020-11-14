@@ -1,8 +1,10 @@
 use std::fs;
 
-use ale_font::{ale_font_load, Font};
+use ale_font::{ale_font_layout, ale_font_load, Font};
 use ale_gltf::ale_gltf_load;
 use ale_mesh::{ale_mesh_new_cube, ale_mesh_new_plane};
+use ale_opengl::{ale_opengl_text_render, ale_opengl_texture_context_new, OpenGLTextureContext};
+use ale_texture::ale_texture_load;
 use alers::camera::flycamera::FlyCamera;
 use alers::camera::Camera;
 use alers::data::color::Color;
@@ -27,6 +29,8 @@ pub struct Game {
   world: World,
 
   inconsolata_font: Font,
+
+  opengl_texture_context: OpenGLTextureContext,
 }
 
 impl Game {
@@ -35,6 +39,8 @@ impl Game {
   }
 
   pub fn load(context: &mut RenderContext, window: &Window) -> Game {
+    let opengl_texture_context = ale_opengl_texture_context_new();
+
     let resource_base_path = "E:\\Codes\\Repos\\alers\\resources";
     let shader_base_path = "E:\\Codes\\Repos\\alers\\shaders";
 
@@ -78,15 +84,14 @@ impl Game {
     );
 
     // Load textures
-    let texture =
-      resource::texture::Texture::load(&format!("{}/{}", resource_base_path, "test/hdr/GravelPlaza_Env.hdr")).unwrap();
+    let texture = ale_texture_load(&format!("{}/{}", resource_base_path, "test/hdr/GravelPlaza_Env.hdr")).unwrap();
 
     // Load cubemap
     let cubemap = resource::cubemap::Cubemap::new(Rect::new(512, 512));
     let convoluted_cubemap = resource::cubemap::Cubemap::new(Rect::new(32, 32));
 
     // Load fonts
-    let inconsolata_font = ale_font_load("resources/font/Inconsolata/static/Inconsolata-Regular.ttf");
+    let mut inconsolata_font = ale_font_load("resources/font/Inconsolata/static/Inconsolata-Regular.ttf");
 
     // Load camera
     let fly_camera = FlyCamera::new(Camera::new(
@@ -182,6 +187,7 @@ impl Game {
     Game {
       world,
       inconsolata_font,
+      opengl_texture_context,
     }
   }
 
@@ -194,6 +200,13 @@ impl Game {
   }
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
+    ale_opengl_text_render(
+      &mut self.opengl_texture_context,
+      &mut self.inconsolata_font,
+      24,
+      "love: ❤️",
+    );
+
     self.world.render::<T>(render_tasks);
   }
 }

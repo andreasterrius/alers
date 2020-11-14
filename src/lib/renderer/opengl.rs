@@ -17,14 +17,14 @@ use crate::renderer::opengl::RenderError::{
 };
 use crate::resource::cubemap::{Cubemap, CubemapId};
 use crate::resource::shader::{ShaderFile, ShaderFileId};
-use crate::resource::texture::{Texture, TextureId};
 use crate::ui::UIRenderInfo;
 use ale_font::Font;
 use ale_mesh::{Mesh, MeshId};
+use ale_opengl::raw;
+use ale_texture::{Texture, TextureId};
 
 pub mod cubemap;
 pub mod framebuffer;
-pub mod raw;
 pub mod renderbuffer;
 pub mod shader;
 pub mod static_mesh;

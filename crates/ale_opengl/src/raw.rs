@@ -1,12 +1,13 @@
 use core::{mem, ptr};
+pub use gl::load_with;
 use std::convert::TryInto;
 use std::ffi::{c_void, CString};
 use std::ptr::null;
 
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
 
-use crate::resource::texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 use ale_mesh::buffer::Buffer;
+use ale_texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 
 pub unsafe fn clear_buffer() {
   gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);
@@ -246,34 +247,28 @@ pub unsafe fn create_shader(
 #[derive(Debug)]
 pub struct CreateTextureError {}
 
-pub unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureError> {
+pub struct OpenGLTextureId(pub u32);
+
+pub unsafe fn create_texture(texture: &Texture) -> Result<OpenGLTextureId, CreateTextureError> {
   let mut gl_texture = 0;
   gl::GenTextures(1, &mut gl_texture);
   gl::BindTexture(gl::TEXTURE_2D, gl_texture);
 
-  gl::TexParameteri(
-    gl::TEXTURE_2D,
-    gl::TEXTURE_WRAP_S,
-    texture_wrap_to_gl(&texture.get_wrap().x),
-  );
-  gl::TexParameteri(
-    gl::TEXTURE_2D,
-    gl::TEXTURE_WRAP_T,
-    texture_wrap_to_gl(&texture.get_wrap().y),
-  );
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, texture_wrap_to_gl(&texture.wrap.x));
+  gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, texture_wrap_to_gl(&texture.wrap.y));
 
   gl::TexParameteri(
     gl::TEXTURE_2D,
     gl::TEXTURE_MIN_FILTER,
-    texture_mag_to_gl(&texture.get_magnification().min),
+    texture_mag_to_gl(&texture.magnification.min),
   );
   gl::TexParameteri(
     gl::TEXTURE_2D,
     gl::TEXTURE_MAG_FILTER,
-    texture_mag_to_gl(&texture.get_magnification().max),
+    texture_mag_to_gl(&texture.magnification.max),
   );
 
-  let byte = texture.get_data();
+  let byte = &texture.data;
   let (internal_format, pixel_format, ptr) = match byte {
     TexturePixel::RgbF8(v) => (gl::RGB as i32, gl::UNSIGNED_BYTE, v.as_ptr() as *const c_void),
     TexturePixel::RgbF32(v) => (gl::RGB16F as i32, gl::FLOAT, v.as_ptr() as *const c_void),
@@ -283,15 +278,15 @@ pub unsafe fn create_texture(texture: &Texture) -> Result<u32, CreateTextureErro
     gl::TEXTURE_2D,
     0,
     internal_format,
-    texture.width() as i32,
-    texture.height() as i32,
+    texture.width as i32,
+    texture.height as i32,
     0,
     gl::RGB,
     pixel_format,
     ptr,
   );
 
-  return Ok(gl_texture);
+  return Ok(OpenGLTextureId(gl_texture));
 }
 
 fn texture_wrap_to_gl(wrap: &TextureWrapType) -> i32 {

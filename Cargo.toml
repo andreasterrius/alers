@@ -36,10 +36,9 @@ ale_autoid = { path = "crates/ale_autoid" }
 ale_math = { path = "crates/ale_math" }
 ale_font = { path = "crates/ale_font" }
 ale_opengl = { path = "crates/ale_opengl" }
+ale_texture = { path = "crates/ale_texture" }
 fbxcel-dom = "0.0.4"
 cgmath = "0.17.0"
-gl = "0.6.2"
-image = "0.23.*"
 time = "0.1"
 rand = "0.3"
 rodio = "0.5.2"
@@ -49,4 +48,3 @@ simplelog = "0.7.4"
 log = "0.4.8"
 approx = "0.3.2"
 bitflags = "1.2.1"
-hdrldr = "0.1"

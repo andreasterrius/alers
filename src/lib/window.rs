@@ -43,7 +43,7 @@ impl<'a> WindowCreator<'a> {
 
     // gl: load all OpenGL function pointers
     // ---------------------------------------
-    gl::load_with(|symbol| glfw_window.get_proc_address(symbol) as *const _);
+    ale_opengl::raw::load_with(|symbol| glfw_window.get_proc_address(symbol) as *const _);
 
     Window {
       glfw_window,

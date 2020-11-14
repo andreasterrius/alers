@@ -1,5 +1,5 @@
-use crate::renderer::opengl::raw::{create_texture, CreateTextureError};
-use crate::resource::texture::Texture;
+use ale_opengl::raw::{create_texture, CreateTextureError};
+use ale_texture::Texture;
 
 #[derive(Debug)]
 pub enum TextureError {
@@ -19,6 +19,6 @@ pub struct TextureDrawInfo {
 impl TextureDrawInfo {
   pub fn new(texture: &Texture) -> Result<TextureDrawInfo, TextureError> {
     let texture = unsafe { create_texture(texture)? };
-    Ok(TextureDrawInfo { texture })
+    Ok(TextureDrawInfo { texture: texture.0 })
   }
 }

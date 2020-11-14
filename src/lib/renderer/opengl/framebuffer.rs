@@ -1,4 +1,4 @@
-use crate::renderer::opengl::raw;
+use ale_opengl::raw;
 
 pub struct FramebufferDrawInfo {
   pub framebuffer: u32,
