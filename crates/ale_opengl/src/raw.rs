@@ -269,8 +269,16 @@ pub unsafe fn create_texture(texture: &Texture) -> Result<OpenGLTextureId, Creat
 
   let byte = &texture.data;
   let (internal_format, pixel_format, ptr) = match byte {
-    TexturePixel::RgbF8(v) => (gl::RGB as i32, gl::UNSIGNED_BYTE, v.as_ptr() as *const c_void),
-    TexturePixel::RgbF32(v) => (gl::RGB16F as i32, gl::FLOAT, v.as_ptr() as *const c_void),
+    TexturePixel::RgbU8(v) => (gl::RGB as i32, gl::UNSIGNED_BYTE, v.as_ptr() as *const c_void),
+    TexturePixel::RgbF32(v) => (gl::RGB32F as i32, gl::FLOAT, v.as_ptr() as *const c_void),
+  };
+
+  let channel = match texture.channel_count {
+    1 => gl::RED,
+    2 => gl::RG,
+    3 => gl::RGB,
+    4 => gl::RGBA,
+    _ => panic!("Unhandled texture channel count"),
   };
 
   gl::TexImage2D(
@@ -280,7 +288,7 @@ pub unsafe fn create_texture(texture: &Texture) -> Result<OpenGLTextureId, Creat
     texture.width as i32,
     texture.height as i32,
     0,
-    gl::RGB,
+    channel,
     pixel_format,
     ptr,
   );
@@ -327,7 +335,7 @@ pub unsafe fn create_cubemap(w: u32, h: u32) -> u32 {
     gl::TexImage2D(
       gl::TEXTURE_CUBE_MAP_POSITIVE_X + i,
       0,
-      gl::RGB16F as i32,
+      gl::RGB32F as i32,
       w as i32,
       h as i32,
       0,

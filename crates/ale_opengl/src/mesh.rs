@@ -1,15 +1,22 @@
 use crate::raw::{create_buffer, CreateBufferError};
-use ale_mesh::{Mesh, MeshId};
+use ale_mesh::{ale_mesh_cube_new, ale_mesh_plane_new, Mesh, MeshId};
 use std::collections::HashMap;
 
 pub struct OpenGLMeshId(pub u32);
 
 pub struct OpenGLMeshContext {
   pub(crate) mesh: HashMap<MeshId, OpenGLMesh>,
+
+  pub plane_opengl_mesh: OpenGLMesh,
+  pub cube_opengl_mesh: OpenGLMesh,
 }
 
 pub fn ale_opengl_mesh_context_new() -> OpenGLMeshContext {
-  OpenGLMeshContext { mesh: HashMap::new() }
+  OpenGLMeshContext {
+    mesh: HashMap::new(),
+    plane_opengl_mesh: ale_opengl_mesh_new(&ale_mesh_plane_new()).unwrap(),
+    cube_opengl_mesh: ale_opengl_mesh_new(&ale_mesh_cube_new()).unwrap(),
+  }
 }
 
 pub struct OpenGLMesh {

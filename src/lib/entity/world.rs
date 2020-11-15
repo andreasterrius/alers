@@ -5,6 +5,7 @@ use crate::entity::ui::UIEntity;
 use crate::renderer::opengl::RenderTasks;
 use crate::ui::UI;
 use ale_input::Input;
+use ale_camera::CameraRenderInfo;
 
 pub struct World {
   // List of pawns in the world
@@ -40,6 +41,10 @@ impl World {
 
   pub fn set_camera(&mut self, camera: CameraEntity) {
     self.camera = camera;
+  }
+
+  pub fn get_camera_render_info(&mut self) -> CameraRenderInfo  {
+    self.camera.get_camera_render_info().unwrap()
   }
 
   pub fn add_ui(&mut self, ui: UIEntity) {

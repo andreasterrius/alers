@@ -64,9 +64,11 @@ pub enum TextureMagnificationType {
 
 #[derive(Debug)]
 pub enum TexturePixel {
-  RgbF8(Vec<u8>),
   //  8 Bytes per channel
-  RgbF32(Vec<f32>), // 32 Bytes per channel
+  RgbU8(Vec<u8>),
+
+  // 32 Bytes per channel
+  RgbF32(Vec<f32>),
 }
 
 #[derive(Debug)]
@@ -116,7 +118,7 @@ pub fn ale_texture_load(path: &str) -> Result<Texture, LoadTextureError> {
 
     // TODO: i.raw_pixels() clones underlying bytes, find a way that doesn't
     let v = intern_flip_byte_vertically(&i.to_bytes(), i.width() as u32, i.height() as u32, 3);
-    Ok(ale_texture_new(TexturePixel::RgbF8(v), i.width(), i.height(), 3))
+    Ok(ale_texture_new(TexturePixel::RgbU8(v), i.width(), i.height(), 3))
   }
 }
 

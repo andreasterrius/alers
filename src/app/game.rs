@@ -13,8 +13,10 @@ use ale_opengl::shader::{
   ale_opengl_shader_context_new, ale_opengl_shader_variable_new, OpenGLShaderContext, OpenGLShaderVariable,
   OpenGLShaderVariableType,
 };
-use ale_opengl::texture::{ale_opengl_text_render, ale_opengl_texture_context_new, OpenGLTextureContext};
+use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
 
+use ale_opengl::ale_opengl_clear_render;
+use ale_opengl::text::ale_opengl_text_render;
 use ale_shader::{ale_shader_new, Shader};
 use ale_texture::ale_texture_load;
 use alers::data::display_info::DisplayInfo;
@@ -101,7 +103,10 @@ impl Game {
     let convoluted_cubemap = resource::cubemap::Cubemap::new(Rect::new(32, 32));
 
     // Load fonts
-    let mut inconsolata_font = ale_font_load("resources/font/Inconsolata/static/Inconsolata-Regular.ttf");
+    let mut inconsolata_font = ale_font_load(&format!(
+      "{}/{}",
+      resource_base_path, "font/Inconsolata/static/Inconsolata-Regular.ttf"
+    ));
 
     // Load camera
     let fly_camera = FlyCamera::new(Camera::new(
@@ -212,15 +217,18 @@ impl Game {
   }
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
+    ale_opengl_clear_render();
+
+    self.world.render::<T>(render_tasks);
+
     ale_opengl_text_render(
       &mut self.opengl_texture_context,
       &self.opengl_mesh_context,
       &self.opengl_shader_context,
+      &self.world.get_camera_render_info(),
       &mut self.inconsolata_font,
-      24,
-      "love: ❤️",
+      12,
+      "L",
     );
-
-    self.world.render::<T>(render_tasks);
   }
 }

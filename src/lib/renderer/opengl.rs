@@ -266,11 +266,6 @@ impl RenderTasks for SimpleRenderTasks {
   }
 
   fn render(&mut self, context: &RenderContext) -> Result<Vec<RenderResult>, RenderError> {
-    // Clear the screen buffer
-    unsafe {
-      raw::clear_buffer();
-    }
-
     let result = vec![];
     for renderable in &self.renderables {
       match renderable {
@@ -307,7 +302,7 @@ impl RenderTasks for SimpleRenderTasks {
               };
 
               raw::active_texture((i + 1) as u32);
-              raw::bind_texture(texture_draw_info.opengl_texture_id.0);
+              raw::bind_texture(texture_draw_info.id.0);
             }
 
             // Pass shader specific uniforms
@@ -395,7 +390,7 @@ impl RenderTasks for SimpleRenderTasks {
                 let glid = context
                   .get_texture(&c)
                   .ok_or(UnregisteredTexture(*c))?
-                  .opengl_texture_id
+                  .id
                   .0;
                 raw::bind_texture(glid);
               }
