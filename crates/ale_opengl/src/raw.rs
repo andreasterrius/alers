@@ -15,6 +15,14 @@ pub unsafe fn clear_buffer() {
   gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 }
 
+pub unsafe fn enable_blend() {
+  gl::Enable(gl::BLEND);
+}
+
+pub unsafe fn enable_blend_transparent() {
+  gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+}
+
 pub unsafe fn set_viewport(x: i32, y: i32, w: u32, h: u32) {
   gl::Viewport(x, y, w as i32, h as i32);
 }

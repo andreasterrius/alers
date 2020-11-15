@@ -42,6 +42,8 @@ fn main() {
     game.render(&mut render_tasks);
     render_tasks.render(&context).unwrap();
 
+    game.after_render();
+
     window.swap_buffers();
   }
 }

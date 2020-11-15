@@ -6,7 +6,7 @@ use ale_camera::{Camera, CameraRenderInfo};
 use ale_font::{ale_font_layout, Font, FontTextureKey};
 use ale_math::color::Color;
 use ale_math::rect::Rect;
-use ale_math::Matrix;
+use ale_math::{Matrix, Vector2};
 use ale_texture::Texture;
 use std::collections::HashMap;
 
@@ -14,12 +14,18 @@ pub struct OpenGLTextureId(pub u32);
 
 pub struct OpenGLTexture {
   pub id: OpenGLTextureId,
+  pub width: u32,
+  pub height: u32,
 }
 
 pub fn ale_opengl_texture_new(texture: &Texture) -> Result<OpenGLTexture, OpenGLTextureError> {
   unsafe {
     create_texture(texture)
-      .map(|id| OpenGLTexture { id: id })
+      .map(|id| OpenGLTexture {
+        id,
+        width: texture.width,
+        height: texture.height,
+      })
       .map_err(|err| OpenGLTextureError::from(err))
   }
 }
@@ -38,7 +44,7 @@ pub fn ale_opengl_texture_render(
   opengl_mesh_plane: &OpenGLMesh,
   opengl_shader_sprite: &OpenGLShader,
   opengl_texture: &OpenGLTexture,
-  rect: &Rect,
+  position: Vector2<f32>,
   color: &Color,
   camera: &CameraRenderInfo,
 ) {
@@ -51,10 +57,10 @@ pub fn ale_opengl_texture_render(
     raw::uniform4f(
       opengl_shader_sprite.id,
       "possize",
-      rect.get_x() as f32,
-      rect.get_y() as f32,
-      rect.get_width() as f32,
-      rect.get_height() as f32,
+      position.x,
+      position.y,
+      opengl_texture.width as f32,
+      opengl_texture.height as f32,
     );
 
     let (r, g, b, a) = color.get_rgba();

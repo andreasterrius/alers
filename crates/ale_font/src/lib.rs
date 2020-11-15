@@ -1,5 +1,6 @@
+use ale_math::Vector2;
 use ale_texture::{ale_texture_new, Texture, TexturePixel};
-use rusttype::{point, Scale};
+use rusttype::{point, vector, Scale};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -26,6 +27,7 @@ pub struct FontTextureKey {
 
 pub struct FontLayout {
   pub font_texture_key: FontTextureKey,
+  pub offset: Vector2<f32>,
 }
 
 pub fn ale_font_load(path: &str) -> Font {
@@ -43,9 +45,8 @@ pub fn ale_font_load(path: &str) -> Font {
 }
 
 pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str) -> Vec<FontLayout> {
-  // 2x scale in x direction to counter the aspect ratio of monospace characters.
   let scale = Scale {
-    x: font_size as f32 * 2.0,
+    x: font_size as f32,
     y: font_size as f32,
   };
 
@@ -57,8 +58,11 @@ pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str) -> Vec<FontL
 
   for g in glyphs {
     if let Some(bb) = g.pixel_bounding_box() {
-      let width = g.unpositioned().h_metrics().advance_width.ceil() as usize;
-      let height = v_metrics.ascent.ceil() as usize;
+
+      //let width = g.unpositioned().h_metrics().advance_width.ceil() as usize;
+      //let height = v_metrics.ascent.ceil() as usize;
+      let width = (bb.max.x - bb.min.x) as usize;
+      let height = (bb.max.y - bb.min.y) as usize;
 
       let font_raster_key = FontTextureKey {
         glyph_id: g.id().0,
@@ -82,6 +86,7 @@ pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str) -> Vec<FontL
 
       layouts.push(FontLayout {
         font_texture_key: font_raster_key,
+        offset: Vector2::new(bb.min.x as f32, bb.min.y as f32),
       });
     }
   }

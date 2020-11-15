@@ -10,3 +10,10 @@ pub fn ale_opengl_clear_render() {
     raw::clear_buffer();
   }
 }
+
+pub fn ale_opengl_blend_enable() {
+  unsafe {
+    raw::enable_blend();
+    raw::enable_blend_transparent();
+  }
+}

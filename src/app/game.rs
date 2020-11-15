@@ -15,8 +15,8 @@ use ale_opengl::shader::{
 };
 use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
 
-use ale_opengl::ale_opengl_clear_render;
 use ale_opengl::text::ale_opengl_text_render;
+use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render};
 use ale_shader::{ale_shader_new, Shader};
 use ale_texture::ale_texture_load;
 use alers::data::display_info::DisplayInfo;
@@ -199,6 +199,9 @@ impl Game {
     );
     render_tasks.render(context).unwrap();
 
+    // Setup the opengl renderer;
+    ale_opengl_blend_enable();
+
     Game {
       world,
       inconsolata_font,
@@ -220,15 +223,18 @@ impl Game {
     ale_opengl_clear_render();
 
     self.world.render::<T>(render_tasks);
+  }
 
+  pub fn after_render(&mut self) {
     ale_opengl_text_render(
       &mut self.opengl_texture_context,
       &self.opengl_mesh_context,
       &self.opengl_shader_context,
       &self.world.get_camera_render_info(),
       &mut self.inconsolata_font,
-      12,
-      "L",
+      24,
+      Vector2::new(0.0, 0.0),
+      "Abcdefg hijklmnopr qstuvwxyz",
     );
   }
 }

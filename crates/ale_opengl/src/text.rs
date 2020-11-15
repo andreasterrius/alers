@@ -1,10 +1,11 @@
 use crate::mesh::OpenGLMeshContext;
 use crate::shader::OpenGLShaderContext;
-use crate::texture::{ale_opengl_texture_new, OpenGLTextureContext, ale_opengl_texture_render};
+use crate::texture::{ale_opengl_texture_new, ale_opengl_texture_render, OpenGLTextureContext};
 use ale_camera::CameraRenderInfo;
 use ale_font::{ale_font_layout, Font};
 use ale_math::color::Color;
 use ale_math::rect::Rect;
+use ale_math::Vector2;
 
 pub fn ale_opengl_text_render(
   opengl_texture_context: &mut OpenGLTextureContext,
@@ -13,6 +14,7 @@ pub fn ale_opengl_text_render(
   camera_render_info: &CameraRenderInfo,
   font: &mut Font,
   font_size: i32,
+  position: Vector2<f32>,
   text: &str,
 ) {
   let layouts = ale_font_layout(font, font_size, text);
@@ -36,7 +38,7 @@ pub fn ale_opengl_text_render(
       &opengl_mesh_context.plane_opengl_mesh,
       &opengl_shader_context.text_2d_shader,
       &opengl_texture,
-      &Rect::new(100, 100),
+      position + l.offset,
       &Color::from_rgb(1.0, 1.0, 1.0),
       &camera_render_info,
     )
