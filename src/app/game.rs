@@ -1,22 +1,28 @@
 use std::fs;
 
+use ale_camera::flycamera::FlyCamera;
+use ale_camera::Camera;
 use ale_font::{ale_font_layout, ale_font_load, Font};
 use ale_gltf::ale_gltf_load;
-use ale_mesh::{ale_mesh_new_cube, ale_mesh_new_plane};
-use ale_opengl::{ale_opengl_text_render, ale_opengl_texture_context_new, OpenGLTextureContext};
+use ale_input::Input;
+use ale_math::color::Color;
+use ale_math::rect::Rect;
+use ale_mesh::{ale_mesh_cube_new, ale_mesh_plane_new};
+use ale_opengl::mesh::{ale_opengl_mesh_context_new, OpenGLMeshContext};
+use ale_opengl::shader::{
+  ale_opengl_shader_context_new, ale_opengl_shader_variable_new, OpenGLShaderContext, OpenGLShaderVariable,
+  OpenGLShaderVariableType,
+};
+use ale_opengl::texture::{ale_opengl_text_render, ale_opengl_texture_context_new, OpenGLTextureContext};
+
+use ale_shader::{ale_shader_new, Shader};
 use ale_texture::ale_texture_load;
-use alers::camera::flycamera::FlyCamera;
-use alers::camera::Camera;
-use alers::data::color::Color;
 use alers::data::display_info::DisplayInfo;
 use alers::entity::camera::CameraEntity;
 use alers::entity::pawn::PawnEntity;
 use alers::entity::skybox::SkyboxEntity;
 use alers::entity::ui::UIEntity;
 use alers::entity::world::World;
-use alers::input::Input;
-use alers::math::rect::Rect;
-use alers::renderer::opengl::shader::{ShaderVariable, ShaderVariableType};
 use alers::renderer::opengl::{ProjectionTarget, RenderContext, RenderTasks, SimpleRenderTasks};
 use alers::resource;
 use alers::ui::panel::Panel;
@@ -31,6 +37,8 @@ pub struct Game {
   inconsolata_font: Font,
 
   opengl_texture_context: OpenGLTextureContext,
+  opengl_mesh_context: OpenGLMeshContext,
+  opengl_shader_context: OpenGLShaderContext,
 }
 
 impl Game {
@@ -40,6 +48,8 @@ impl Game {
 
   pub fn load(context: &mut RenderContext, window: &Window) -> Game {
     let opengl_texture_context = ale_opengl_texture_context_new();
+    let opengl_mesh_context = ale_opengl_mesh_context_new();
+    let opengl_shader_context = ale_opengl_shader_context_new();
 
     let resource_base_path = "E:\\Codes\\Repos\\alers\\resources";
     let shader_base_path = "E:\\Codes\\Repos\\alers\\shaders";
@@ -52,8 +62,8 @@ impl Game {
 
     let meshes = ale_gltf_load(&format!("{}/{}", resource_base_path, "test/sceneg.gltf"));
 
-    let cube_mesh = ale_mesh_new_cube();
-    let plane_mesh = ale_mesh_new_plane();
+    let cube_mesh = ale_mesh_cube_new();
+    let plane_mesh = ale_mesh_plane_new();
 
     // Load skeletal meshes
     // let _skeletal_meshes = resource::fbx_convert::to_skeletal_meshes(
@@ -62,23 +72,23 @@ impl Game {
     // .unwrap();
 
     // Load shaders
-    let pbr_shader = resource::shader::ShaderFile::new(
+    let pbr_shader = ale_shader_new(
       fs::read_to_string(format!("{}/{}", shader_base_path, "pbr.vert")).unwrap(),
       fs::read_to_string(format!("{}/{}", shader_base_path, "pbr.frag")).unwrap(),
     );
-    let equirect_shader = resource::shader::ShaderFile::new(
+    let equirect_shader = ale_shader_new(
       fs::read_to_string(format!("{}/{}", shader_base_path, "cubemap.vert")).unwrap(),
       fs::read_to_string(format!("{}/{}", shader_base_path, "equirect.frag")).unwrap(),
     );
-    let irradiance_shader = resource::shader::ShaderFile::new(
+    let irradiance_shader = ale_shader_new(
       fs::read_to_string(format!("{}/{}", shader_base_path, "cubemap.vert")).unwrap(),
       fs::read_to_string(format!("{}/{}", shader_base_path, "irradiance.frag")).unwrap(),
     );
-    let skybox_shader = resource::shader::ShaderFile::new(
+    let skybox_shader = ale_shader_new(
       fs::read_to_string(format!("{}/{}", shader_base_path, "skybox.vert")).unwrap(),
       fs::read_to_string(format!("{}/{}", shader_base_path, "skybox.frag")).unwrap(),
     );
-    let ui_shader = resource::shader::ShaderFile::new(
+    let ui_shader = ale_shader_new(
       fs::read_to_string(format!("{}/{}", shader_base_path, "ui.vert")).unwrap(),
       fs::read_to_string(format!("{}/{}", shader_base_path, "ui.frag")).unwrap(),
     );
@@ -96,7 +106,7 @@ impl Game {
     // Load camera
     let fly_camera = FlyCamera::new(Camera::new(
       Vector3::new(0.0f32, 0.0f32, -10.0f32),
-      window.get_display_info().clone(),
+      window.get_display_info().dimension.clone(),
       90.0f32,
     ));
 
@@ -109,13 +119,13 @@ impl Game {
         shader_id: pbr_shader.uid(),
         textures: vec![],
         shader_variables: vec![
-          ShaderVariable::new(
+          ale_opengl_shader_variable_new(
             "albedo".to_owned(),
-            ShaderVariableType::F32_3(Vector3::new(0.7f32, 0.7, 0.7)),
+            OpenGLShaderVariableType::F32_3(Vector3::new(0.7f32, 0.7, 0.7)),
           ),
-          ShaderVariable::new("metallic".to_owned(), ShaderVariableType::F32_1(0.0f32)),
-          ShaderVariable::new("roughness".to_owned(), ShaderVariableType::F32_1(0.5f32)),
-          ShaderVariable::new("ao".to_owned(), ShaderVariableType::F32_1(0.5f32)),
+          ale_opengl_shader_variable_new("metallic".to_owned(), OpenGLShaderVariableType::F32_1(0.0f32)),
+          ale_opengl_shader_variable_new("roughness".to_owned(), OpenGLShaderVariableType::F32_1(0.5f32)),
+          ale_opengl_shader_variable_new("ao".to_owned(), OpenGLShaderVariableType::F32_1(0.5f32)),
         ],
       });
       context.static_mesh(&mesh.1).unwrap();
@@ -188,6 +198,8 @@ impl Game {
       world,
       inconsolata_font,
       opengl_texture_context,
+      opengl_mesh_context,
+      opengl_shader_context,
     }
   }
 
@@ -202,6 +214,8 @@ impl Game {
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
     ale_opengl_text_render(
       &mut self.opengl_texture_context,
+      &self.opengl_mesh_context,
+      &self.opengl_shader_context,
       &mut self.inconsolata_font,
       24,
       "love: ❤️",

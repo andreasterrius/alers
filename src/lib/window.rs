@@ -1,6 +1,6 @@
 use crate::data::display_info::DisplayInfo;
-use crate::input::Input;
 use crate::window::input_translator::{translate_action, translate_key, translate_modifier, translate_scancode};
+use ale_input::Input;
 use glfw::{Action, Context, CursorMode, Key, WindowEvent};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, RwLock};

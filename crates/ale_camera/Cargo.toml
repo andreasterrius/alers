@@ -1,5 +1,5 @@
 [package]
-name = "ale_opengl"
+name = "ale_camera"
 version = "0.1.0"
 authors = ["Andreas Terrius <andreas.terrius@gmail.com>"]
 edition = "2018"
@@ -7,10 +7,5 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ale_font = { path = "../ale_font" }
 ale_math = { path = "../ale_math" }
-ale_mesh = { path = "../ale_mesh" }
-ale_texture = { path = "../ale_texture" }
-ale_shader = { path = "../ale_shader" }
-ale_camera = { path = "../ale_camera" }
-gl = "0.6.2"
+ale_input = { path = "../ale_input" }

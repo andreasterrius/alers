@@ -1,10 +1,10 @@
 use crate::resource::cubemap::CubemapId;
-use crate::resource::shader::ShaderFileId;
 use ale_mesh::MeshId;
+use ale_shader::ShaderId;
 
 pub struct SkyboxEntity {
   pub static_mesh_id: MeshId,
-  pub shader_id: ShaderFileId,
+  pub shader_id: ShaderId,
   pub rendered_cubemap_id: CubemapId,
   pub irradiance_cubemap_id: CubemapId,
 }

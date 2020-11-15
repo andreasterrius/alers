@@ -37,6 +37,9 @@ ale_math = { path = "crates/ale_math" }
 ale_font = { path = "crates/ale_font" }
 ale_opengl = { path = "crates/ale_opengl" }
 ale_texture = { path = "crates/ale_texture" }
+ale_camera = { path = "crates/ale_camera" }
+ale_shader = { path = "crates/ale_shader" }
+ale_input = { path = "crates/ale_input" }
 fbxcel-dom = "0.0.4"
 cgmath = "0.17.0"
 time = "0.1"
@@ -47,4 +50,3 @@ unicode-normalization = "0.1.0"
 simplelog = "0.7.4"
 log = "0.4.8"
 approx = "0.3.2"
-bitflags = "1.2.1"

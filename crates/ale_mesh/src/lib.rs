@@ -21,7 +21,7 @@ pub fn ale_mesh_new(vertices: Buffer<f32>, indices: Option<Buffer<i32>>) -> Mesh
   }
 }
 
-pub fn ale_mesh_new_cube() -> Mesh {
+pub fn ale_mesh_cube_new() -> Mesh {
   let vertices = BufferBuilder::new(vec![
     // back face
     -1.0f32, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // bottom-left
@@ -75,7 +75,7 @@ pub fn ale_mesh_new_cube() -> Mesh {
   ale_mesh_new(vertices, None)
 }
 
-pub fn ale_mesh_new_plane() -> Mesh {
+pub fn ale_mesh_plane_new() -> Mesh {
   let vertices = BufferBuilder::new(vec![0.0f32, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0])
     .info("vertex", 2)
     .build()

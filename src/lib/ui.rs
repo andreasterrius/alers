@@ -1,9 +1,9 @@
-use crate::data::color::Color;
-use crate::input::Input;
-use crate::math::rect::Rect;
 use crate::ui::button::Button;
 use crate::ui::panel::Panel;
 use crate::ui::text::Text;
+use ale_math::color::Color;
+use ale_math::rect::Rect;
+use ale_input::Input;
 
 pub mod button;
 pub mod panel;

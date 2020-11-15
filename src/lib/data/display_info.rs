@@ -1,4 +1,4 @@
-use crate::math::rect::Rect;
+use ale_math::rect::Rect;
 
 #[derive(Clone)]
 pub struct DisplayInfo {

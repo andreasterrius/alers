@@ -1,8 +1,7 @@
-use cgmath::prelude::*;
-use cgmath::{Deg, Quaternion, Vector2, Vector3};
-
-use crate::camera::Camera;
-use crate::input::{Action, Input, Key};
+use crate::Camera;
+use ale_input::{Action, Input, Key};
+use ale_math::prelude::*;
+use ale_math::{Deg, Quaternion, Vector2, Vector3, Zero};
 
 pub const SMALL_NUMBERF32: f32 = 1e-12;
 

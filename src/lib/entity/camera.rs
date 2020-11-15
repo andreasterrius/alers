@@ -1,6 +1,6 @@
-use crate::camera::flycamera::FlyCamera;
-use crate::camera::{Camera, CameraRenderInfo};
-use crate::input::Input;
+use ale_camera::flycamera::FlyCamera;
+use ale_camera::{Camera, CameraRenderInfo};
+use ale_input::Input;
 
 pub enum CameraEntity {
   FlyCamera(FlyCamera),

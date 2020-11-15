@@ -1,12 +1,10 @@
-use crate::data::color::Color;
 use crate::entity::camera::CameraEntity;
 use crate::entity::pawn::PawnEntity;
 use crate::entity::skybox::SkyboxEntity;
 use crate::entity::ui::UIEntity;
-use crate::input::Input;
-use crate::math::rect::Rect;
 use crate::renderer::opengl::RenderTasks;
 use crate::ui::UI;
+use ale_input::Input;
 
 pub struct World {
   // List of pawns in the world

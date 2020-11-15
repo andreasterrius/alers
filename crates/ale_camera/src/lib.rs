@@ -1,8 +1,7 @@
-use cgmath::prelude::*;
-use cgmath::{Deg, Matrix4, Quaternion, Rotation, Vector3};
-
-use crate::data::display_info::DisplayInfo;
+use ale_math::prelude::*;
+use ale_math::rect::Rect;
 use ale_math::transform::Transform;
+use ale_math::{ortho, perspective, Deg, Matrix4, Quaternion, Vector3};
 use std::sync::Arc;
 
 pub mod flycamera;
@@ -11,7 +10,7 @@ pub struct Camera {
   transform: Transform,
   fov: f32,
   aspect_ratio: f32,
-  display_info: DisplayInfo,
+  display_rect: Rect,
 
   projection_mat: Option<Matrix4<f32>>,
   orthographic_mat: Option<Matrix4<f32>>,
@@ -19,15 +18,14 @@ pub struct Camera {
 }
 
 impl Camera {
-  pub fn new(position: Vector3<f32>, display_info: DisplayInfo, fov: f32) -> Camera {
-    let aspect_ratio =
-      display_info.get_dimension().get_width() as f32 / display_info.get_dimension().get_height() as f32;
+  pub fn new(position: Vector3<f32>, display_rect: Rect, fov: f32) -> Camera {
+    let aspect_ratio = display_rect.get_width() as f32 / display_rect.get_height() as f32;
 
     Camera {
       transform: Transform::from_position_rotation(position, Quaternion::one()),
       fov,
       aspect_ratio,
-      display_info,
+      display_rect,
       projection_mat: None,
       orthographic_mat: None,
       view_mat: None,
@@ -85,7 +83,7 @@ impl Camera {
 
   fn projection_mat(&mut self) -> Matrix4<f32> {
     match self.projection_mat {
-      None => self.projection_mat = Some(cgmath::perspective(Deg(self.fov), self.aspect_ratio, 0.1f32, 100.0f32)),
+      None => self.projection_mat = Some(perspective(Deg(self.fov), self.aspect_ratio, 0.1f32, 100.0f32)),
       Some(_) => (),
     }
     self.projection_mat.unwrap()
@@ -94,10 +92,10 @@ impl Camera {
   fn orthographic_mat(&mut self) -> Matrix4<f32> {
     match self.orthographic_mat {
       None => {
-        self.orthographic_mat = Some(cgmath::ortho(
+        self.orthographic_mat = Some(ortho(
           0.0f32,
-          self.display_info.get_dimension().get_width() as f32,
-          self.display_info.get_dimension().get_height() as f32,
+          self.display_rect.get_width() as f32,
+          self.display_rect.get_height() as f32,
           0.0,
           -1.0,
           1.0f32,

@@ -1,9 +1,9 @@
-use crate::data::color::Color;
-use crate::input::Input;
-use crate::math::rect::Rect;
-use crate::resource::shader::ShaderFileId;
+
 use crate::ui::{UIRenderInfo, UI};
 use std::rc::Rc;
+use ale_math::rect::Rect;
+use ale_math::color::Color;
+use ale_input::Input;
 
 pub struct Panel {
   rect: Rect,

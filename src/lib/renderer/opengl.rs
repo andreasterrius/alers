@@ -3,37 +3,35 @@ use std::collections::HashMap;
 use cgmath::prelude::*;
 use cgmath::{Deg, Matrix, Matrix4, Point3, Vector2, Vector3, Vector4};
 
-use crate::camera::CameraRenderInfo;
-use crate::data::color::Color;
-use crate::math::rect::Rect;
 use crate::renderer::constant::{CAMERA_POSITION, MODEL, PROJECTION, VIEW};
 use crate::renderer::opengl::cubemap::{CubemapDrawInfo, CubemapError};
 use crate::renderer::opengl::framebuffer::{FramebufferDrawInfo, FramebufferError};
-use crate::renderer::opengl::shader::{ShaderDrawInfo, ShaderError, ShaderVariable, ShaderVariableType};
-use crate::renderer::opengl::static_mesh::{StaticMeshDrawInfo, StaticMeshError};
-use crate::renderer::opengl::texture::{TextureDrawInfo, TextureError};
 use crate::renderer::opengl::RenderError::{
   NoCameraSet, UnregisteredCubemap, UnregisteredMesh, UnregisteredShader, UnregisteredTexture,
 };
 use crate::resource::cubemap::{Cubemap, CubemapId};
-use crate::resource::shader::{ShaderFile, ShaderFileId};
 use crate::ui::UIRenderInfo;
+use ale_camera::CameraRenderInfo;
 use ale_font::Font;
+use ale_math::rect::Rect;
 use ale_mesh::{Mesh, MeshId};
+use ale_opengl::mesh::{ale_opengl_mesh_new, OpenGLMesh, OpenGLMeshError};
 use ale_opengl::raw;
+use ale_opengl::shader::{
+  ale_opengl_shader_new, OpenGLShader, OpenGLShaderError, OpenGLShaderVariable, OpenGLShaderVariableType,
+};
+use ale_opengl::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureError};
+use ale_shader::{Shader, ShaderId};
 use ale_texture::{Texture, TextureId};
 
 pub mod cubemap;
 pub mod framebuffer;
 pub mod renderbuffer;
-pub mod shader;
-pub mod static_mesh;
-pub mod texture;
 
 pub struct RenderContext {
-  static_meshes: HashMap<MeshId, StaticMeshDrawInfo>,
-  shaders: HashMap<ShaderFileId, ShaderDrawInfo>,
-  textures: HashMap<TextureId, TextureDrawInfo>,
+  static_meshes: HashMap<MeshId, OpenGLMesh>,
+  shaders: HashMap<ShaderId, OpenGLShader>,
+  textures: HashMap<TextureId, OpenGLTexture>,
 
   //internal context
   //framebuffers: HashMap<Id, FramebufferDrawInfo>,
@@ -57,18 +55,18 @@ impl RenderContext {
     }
   }
 
-  pub fn static_mesh(&mut self, mesh: &Mesh) -> Result<(), StaticMeshError> {
-    self.static_meshes.insert(mesh.uid(), StaticMeshDrawInfo::new(mesh)?);
+  pub fn static_mesh(&mut self, mesh: &Mesh) -> Result<(), OpenGLMeshError> {
+    self.static_meshes.insert(mesh.uid(), ale_opengl_mesh_new(mesh)?);
     Ok(())
   }
 
-  pub fn shader(&mut self, shader: &ShaderFile) -> Result<(), ShaderError> {
-    self.shaders.insert(shader.uid(), ShaderDrawInfo::new(shader)?);
+  pub fn shader(&mut self, shader: &Shader) -> Result<(), OpenGLShaderError> {
+    self.shaders.insert(shader.uid(), ale_opengl_shader_new(shader)?);
     Ok(())
   }
 
-  pub fn texture(&mut self, texture: &Texture) -> Result<(), TextureError> {
-    self.textures.insert(texture.uid(), TextureDrawInfo::new(texture)?);
+  pub fn texture(&mut self, texture: &Texture) -> Result<(), OpenGLTextureError> {
+    self.textures.insert(texture.uid(), ale_opengl_texture_new(texture)?);
     Ok(())
   }
 
@@ -83,16 +81,16 @@ impl RenderContext {
     Ok(())
   }
 
-  pub fn get_static_mesh(&self, mesh_id: &MeshId) -> Option<&StaticMeshDrawInfo> {
+  pub fn get_static_mesh(&self, mesh_id: &MeshId) -> Option<&OpenGLMesh> {
     self.static_meshes.get(&mesh_id)
   }
 
-  pub fn get_shader(&self, shader_id: &ShaderFileId) -> Option<&ShaderDrawInfo> {
+  pub fn get_shader(&self, shader_id: &ShaderId) -> Option<&OpenGLShader> {
     self.shaders.get(&shader_id)
   }
 
-  pub fn get_texture(&self, texture_id: &TextureId) -> Option<&TextureDrawInfo> {
-    self.textures.get(&texture_id)
+  pub fn get_texture(&self, texture_id: &TextureId) -> Option<&OpenGLTexture> {
+    self.textures.get(texture_id)
   }
 
   //  pub fn get_framebuffer(&self, framebuffer: &Id) -> Option<&FramebufferDrawInfo> {
@@ -106,15 +104,15 @@ impl RenderContext {
 
 enum Renderable {
   StaticMesh {
-    shader_id: ShaderFileId,
+    shader_id: ShaderId,
     mesh_id: MeshId,
     texture_ids: Vec<TextureId>,
     transform: Matrix4<f32>,
-    shader_variables: Vec<ShaderVariable>,
+    shader_variables: Vec<OpenGLShaderVariable>,
   },
 
   EquirectCubemapProjection {
-    equirect_shader_id: ShaderFileId,
+    equirect_shader_id: ShaderId,
     cube_mesh_id: MeshId,
     projection_target: ProjectionTarget,
     cubemap_id: CubemapId,
@@ -122,20 +120,20 @@ enum Renderable {
     original_dimension: Rect,
 
     #[allow(dead_code)]
-    shader_variables: Vec<ShaderVariable>,
+    shader_variables: Vec<OpenGLShaderVariable>,
   },
 
   Skybox {
-    skybox_shader_id: ShaderFileId,
+    skybox_shader_id: ShaderId,
     cube_mesh_id: MeshId,
     rendered_cubemap_id: CubemapId,
 
     #[allow(dead_code)]
-    shader_variables: Vec<ShaderVariable>,
+    shader_variables: Vec<OpenGLShaderVariable>,
   },
 
   UIElement {
-    ui_shader_id: ShaderFileId,
+    ui_shader_id: ShaderId,
     plane_mesh_id: MeshId,
     ui_render_info: UIRenderInfo,
   },
@@ -144,34 +142,34 @@ enum Renderable {
 pub trait RenderTasks {
   fn with_camera(&mut self, camera_render_info: CameraRenderInfo);
 
-  fn queue_ui(&mut self, ui_shader_id: ShaderFileId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo);
+  fn queue_ui(&mut self, ui_shader_id: ShaderId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo);
 
   fn queue_static_mesh(
     &mut self,
-    shader_id: ShaderFileId,
+    shader_id: ShaderId,
     mesh_id: MeshId,
     texture_ids: Vec<TextureId>,
     transform: Matrix4<f32>,
-    shader_vars: Vec<ShaderVariable>,
+    shader_vars: Vec<OpenGLShaderVariable>,
   );
 
   fn queue_cubemap_projection(
     &mut self,
-    equirect_shader_id: ShaderFileId,
+    equirect_shader_id: ShaderId,
     cube_mesh_id: MeshId,
     projection_target: ProjectionTarget,
     cubemap_id: CubemapId,
     projection_dimension: Rect,
     original_dimension: Rect,
-    shader_variables: Vec<ShaderVariable>,
+    shader_variables: Vec<OpenGLShaderVariable>,
   );
 
   fn queue_skybox(
     &mut self,
-    skybox_shader_id: ShaderFileId,
+    skybox_shader_id: ShaderId,
     cube_mesh_id: MeshId,
     rendered_cubemap_id: CubemapId,
-    shader_variables: Vec<ShaderVariable>,
+    shader_variables: Vec<OpenGLShaderVariable>,
   );
 
   fn with_skybox(&mut self, cubemap_id: CubemapId);
@@ -202,7 +200,7 @@ impl RenderTasks for SimpleRenderTasks {
     self.camera_render_info = Some(camera_render_info);
   }
 
-  fn queue_ui(&mut self, ui_shader_id: ShaderFileId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo) {
+  fn queue_ui(&mut self, ui_shader_id: ShaderId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo) {
     self.renderables.push(Renderable::UIElement {
       ui_shader_id,
       plane_mesh_id,
@@ -212,11 +210,11 @@ impl RenderTasks for SimpleRenderTasks {
 
   fn queue_static_mesh(
     &mut self,
-    shader_id: ShaderFileId,
+    shader_id: ShaderId,
     mesh_id: MeshId,
     texture_ids: Vec<TextureId>,
     transform: Matrix4<f32>,
-    shader_variables: Vec<ShaderVariable>,
+    shader_variables: Vec<OpenGLShaderVariable>,
   ) {
     self.renderables.push(Renderable::StaticMesh {
       shader_id,
@@ -229,13 +227,13 @@ impl RenderTasks for SimpleRenderTasks {
 
   fn queue_cubemap_projection(
     &mut self,
-    equirect_shader_id: ShaderFileId,
+    equirect_shader_id: ShaderId,
     cube_mesh_id: MeshId,
     projection_target: ProjectionTarget,
     cubemap_id: CubemapId,
     projection_dimension: Rect,
     original_dimension: Rect,
-    shader_variables: Vec<ShaderVariable>,
+    shader_variables: Vec<OpenGLShaderVariable>,
   ) {
     self.renderables.push(Renderable::EquirectCubemapProjection {
       equirect_shader_id,
@@ -250,10 +248,10 @@ impl RenderTasks for SimpleRenderTasks {
 
   fn queue_skybox(
     &mut self,
-    skybox_shader_id: ShaderFileId,
+    skybox_shader_id: ShaderId,
     cube_mesh_id: MeshId,
     rendered_cubemap_id: CubemapId,
-    shader_variables: Vec<ShaderVariable>,
+    shader_variables: Vec<OpenGLShaderVariable>,
   ) {
     self.renderables.push(Renderable::Skybox {
       skybox_shader_id,
@@ -289,14 +287,14 @@ impl RenderTasks for SimpleRenderTasks {
 
           unsafe {
             // Bind shader
-            raw::use_shader(shader_draw_info.shader);
+            raw::use_shader(shader_draw_info.id);
 
             if let Some(cubemap_id) = &self.skybox {
               let irradiance_cubemap_draw_info = context
                 .cubemap
                 .get(cubemap_id)
                 .ok_or(UnregisteredCubemap(*cubemap_id))?;
-              raw::uniform1i(shader_draw_info.shader, "irradianceMap", 0);
+              raw::uniform1i(shader_draw_info.id, "irradianceMap", 0);
               raw::active_texture(0);
               raw::bind_cubemap(irradiance_cubemap_draw_info.cubemap);
             }
@@ -309,30 +307,25 @@ impl RenderTasks for SimpleRenderTasks {
               };
 
               raw::active_texture((i + 1) as u32);
-              raw::bind_texture(texture_draw_info.texture);
+              raw::bind_texture(texture_draw_info.opengl_texture_id.0);
             }
 
             // Pass shader specific uniforms
             for shader_variable in shader_variables {
-              match shader_variable.variable_type {
-                ShaderVariableType::F32_1(ff) => raw::uniform1f(shader_draw_info.shader, &shader_variable.name, ff),
-                ShaderVariableType::F32_3(vec) => {
-                  raw::uniform3f(shader_draw_info.shader, &shader_variable.name, vec.x, vec.y, vec.z)
+              match shader_variable.opengl_shader_variable_type {
+                OpenGLShaderVariableType::F32_1(ff) => raw::uniform1f(shader_draw_info.id, &shader_variable.name, ff),
+                OpenGLShaderVariableType::F32_3(vec) => {
+                  raw::uniform3f(shader_draw_info.id, &shader_variable.name, vec.x, vec.y, vec.z)
                 }
-                ShaderVariableType::F32_4(vec) => raw::uniform4f(
-                  shader_draw_info.shader,
-                  &shader_variable.name,
-                  vec.x,
-                  vec.y,
-                  vec.z,
-                  vec.w,
-                ),
+                OpenGLShaderVariableType::F32_4(vec) => {
+                  raw::uniform4f(shader_draw_info.id, &shader_variable.name, vec.x, vec.y, vec.z, vec.w)
+                }
               }
             }
 
             let camera_position = camera_render_info.position;
             raw::uniform3f(
-              shader_draw_info.shader,
+              shader_draw_info.id,
               CAMERA_POSITION,
               camera_position.x,
               camera_position.y,
@@ -340,13 +333,9 @@ impl RenderTasks for SimpleRenderTasks {
             );
 
             // Pass uniforms
-            raw::matrix4f(shader_draw_info.shader, MODEL, transform.as_ptr());
-            raw::matrix4f(shader_draw_info.shader, VIEW, camera_render_info.view.as_ptr());
-            raw::matrix4f(
-              shader_draw_info.shader,
-              PROJECTION,
-              camera_render_info.projection.as_ptr(),
-            );
+            raw::matrix4f(shader_draw_info.id, MODEL, transform.as_ptr());
+            raw::matrix4f(shader_draw_info.id, VIEW, camera_render_info.view.as_ptr());
+            raw::matrix4f(shader_draw_info.id, PROJECTION, camera_render_info.projection.as_ptr());
 
             // Bind Array Buffer
             raw::bind_vao(mesh_draw_info.vao);
@@ -386,7 +375,7 @@ impl RenderTasks for SimpleRenderTasks {
             cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, 1.0), -Vector3::unit_y()),
             cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, -1.0), -Vector3::unit_y()),
           ];
-          let equirect_shader = shader_draw_info.shader;
+          let equirect_shader = shader_draw_info.id;
 
           unsafe {
             let (framebuffer, _) =
@@ -403,7 +392,11 @@ impl RenderTasks for SimpleRenderTasks {
                 raw::bind_cubemap(glid);
               }
               ProjectionTarget::Texture2d(c) => {
-                let glid = context.get_texture(&c).ok_or(UnregisteredTexture(*c))?.texture;
+                let glid = context
+                  .get_texture(&c)
+                  .ok_or(UnregisteredTexture(*c))?
+                  .opengl_texture_id
+                  .0;
                 raw::bind_texture(glid);
               }
             };
@@ -448,14 +441,10 @@ impl RenderTasks for SimpleRenderTasks {
           let camera_render_info = self.camera_render_info.as_ref().ok_or(NoCameraSet)?;
 
           unsafe {
-            raw::use_shader(shader_draw_info.shader);
-            raw::uniform1i(shader_draw_info.shader, "environmentMap", 0);
-            raw::matrix4f(shader_draw_info.shader, VIEW, camera_render_info.view.as_ptr());
-            raw::matrix4f(
-              shader_draw_info.shader,
-              PROJECTION,
-              camera_render_info.projection.as_ptr(),
-            );
+            raw::use_shader(shader_draw_info.id);
+            raw::uniform1i(shader_draw_info.id, "environmentMap", 0);
+            raw::matrix4f(shader_draw_info.id, VIEW, camera_render_info.view.as_ptr());
+            raw::matrix4f(shader_draw_info.id, PROJECTION, camera_render_info.projection.as_ptr());
             raw::active_texture(0);
             raw::bind_cubemap(rendered_cubemap_draw_info.cubemap);
 
@@ -481,9 +470,9 @@ impl RenderTasks for SimpleRenderTasks {
 
           unsafe {
             raw::bind_vao(mesh_draw_info.vao);
-            raw::use_shader(shader_draw_info.shader);
+            raw::use_shader(shader_draw_info.id);
             raw::uniform4f(
-              shader_draw_info.shader,
+              shader_draw_info.id,
               "possize",
               ui_render_info.rect.get_x() as f32,
               ui_render_info.rect.get_y() as f32,
@@ -491,10 +480,10 @@ impl RenderTasks for SimpleRenderTasks {
               ui_render_info.rect.get_height() as f32,
             );
             let (r, g, b, a) = ui_render_info.color.get_rgba();
-            raw::uniform4f(shader_draw_info.shader, "color", r, g, b, a);
-            raw::matrix4f(shader_draw_info.shader, VIEW, camera_render_info.view.as_ptr());
+            raw::uniform4f(shader_draw_info.id, "color", r, g, b, a);
+            raw::matrix4f(shader_draw_info.id, VIEW, camera_render_info.view.as_ptr());
             raw::matrix4f(
-              shader_draw_info.shader,
+              shader_draw_info.id,
               PROJECTION,
               camera_render_info.orthographic.as_ptr(),
             );
@@ -520,7 +509,7 @@ pub enum ProjectionTarget {
 pub enum RenderError {
   NoCameraSet,
   UnregisteredMesh(MeshId),
-  UnregisteredShader(ShaderFileId),
+  UnregisteredShader(ShaderId),
   UnregisteredTexture(TextureId),
   //UnregisteredFramebuffer(Id),
   UnregisteredCubemap(CubemapId),

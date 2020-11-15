@@ -26,11 +26,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "ale_camera"
+version = "0.1.0"
+dependencies = [
+ "ale_input",
+ "ale_math",
+]
+
+[[package]]
 name = "ale_font"
 version = "0.1.0"
 dependencies = [
  "ale_texture",
  "rusttype",
+]
+
+[[package]]
+name = "ale_input"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
 ]
 
 [[package]]
@@ -51,11 +66,20 @@ dependencies = [
 name = "ale_opengl"
 version = "0.1.0"
 dependencies = [
+ "ale_camera",
  "ale_font",
  "ale_math",
  "ale_mesh",
+ "ale_shader",
  "ale_texture",
  "gl",
+]
+
+[[package]]
+name = "ale_shader"
+version = "0.1.0"
+dependencies = [
+ "ale_autoid",
 ]
 
 [[package]]
