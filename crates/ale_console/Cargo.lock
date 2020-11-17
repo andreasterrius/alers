@@ -3,3 +3,19 @@
 [[package]]
 name = "ale_console"
 version = "0.1.0"
+dependencies = [
+ "ale_input",
+]
+
+[[package]]
+name = "ale_input"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+]
+
+[[package]]
+name = "bitflags"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"

@@ -38,7 +38,7 @@ pub fn ale_opengl_text_render(
       &opengl_mesh_context.plane_opengl_mesh,
       &opengl_shader_context.text_2d_shader,
       &opengl_texture,
-      position + l.offset,
+      position + l.offset_min,
       &Color::from_rgb(1.0, 1.0, 1.0),
       &camera_render_info,
     )

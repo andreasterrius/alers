@@ -40,6 +40,7 @@ ale_texture = { path = "crates/ale_texture" }
 ale_camera = { path = "crates/ale_camera" }
 ale_shader = { path = "crates/ale_shader" }
 ale_input = { path = "crates/ale_input" }
+ale_console = { path = "crates/ale_console" }
 fbxcel-dom = "0.0.4"
 cgmath = "0.17.0"
 time = "0.1"

@@ -3,6 +3,7 @@ use bitflags::bitflags;
 #[derive(Debug)]
 pub enum Input {
   Key(Key, Scancode, Action, Modifier),
+  Char(char),
   MouseMotion(f32, f32),
 }
 
@@ -133,7 +134,7 @@ pub enum Key {
 
 pub type Scancode = i32;
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Action {
   Release,
   Press,

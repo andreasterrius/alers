@@ -27,7 +27,9 @@ pub struct FontTextureKey {
 
 pub struct FontLayout {
   pub font_texture_key: FontTextureKey,
-  pub offset: Vector2<f32>,
+  pub line_break_y_offset: f32,
+  pub offset_min: Vector2<f32>,
+  pub offset_max: Vector2<f32>,
 }
 
 pub fn ale_font_load(path: &str) -> Font {
@@ -58,7 +60,6 @@ pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str) -> Vec<FontL
 
   for g in glyphs {
     if let Some(bb) = g.pixel_bounding_box() {
-
       //let width = g.unpositioned().h_metrics().advance_width.ceil() as usize;
       //let height = v_metrics.ascent.ceil() as usize;
       let width = (bb.max.x - bb.min.x) as usize;
@@ -86,7 +87,9 @@ pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str) -> Vec<FontL
 
       layouts.push(FontLayout {
         font_texture_key: font_raster_key,
-        offset: Vector2::new(bb.min.x as f32, bb.min.y as f32),
+        line_break_y_offset: v_metrics.line_gap,
+        offset_min: Vector2::new(bb.min.x as f32, bb.min.y as f32),
+        offset_max: Vector2::new(bb.max.x as f32, bb.max.y as f32),
       });
     }
   }

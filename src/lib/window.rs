@@ -36,6 +36,7 @@ impl<'a> WindowCreator<'a> {
       .expect("Failed to create GLFW window");
 
     glfw_window.make_current();
+    glfw_window.set_char_polling(true);
     glfw_window.set_key_polling(true);
     glfw_window.set_cursor_pos_polling(true);
     glfw_window.set_framebuffer_size_polling(true);
@@ -100,6 +101,9 @@ impl Window {
             result
           }
         }),
+        glfw::WindowEvent::Char(char) => {
+          inputs.push(Input::Char(char));
+        }
         _ => {}
       }
     }

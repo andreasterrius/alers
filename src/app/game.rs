@@ -15,6 +15,7 @@ use ale_opengl::shader::{
 };
 use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
 
+use ale_console::{ale_console_input, ale_console_new, Console};
 use ale_opengl::text::ale_opengl_text_render;
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render};
 use ale_shader::{ale_shader_new, Shader};
@@ -37,6 +38,8 @@ pub struct Game {
   world: World,
 
   inconsolata_font: Font,
+
+  console: Console,
 
   opengl_texture_context: OpenGLTextureContext,
   opengl_mesh_context: OpenGLMeshContext,
@@ -202,9 +205,12 @@ impl Game {
     // Setup the opengl renderer;
     ale_opengl_blend_enable();
 
+    let console = ale_console_new(100);
+
     Game {
       world,
       inconsolata_font,
+      console,
       opengl_texture_context,
       opengl_mesh_context,
       opengl_shader_context,
@@ -213,6 +219,10 @@ impl Game {
 
   pub fn input(&mut self, inputs: Vec<Input>) {
     self.world.input(&inputs);
+
+    for input in &inputs {
+      ale_console_input(&mut self.console, input);
+    }
   }
 
   pub fn tick(&mut self, delta_time: f32) {
