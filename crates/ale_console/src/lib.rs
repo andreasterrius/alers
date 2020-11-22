@@ -24,6 +24,9 @@ pub fn ale_console_input(console: &mut Console, input: &Input) {
     Input::Key(key, scancode, action, modifier) => {
       if action == &ale_input::Action::Press {
         if key == &ale_input::Key::Enter {
+          if console.lines.len() > console.max_lines {
+            console.lines.pop_front();
+          }
           console.lines.push_back(console.line_buffer.clone());
           console.line_buffer.clear();
         } else if key == &ale_input::Key::GraveAccent {
@@ -34,7 +37,7 @@ pub fn ale_console_input(console: &mut Console, input: &Input) {
       }
     }
     Input::Char(char) => {
-      if console.has_focus {
+      if console.has_focus && char != &'`' {
         console.line_buffer.push(char.clone());
       }
     }

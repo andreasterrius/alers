@@ -34,6 +34,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ale_console"
+version = "0.1.0"
+dependencies = [
+ "ale_input",
+]
+
+[[package]]
 name = "ale_font"
 version = "0.1.0"
 dependencies = [
@@ -68,6 +75,7 @@ name = "ale_opengl"
 version = "0.1.0"
 dependencies = [
  "ale_camera",
+ "ale_console",
  "ale_font",
  "ale_math",
  "ale_mesh",

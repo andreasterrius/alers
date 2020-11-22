@@ -1,3 +1,4 @@
+use ale_math::rect::Rect;
 use ale_math::Vector2;
 use ale_texture::{ale_texture_new, Texture, TexturePixel};
 use rusttype::{point, vector, Scale};
@@ -26,10 +27,15 @@ pub struct FontTextureKey {
 }
 
 pub struct FontLayout {
+  pub glyphs: Vec<FontGlyphLayout>,
+
+  pub bounds: Vector2<i32>,
+}
+
+pub struct FontGlyphLayout {
   pub font_texture_key: FontTextureKey,
-  pub line_break_y_offset: f32,
-  pub offset_min: Vector2<f32>,
-  pub offset_max: Vector2<f32>,
+  pub offset_min: Vector2<i32>,
+  pub offset_max: Vector2<i32>,
 }
 
 pub fn ale_font_load(path: &str) -> Font {
@@ -46,7 +52,7 @@ pub fn ale_font_load(path: &str) -> Font {
   };
 }
 
-pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str) -> Vec<FontLayout> {
+pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str, bounds: Option<Vector2<i32>>) -> FontLayout {
   let scale = Scale {
     x: font_size as f32,
     y: font_size as f32,
@@ -56,7 +62,13 @@ pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str) -> Vec<FontL
   let offset = point(0.0, v_metrics.ascent);
 
   let glyphs: Vec<_> = font.intern_font.layout(text, scale, offset).collect();
-  let mut layouts = vec![];
+  let mut glyph_layouts = vec![];
+
+  let mut max_height = 0;
+  let mut prev_bb_min = Vector2::new(0, 0);
+  let mut prev_bb_max = Vector2::new(0, 0);
+  let mut curr_pos = Vector2::new(0, 0);
+  let mut all_bounding_box = Vector2::new(0, 0);
 
   for g in glyphs {
     if let Some(bb) = g.pixel_bounding_box() {
@@ -69,6 +81,20 @@ pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str) -> Vec<FontL
         glyph_id: g.id().0,
         font_size,
       };
+
+      max_height = if height > max_height { height } else { max_height };
+      let advance = (bb.min.x - prev_bb_max.x) + (prev_bb_max.x - prev_bb_min.x);
+
+      prev_bb_min = Vector2::new(bb.min.x, bb.min.y);
+      prev_bb_max = Vector2::new(bb.max.x, bb.max.y);
+
+      curr_pos.x += advance;
+      if let Some(bounds) = bounds {
+        if curr_pos.x >= bounds.x as i32 {
+          curr_pos.x = 0;
+          curr_pos.y += v_metrics.ascent.ceil() as i32;
+        }
+      }
 
       font.textures.entry(font_raster_key.clone()).or_insert_with(|| {
         let mut raster: Vec<f32> = vec![0.0; width * height];
@@ -85,14 +111,26 @@ pub fn ale_font_layout(font: &mut Font, font_size: i32, text: &str) -> Vec<FontL
         }
       });
 
-      layouts.push(FontLayout {
+      if all_bounding_box.x <= curr_pos.x + width as i32 {
+        all_bounding_box.x = curr_pos.x + width as i32;
+      }
+      if all_bounding_box.y <= curr_pos.y + height as i32 {
+        all_bounding_box.y += curr_pos.y + height as i32;
+        all_bounding_box.y += curr_pos.y + height as i32;
+      }
+
+      let offset_y = Vector2::new(0, bb.min.y);
+      glyph_layouts.push(FontGlyphLayout {
         font_texture_key: font_raster_key,
-        line_break_y_offset: v_metrics.line_gap,
-        offset_min: Vector2::new(bb.min.x as f32, bb.min.y as f32),
-        offset_max: Vector2::new(bb.max.x as f32, bb.max.y as f32),
+        offset_min: curr_pos + offset_y,
+        offset_max: curr_pos + Vector2::new(width as i32, height as i32),
       });
     }
   }
 
-  layouts
+  FontLayout {
+    glyphs: glyph_layouts,
+
+    bounds: all_bounding_box,
+  }
 }

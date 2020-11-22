@@ -13,4 +13,5 @@ ale_mesh = { path = "../ale_mesh" }
 ale_texture = { path = "../ale_texture" }
 ale_shader = { path = "../ale_shader" }
 ale_camera = { path = "../ale_camera" }
+ale_console = { path = "../ale_console" }
 gl = "0.6.2"

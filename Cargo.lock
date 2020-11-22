@@ -84,6 +84,7 @@ name = "ale_opengl"
 version = "0.1.0"
 dependencies = [
  "ale_camera",
+ "ale_console",
  "ale_font",
  "ale_math",
  "ale_mesh",

@@ -1,3 +1,4 @@
+pub mod console;
 pub mod mesh;
 pub mod raw;
 pub mod shader;

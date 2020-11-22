@@ -16,6 +16,7 @@ use ale_opengl::shader::{
 use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
 
 use ale_console::{ale_console_input, ale_console_new, Console};
+use ale_opengl::console::ale_opengl_console_render;
 use ale_opengl::text::ale_opengl_text_render;
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render};
 use ale_shader::{ale_shader_new, Shader};
@@ -218,7 +219,9 @@ impl Game {
   }
 
   pub fn input(&mut self, inputs: Vec<Input>) {
-    self.world.input(&inputs);
+    if !self.console.has_focus {
+      self.world.input(&inputs);
+    }
 
     for input in &inputs {
       ale_console_input(&mut self.console, input);
@@ -236,15 +239,26 @@ impl Game {
   }
 
   pub fn after_render(&mut self) {
-    ale_opengl_text_render(
+    // ale_opengl_text_render(
+    //   &mut self.opengl_texture_context,
+    //   &self.opengl_mesh_context,
+    //   &self.opengl_shader_context,
+    //   &self.world.get_camera_render_info(),
+    //   &mut self.inconsolata_font,
+    //   24,
+    //   Vector2::new(0.0, 0.0),
+    //   "Abcdefg hijklmnopr qstuvwxyz",
+    //   Some(Vector2::new(120, 50)),
+    // );
+
+    ale_opengl_console_render(
       &mut self.opengl_texture_context,
       &self.opengl_mesh_context,
       &self.opengl_shader_context,
       &self.world.get_camera_render_info(),
+      &mut self.console,
+      &Vector2::new(800, 600),
       &mut self.inconsolata_font,
-      24,
-      Vector2::new(0.0, 0.0),
-      "Abcdefg hijklmnopr qstuvwxyz",
-    );
+    )
   }
 }
