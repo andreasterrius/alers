@@ -4,6 +4,7 @@ use ale_input::Input;
 use glfw::{Action, Context, CursorMode, Key, WindowEvent};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, RwLock};
+use ale_math::Vector2;
 
 pub mod input_translator;
 
@@ -112,5 +113,12 @@ impl Window {
 
   pub fn get_display_info(&self) -> &DisplayInfo {
     &self.display_info
+  }
+
+  pub fn get_screen_size(&self) -> Vector2<u32> {
+    Vector2::new(
+      self.display_info.dimension.get_width(),
+      self.display_info.dimension.get_height(),
+    )
   }
 }

@@ -1,5 +1,6 @@
 pub mod console;
 pub mod mesh;
+pub mod postprocess;
 pub mod raw;
 pub mod shader;
 pub mod text;

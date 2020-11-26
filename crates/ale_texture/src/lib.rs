@@ -64,7 +64,10 @@ pub enum TextureMagnificationType {
 
 #[derive(Debug)]
 pub enum TexturePixel {
-  //  8 Bytes per channel
+  // 8 Bytes per channel, but null data
+  RgbU8Null,
+
+  // 8 Bytes per channel
   RgbU8(Vec<u8>),
 
   // 32 Bytes per channel

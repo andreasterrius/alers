@@ -17,6 +17,7 @@ use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
 
 use ale_console::{ale_console_input, ale_console_new, Console};
 use ale_opengl::console::ale_opengl_console_render;
+use ale_opengl::postprocess::ale_opengl_postprocess_new;
 use ale_opengl::text::ale_opengl_text_render;
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render};
 use ale_shader::{ale_shader_new, Shader};
@@ -56,6 +57,7 @@ impl Game {
     let opengl_texture_context = ale_opengl_texture_context_new();
     let opengl_mesh_context = ale_opengl_mesh_context_new();
     let opengl_shader_context = ale_opengl_shader_context_new();
+    let opengl_postprocess_context = ale_opengl_postprocess_new(window.get_screen_size());
 
     let resource_base_path = "E:\\Codes\\Repos\\alers\\resources";
     let shader_base_path = "E:\\Codes\\Repos\\alers\\shaders";

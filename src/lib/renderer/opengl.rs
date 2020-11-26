@@ -5,7 +5,6 @@ use cgmath::{Deg, Matrix, Matrix4, Point3, Vector2, Vector3, Vector4};
 
 use crate::renderer::constant::{CAMERA_POSITION, MODEL, PROJECTION, VIEW};
 use crate::renderer::opengl::cubemap::{CubemapDrawInfo, CubemapError};
-use crate::renderer::opengl::framebuffer::{FramebufferDrawInfo, FramebufferError};
 use crate::renderer::opengl::RenderError::{
   NoCameraSet, UnregisteredCubemap, UnregisteredMesh, UnregisteredShader, UnregisteredTexture,
 };
@@ -25,7 +24,6 @@ use ale_shader::{Shader, ShaderId};
 use ale_texture::{Texture, TextureId};
 
 pub mod cubemap;
-pub mod framebuffer;
 pub mod renderbuffer;
 
 pub struct RenderContext {
@@ -374,7 +372,7 @@ impl RenderTasks for SimpleRenderTasks {
 
           unsafe {
             let (framebuffer, _) =
-              raw::create_framebuffer(projection_dimension.get_height(), projection_dimension.get_width());
+              raw::create_framebuffer_cubemap(projection_dimension.get_height(), projection_dimension.get_width());
 
             raw::use_shader(equirect_shader);
             raw::uniform1i(equirect_shader, "equirectangularMaps", 0);
@@ -387,11 +385,7 @@ impl RenderTasks for SimpleRenderTasks {
                 raw::bind_cubemap(glid);
               }
               ProjectionTarget::Texture2d(c) => {
-                let glid = context
-                  .get_texture(&c)
-                  .ok_or(UnregisteredTexture(*c))?
-                  .id
-                  .0;
+                let glid = context.get_texture(&c).ok_or(UnregisteredTexture(*c))?.id.0;
                 raw::bind_texture(glid);
               }
             };
@@ -402,10 +396,10 @@ impl RenderTasks for SimpleRenderTasks {
               projection_dimension.get_width(),
               projection_dimension.get_height(),
             );
-            raw::bind_framebuffer(framebuffer);
+            raw::bind_framebuffer(framebuffer.0);
             for i in 0..6 {
               raw::matrix4f(equirect_shader, VIEW, views[i].as_ptr());
-              raw::framebuffer_texture2d(i as u32, cubemap_draw_info.cubemap, 0);
+              raw::framebuffer_texture2d_cubemap(i as u32, cubemap_draw_info.cubemap, 0);
               raw::clear_buffer();
 
               raw::bind_vao(cube_mesh_draw_info.vao);

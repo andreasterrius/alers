@@ -81,7 +81,11 @@ pub unsafe fn matrix4f(shader: u32, name: &str, ptr: *const f32) {
   );
 }
 
-pub unsafe fn framebuffer_texture2d(offset: u32, cubemap: u32, mipmap: i32) {
+pub unsafe fn framebuffer_texture2d(gl_texture: u32) {
+  gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, gl_texture, 0);
+}
+
+pub unsafe fn framebuffer_texture2d_cubemap(offset: u32, cubemap: u32, mipmap: i32) {
   gl::FramebufferTexture2D(
     gl::FRAMEBUFFER,
     gl::COLOR_ATTACHMENT0,
@@ -277,6 +281,7 @@ pub unsafe fn create_texture(texture: &Texture) -> Result<OpenGLTextureId, Creat
 
   let byte = &texture.data;
   let (internal_format, pixel_format, ptr) = match byte {
+    TexturePixel::RgbU8Null => (gl::RGB as i32, gl::UNSIGNED_BYTE, null()),
     TexturePixel::RgbU8(v) => (gl::RGB as i32, gl::UNSIGNED_BYTE, v.as_ptr() as *const c_void),
     TexturePixel::RgbF32(v) => (gl::RGB32F as i32, gl::FLOAT, v.as_ptr() as *const c_void),
   };
@@ -319,7 +324,26 @@ fn texture_mag_to_gl(mag: &TextureMagnificationType) -> i32 {
   }
 }
 
-pub unsafe fn create_framebuffer(w: u32, h: u32) -> (u32, u32) {
+pub struct OpenGLFramebufferId(pub u32);
+pub struct OpenGLRenderbufferId(pub u32);
+
+pub unsafe fn create_framebuffer_postprocess(w: u32, h: u32) -> (OpenGLFramebufferId, OpenGLRenderbufferId) {
+  let mut fbo = 0;
+  gl::GenFramebuffers(1, &mut fbo);
+
+  let mut rbo = 0;
+  gl::GenRenderbuffers(1, &mut rbo);
+
+  gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
+  gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
+
+  gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH24_STENCIL8, w as i32, h as i32);
+  gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_STENCIL_ATTACHMENT, gl::RENDERBUFFER, rbo);
+
+  return (OpenGLFramebufferId(fbo), OpenGLRenderbufferId(rbo));
+}
+
+pub unsafe fn create_framebuffer_cubemap(w: u32, h: u32) -> (OpenGLFramebufferId, OpenGLRenderbufferId) {
   let mut fbo = 0;
   gl::GenFramebuffers(1, &mut fbo);
 
@@ -332,7 +356,7 @@ pub unsafe fn create_framebuffer(w: u32, h: u32) -> (u32, u32) {
   gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT24, w as i32, h as i32);
   gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, rbo);
 
-  return (fbo, rbo);
+  return (OpenGLFramebufferId(fbo), OpenGLRenderbufferId(rbo));
 }
 
 pub unsafe fn create_cubemap(w: u32, h: u32) -> u32 {
