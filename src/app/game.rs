@@ -17,9 +17,13 @@ use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
 
 use ale_console::{ale_console_input, ale_console_new, Console};
 use ale_opengl::console::ale_opengl_console_render;
-use ale_opengl::postprocess::ale_opengl_postprocess_new;
+use ale_opengl::raw::enable_depth_test;
+use ale_opengl::render_frame::{
+  ale_opengl_render_frame_capture, ale_opengl_render_frame_new, ale_opengl_render_frame_render,
+  OpenGLRenderFrameContext,
+};
 use ale_opengl::text::ale_opengl_text_render;
-use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render};
+use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_shader::{ale_shader_new, Shader};
 use ale_texture::ale_texture_load;
 use alers::data::display_info::DisplayInfo;
@@ -39,6 +43,7 @@ use log::info;
 pub struct Game {
   world: World,
 
+  screen_size: Vector2<i32>,
   inconsolata_font: Font,
 
   console: Console,
@@ -46,6 +51,8 @@ pub struct Game {
   opengl_texture_context: OpenGLTextureContext,
   opengl_mesh_context: OpenGLMeshContext,
   opengl_shader_context: OpenGLShaderContext,
+
+  opengl_main_render_frame_context: OpenGLRenderFrameContext,
 }
 
 impl Game {
@@ -57,10 +64,13 @@ impl Game {
     let opengl_texture_context = ale_opengl_texture_context_new();
     let opengl_mesh_context = ale_opengl_mesh_context_new();
     let opengl_shader_context = ale_opengl_shader_context_new();
-    let opengl_postprocess_context = ale_opengl_postprocess_new(window.get_screen_size());
+    let opengl_main_render_frame_context = ale_opengl_render_frame_new(window.get_screen_size());
+    let screen_size = Vector2::new(800, 600);
 
-    let resource_base_path = "E:\\Codes\\Repos\\alers\\resources";
-    let shader_base_path = "E:\\Codes\\Repos\\alers\\shaders";
+    //let resource_base_path = "E:\\Codes\\Repos\\alers\\resources";
+    //let shader_base_path = "E:\\Codes\\Repos\\alers\\shaders";
+    let resource_base_path = "/home/alether/Codes/Graphics/alers/resources";
+    let shader_base_path = "/home/alether/Codes/Graphics/alers/shaders";
 
     // Load meshes
     // let meshes = resource::fbx_convert::to_static_meshes(
@@ -205,18 +215,21 @@ impl Game {
     );
     render_tasks.render(context).unwrap();
 
+    let console = ale_console_new(100);
+
     // Setup the opengl renderer;
     ale_opengl_blend_enable();
-
-    let console = ale_console_new(100);
+    //ale_opengl_depth_test_enable();
 
     Game {
       world,
       inconsolata_font,
       console,
+      screen_size,
       opengl_texture_context,
       opengl_mesh_context,
       opengl_shader_context,
+      opengl_main_render_frame_context,
     }
   }
 
@@ -234,33 +247,37 @@ impl Game {
     self.world.tick(delta_time);
   }
 
-  pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T) {
-    ale_opengl_clear_render();
+  pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T, context: &mut RenderContext) {
+    let opengl_texture_context = &mut self.opengl_texture_context;
+    let opengl_mesh_context = &self.opengl_mesh_context;
+    let opengl_shader_context = &self.opengl_shader_context;
+    let camera_render_info = self.world.get_camera_render_info();
+    let inconsolata_font = &mut self.inconsolata_font;
+    let console = &self.console;
+    let world = &mut self.world;
+    let screen_size = self.screen_size;
 
-    self.world.render::<T>(render_tasks);
-  }
+    ale_opengl_render_frame_capture(&self.opengl_main_render_frame_context, || {
+      ale_opengl_clear_render();
 
-  pub fn after_render(&mut self) {
-    // ale_opengl_text_render(
-    //   &mut self.opengl_texture_context,
-    //   &self.opengl_mesh_context,
-    //   &self.opengl_shader_context,
-    //   &self.world.get_camera_render_info(),
-    //   &mut self.inconsolata_font,
-    //   24,
-    //   Vector2::new(0.0, 0.0),
-    //   "Abcdefg hijklmnopr qstuvwxyz",
-    //   Some(Vector2::new(120, 50)),
-    // );
+      world.render::<T>(render_tasks);
+      render_tasks.render(&context).unwrap();
 
-    ale_opengl_console_render(
-      &mut self.opengl_texture_context,
-      &self.opengl_mesh_context,
+      ale_opengl_console_render(
+        opengl_texture_context,
+        opengl_mesh_context,
+        opengl_shader_context,
+        &camera_render_info,
+        console,
+        screen_size,
+        inconsolata_font,
+      );
+    });
+
+    ale_opengl_render_frame_render(
+      &self.opengl_main_render_frame_context,
       &self.opengl_shader_context,
-      &self.world.get_camera_render_info(),
-      &mut self.console,
-      &Vector2::new(800, 600),
-      &mut self.inconsolata_font,
-    )
+      &self.opengl_mesh_context,
+    );
   }
 }

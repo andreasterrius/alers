@@ -12,8 +12,8 @@ pub fn ale_opengl_console_render(
   opengl_mesh_context: &OpenGLMeshContext,
   opengl_shader_context: &OpenGLShaderContext,
   camera_render_info: &CameraRenderInfo,
-  console: &mut Console,
-  screen_size: &Vector2<i32>,
+  console: &Console,
+  screen_size: Vector2<i32>,
   font: &mut Font,
 ) {
   if console.has_focus {

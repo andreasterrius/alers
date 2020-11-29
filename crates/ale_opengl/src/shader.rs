@@ -8,19 +8,30 @@ pub struct OpenGLShaderId(pub u32);
 pub struct OpenGLShaderContext {
   pub(crate) shader: HashMap<OpenGLShaderId, OpenGLShader>,
 
+  // Use this to render text
   pub(crate) text_2d_shader: OpenGLShader,
+
+  // Use this to render render frames
+  pub(crate) render_frame_shader: OpenGLShader,
 }
 
 pub fn ale_opengl_shader_context_new() -> OpenGLShaderContext {
-  let flat_2d_shader = ale_opengl_shader_new(&ale_shader_new(
+  let text_2d_shader = ale_opengl_shader_new(&ale_shader_new(
     include_str!("../resources/text_2d.vert").to_owned(),
     include_str!("../resources/text_2d.frag").to_owned(),
   ))
   .unwrap();
 
+  let render_frame_shader = ale_opengl_shader_new(&ale_shader_new(
+    include_str!("../resources/render_frame.vert").to_owned(),
+    include_str!("../resources/render_frame.frag").to_owned(),
+  ))
+  .unwrap();
+
   OpenGLShaderContext {
     shader: HashMap::new(),
-    text_2d_shader: flat_2d_shader,
+    text_2d_shader,
+    render_frame_shader,
   }
 }
 

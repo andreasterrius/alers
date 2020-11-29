@@ -39,10 +39,7 @@ fn main() {
 
     // Initialize render queue & assign render tasks
     let mut render_tasks = SimpleRenderTasks::new();
-    game.render(&mut render_tasks);
-    render_tasks.render(&context).unwrap();
-
-    game.after_render();
+    game.render(&mut render_tasks, &mut context);
 
     window.swap_buffers();
   }

@@ -1,6 +1,6 @@
 pub mod console;
 pub mod mesh;
-pub mod postprocess;
+pub mod render_frame;
 pub mod raw;
 pub mod shader;
 pub mod text;
@@ -17,5 +17,11 @@ pub fn ale_opengl_blend_enable() {
   unsafe {
     raw::enable_blend();
     raw::enable_blend_transparent();
+  }
+}
+
+pub fn ale_opengl_depth_test_enable() {
+  unsafe {
+    raw::enable_depth_test();
   }
 }

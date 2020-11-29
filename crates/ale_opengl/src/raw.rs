@@ -8,7 +8,7 @@ use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
 
 use crate::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureId};
 use ale_mesh::buffer::Buffer;
-use ale_texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
+use ale_texture::{ale_texture_new, Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 
 pub unsafe fn clear_buffer() {
   gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);
@@ -30,6 +30,10 @@ pub unsafe fn set_viewport(x: i32, y: i32, w: u32, h: u32) {
 pub unsafe fn enable_depth_test() {
   gl::Enable(gl::DEPTH_TEST);
   gl::DepthFunc(gl::LEQUAL);
+}
+
+pub unsafe fn disable_depth_test() {
+  gl::Disable(gl::DEPTH_TEST);
 }
 
 pub unsafe fn use_shader(shader: u32) {
@@ -79,10 +83,6 @@ pub unsafe fn matrix4f(shader: u32, name: &str, ptr: *const f32) {
     gl::FALSE,
     ptr,
   );
-}
-
-pub unsafe fn framebuffer_texture2d(gl_texture: u32) {
-  gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, gl_texture, 0);
 }
 
 pub unsafe fn framebuffer_texture2d_cubemap(offset: u32, cubemap: u32, mipmap: i32) {
@@ -258,7 +258,7 @@ pub unsafe fn create_shader(
 }
 
 #[derive(Debug)]
-pub struct CreateTextureError {}
+pub struct CreateTextureError;
 
 pub unsafe fn create_texture(texture: &Texture) -> Result<OpenGLTextureId, CreateTextureError> {
   let mut gl_texture = 0;
@@ -306,6 +306,10 @@ pub unsafe fn create_texture(texture: &Texture) -> Result<OpenGLTextureId, Creat
     ptr,
   );
 
+  if gl::GetError() != gl::NO_ERROR {
+    return Err(CreateTextureError);
+  }
+
   return Ok(OpenGLTextureId(gl_texture));
 }
 
@@ -324,23 +328,44 @@ fn texture_mag_to_gl(mag: &TextureMagnificationType) -> i32 {
   }
 }
 
+#[derive(Clone)]
 pub struct OpenGLFramebufferId(pub u32);
 pub struct OpenGLRenderbufferId(pub u32);
 
-pub unsafe fn create_framebuffer_postprocess(w: u32, h: u32) -> (OpenGLFramebufferId, OpenGLRenderbufferId) {
+#[derive(Debug)]
+pub struct OpenGLFramebufferError;
+
+pub unsafe fn create_framebuffer_texcolor_rbodepth(
+  w: u32,
+  h: u32,
+) -> Result<(OpenGLFramebufferId, OpenGLRenderbufferId, OpenGLTextureId), OpenGLFramebufferError> {
   let mut fbo = 0;
   gl::GenFramebuffers(1, &mut fbo);
+  gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
+
+  // Color attachment
+  let texture = ale_texture_new(TexturePixel::RgbU8Null, w, h, 3);
+  let gl_texture = create_texture(&texture).unwrap().0;
+  gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, gl_texture, 0);
 
   let mut rbo = 0;
   gl::GenRenderbuffers(1, &mut rbo);
-
-  gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
   gl::BindRenderbuffer(gl::RENDERBUFFER, rbo);
-
   gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH24_STENCIL8, w as i32, h as i32);
   gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_STENCIL_ATTACHMENT, gl::RENDERBUFFER, rbo);
 
-  return (OpenGLFramebufferId(fbo), OpenGLRenderbufferId(rbo));
+  let status = gl::CheckFramebufferStatus(gl::FRAMEBUFFER);
+  if status != gl::FRAMEBUFFER_COMPLETE {
+    let error_code = gl::GetError();
+    println!("Generating FBO error: fbo_status: {} gl_error: {}", status, error_code);
+    return Err(OpenGLFramebufferError);
+  }
+
+  return Ok((
+    OpenGLFramebufferId(fbo),
+    OpenGLRenderbufferId(rbo),
+    OpenGLTextureId(gl_texture),
+  ));
 }
 
 pub unsafe fn create_framebuffer_cubemap(w: u32, h: u32) -> (OpenGLFramebufferId, OpenGLRenderbufferId) {

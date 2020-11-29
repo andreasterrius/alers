@@ -1,5 +1,5 @@
 use crate::raw::{create_buffer, CreateBufferError};
-use ale_mesh::{ale_mesh_cube_new, ale_mesh_plane_new, Mesh, MeshId};
+use ale_mesh::{ale_mesh_cube_new, ale_mesh_ndc_plane_new, ale_mesh_plane_new, Mesh, MeshId};
 use std::collections::HashMap;
 
 pub struct OpenGLMeshId(pub u32);

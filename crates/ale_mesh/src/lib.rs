@@ -83,3 +83,16 @@ pub fn ale_mesh_plane_new() -> Mesh {
 
   ale_mesh_new(vertices, None)
 }
+
+pub fn ale_mesh_ndc_plane_new() -> Mesh {
+  let vertices = BufferBuilder::new(vec![
+    -1.0f32, 1.0, 0.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, 1.0, 1.0, -1.0, 1.0, 0.0, 1.0,
+    1.0, 1.0, 1.0,
+  ])
+  .info("vertex", 2)
+  .info("texcoords", 2)
+  .build()
+  .unwrap();
+
+  ale_mesh_new(vertices, None)
+}
