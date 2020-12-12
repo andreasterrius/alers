@@ -14,6 +14,8 @@ pub struct FlyCamera {
 
   camera_speed: f32,
   camera_rotate_speed: f32,
+
+  disable_input: bool,
 }
 
 impl FlyCamera {
@@ -25,6 +27,7 @@ impl FlyCamera {
       move_input: Vector3::zero(),
       camera_speed: 10.0,
       camera_rotate_speed: 100.0,
+      disable_input: false,
     }
   }
 
@@ -55,16 +58,21 @@ impl FlyCamera {
   }
 
   fn camera_input(&mut self, input: &Input) {
+    if self.disable_input {
+      return;
+    }
+
     match input {
       // Handle movement
-      Input::Key(Key::A, _, Action::Press, _) => self.move_input.x += -1.0f32,
-      Input::Key(Key::D, _, Action::Press, _) => self.move_input.x += 1.0f32,
-      Input::Key(Key::W, _, Action::Press, _) => self.move_input.z += 1.0f32,
-      Input::Key(Key::S, _, Action::Press, _) => self.move_input.z += -1.0f32,
-      Input::Key(Key::A, _, Action::Release, _) => self.move_input.x += 1.0f32,
-      Input::Key(Key::D, _, Action::Release, _) => self.move_input.x += -1.0f32,
-      Input::Key(Key::W, _, Action::Release, _) => self.move_input.z += -1.0f32,
-      Input::Key(Key::S, _, Action::Release, _) => self.move_input.z += 1.0f32,
+      Input::Key(Key::A, _, Action::Press, _) => self.move_input.x += -10.0f32,
+      Input::Key(Key::D, _, Action::Press, _) => self.move_input.x += 10.0f32,
+      Input::Key(Key::W, _, Action::Press, _) => self.move_input.z += 10.0f32,
+      Input::Key(Key::S, _, Action::Press, _) => self.move_input.z += -10.0f32,
+      Input::Key(Key::A, _, Action::Release, _) => self.move_input.x += 10.0f32,
+      Input::Key(Key::D, _, Action::Release, _) => self.move_input.x += -10.0f32,
+      Input::Key(Key::W, _, Action::Release, _) => self.move_input.z += -10.0f32,
+      Input::Key(Key::S, _, Action::Release, _) => self.move_input.z += 10.0f32,
+      Input::Key(Key::Z, _, Action::Press, _) => self.disable_input = !self.disable_input,
 
       Input::MouseMotion(x, y) => {
         self.rotate_input.x += *x;

@@ -1,12 +1,12 @@
 [package]
-name = "ale_console"
+name = "ale_opengl_fxaa"
 version = "0.1.0"
-authors = ["Andreas Terrius <andreas.terrius@gmail.com>"]
+authors = ["Andreas Terrius <andreas.appandi@traveloka.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ale_input = { path = "../ale_input" }
+ale_console = { path = "../ale_console" }
 ale_variable = { path = "../ale_variable" }
-ale_math = { path = "../ale_math" }
+ale_opengl = { path = "../ale_opengl" }

@@ -16,12 +16,11 @@ use ale_math::rect::Rect;
 use ale_mesh::{Mesh, MeshId};
 use ale_opengl::mesh::{ale_opengl_mesh_new, OpenGLMesh, OpenGLMeshError};
 use ale_opengl::raw;
-use ale_opengl::shader::{
-  ale_opengl_shader_new, OpenGLShader, OpenGLShaderError, OpenGLShaderVariable, OpenGLShaderVariableType,
-};
+use ale_opengl::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader, OpenGLShaderError};
 use ale_opengl::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureError};
 use ale_shader::{Shader, ShaderId};
 use ale_texture::{Texture, TextureId};
+use ale_variable::Variable;
 
 pub mod cubemap;
 pub mod renderbuffer;
@@ -106,7 +105,7 @@ enum Renderable {
     mesh_id: MeshId,
     texture_ids: Vec<TextureId>,
     transform: Matrix4<f32>,
-    shader_variables: Vec<OpenGLShaderVariable>,
+    shader_variables: Vec<Variable>,
   },
 
   EquirectCubemapProjection {
@@ -118,7 +117,7 @@ enum Renderable {
     original_dimension: Rect,
 
     #[allow(dead_code)]
-    shader_variables: Vec<OpenGLShaderVariable>,
+    shader_variables: Vec<Variable>,
   },
 
   Skybox {
@@ -127,7 +126,7 @@ enum Renderable {
     rendered_cubemap_id: CubemapId,
 
     #[allow(dead_code)]
-    shader_variables: Vec<OpenGLShaderVariable>,
+    shader_variables: Vec<Variable>,
   },
 
   UIElement {
@@ -148,7 +147,7 @@ pub trait RenderTasks {
     mesh_id: MeshId,
     texture_ids: Vec<TextureId>,
     transform: Matrix4<f32>,
-    shader_vars: Vec<OpenGLShaderVariable>,
+    shader_vars: Vec<Variable>,
   );
 
   fn queue_cubemap_projection(
@@ -159,7 +158,7 @@ pub trait RenderTasks {
     cubemap_id: CubemapId,
     projection_dimension: Rect,
     original_dimension: Rect,
-    shader_variables: Vec<OpenGLShaderVariable>,
+    shader_variables: Vec<Variable>,
   );
 
   fn queue_skybox(
@@ -167,7 +166,7 @@ pub trait RenderTasks {
     skybox_shader_id: ShaderId,
     cube_mesh_id: MeshId,
     rendered_cubemap_id: CubemapId,
-    shader_variables: Vec<OpenGLShaderVariable>,
+    shader_variables: Vec<Variable>,
   );
 
   fn with_skybox(&mut self, cubemap_id: CubemapId);
@@ -212,7 +211,7 @@ impl RenderTasks for SimpleRenderTasks {
     mesh_id: MeshId,
     texture_ids: Vec<TextureId>,
     transform: Matrix4<f32>,
-    shader_variables: Vec<OpenGLShaderVariable>,
+    shader_variables: Vec<Variable>,
   ) {
     self.renderables.push(Renderable::StaticMesh {
       shader_id,
@@ -231,7 +230,7 @@ impl RenderTasks for SimpleRenderTasks {
     cubemap_id: CubemapId,
     projection_dimension: Rect,
     original_dimension: Rect,
-    shader_variables: Vec<OpenGLShaderVariable>,
+    shader_variables: Vec<Variable>,
   ) {
     self.renderables.push(Renderable::EquirectCubemapProjection {
       equirect_shader_id,
@@ -249,7 +248,7 @@ impl RenderTasks for SimpleRenderTasks {
     skybox_shader_id: ShaderId,
     cube_mesh_id: MeshId,
     rendered_cubemap_id: CubemapId,
-    shader_variables: Vec<OpenGLShaderVariable>,
+    shader_variables: Vec<Variable>,
   ) {
     self.renderables.push(Renderable::Skybox {
       skybox_shader_id,
@@ -280,7 +279,7 @@ impl RenderTasks for SimpleRenderTasks {
 
           unsafe {
             // Bind shader
-            raw::use_shader(shader_draw_info.id);
+            ale_opengl_shader_activate(shader_draw_info, shader_variables);
 
             if let Some(cubemap_id) = &self.skybox {
               let irradiance_cubemap_draw_info = context
@@ -301,19 +300,6 @@ impl RenderTasks for SimpleRenderTasks {
 
               raw::active_texture((i + 1) as u32);
               raw::bind_texture(texture_draw_info.id.0);
-            }
-
-            // Pass shader specific uniforms
-            for shader_variable in shader_variables {
-              match shader_variable.opengl_shader_variable_type {
-                OpenGLShaderVariableType::F32_1(ff) => raw::uniform1f(shader_draw_info.id, &shader_variable.name, ff),
-                OpenGLShaderVariableType::F32_3(vec) => {
-                  raw::uniform3f(shader_draw_info.id, &shader_variable.name, vec.x, vec.y, vec.z)
-                }
-                OpenGLShaderVariableType::F32_4(vec) => {
-                  raw::uniform4f(shader_draw_info.id, &shader_variable.name, vec.x, vec.y, vec.z, vec.w)
-                }
-              }
             }
 
             let camera_position = camera_render_info.position;

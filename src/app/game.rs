@@ -9,13 +9,10 @@ use ale_math::color::Color;
 use ale_math::rect::Rect;
 use ale_mesh::{ale_mesh_cube_new, ale_mesh_plane_new};
 use ale_opengl::mesh::{ale_opengl_mesh_context_new, OpenGLMeshContext};
-use ale_opengl::shader::{
-  ale_opengl_shader_context_new, ale_opengl_shader_variable_new, OpenGLShaderContext, OpenGLShaderVariable,
-  OpenGLShaderVariableType,
-};
+use ale_opengl::shader::{ale_opengl_shader_context_new, OpenGLShaderContext};
 use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
 
-use ale_console::{ale_console_input, ale_console_new, Console};
+use ale_console::{ale_console_input, ale_console_new, ale_console_variable_register, Console};
 use ale_opengl::console::ale_opengl_console_render;
 use ale_opengl::raw::enable_depth_test;
 use ale_opengl::render_frame::{
@@ -24,8 +21,10 @@ use ale_opengl::render_frame::{
 };
 use ale_opengl::text::ale_opengl_text_render;
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
+use ale_opengl_fxaa::ale_opengl_fxaa_console_variable_register;
 use ale_shader::{ale_shader_new, Shader};
 use ale_texture::ale_texture_load;
+use ale_variable::Variable;
 use alers::data::display_info::DisplayInfo;
 use alers::entity::camera::CameraEntity;
 use alers::entity::pawn::PawnEntity;
@@ -64,7 +63,9 @@ impl Game {
     let opengl_texture_context = ale_opengl_texture_context_new();
     let opengl_mesh_context = ale_opengl_mesh_context_new();
     let opengl_shader_context = ale_opengl_shader_context_new();
+
     let opengl_main_render_frame_context = ale_opengl_render_frame_new(window.get_screen_size());
+
     let screen_size = Vector2::new(800, 600);
 
     //let resource_base_path = "E:\\Codes\\Repos\\alers\\resources";
@@ -140,13 +141,10 @@ impl Game {
         shader_id: pbr_shader.uid(),
         textures: vec![],
         shader_variables: vec![
-          ale_opengl_shader_variable_new(
-            "albedo".to_owned(),
-            OpenGLShaderVariableType::F32_3(Vector3::new(0.7f32, 0.7, 0.7)),
-          ),
-          ale_opengl_shader_variable_new("metallic".to_owned(), OpenGLShaderVariableType::F32_1(0.0f32)),
-          ale_opengl_shader_variable_new("roughness".to_owned(), OpenGLShaderVariableType::F32_1(0.5f32)),
-          ale_opengl_shader_variable_new("ao".to_owned(), OpenGLShaderVariableType::F32_1(0.5f32)),
+          Variable::F32_3("albedo".to_owned(), Vector3::new(0.7f32, 0.7, 0.7)),
+          Variable::F32_1("metallic".to_owned(), 0.0f32),
+          Variable::F32_1("roughness".to_owned(), 0.5f32),
+          Variable::F32_1("ao".to_owned(), 0.5f32),
         ],
       });
       context.static_mesh(&mesh.1).unwrap();
@@ -157,15 +155,6 @@ impl Game {
       shader_id: skybox_shader.uid(),
       rendered_cubemap_id: convoluted_cubemap.uid(),
       irradiance_cubemap_id: convoluted_cubemap.uid(),
-    });
-
-    world.add_ui(UIEntity {
-      ui: UI::Panel(Panel::new(
-        Rect::from_xy(400, 300, 200, 150),
-        Color::from_rgb(1.0, 1.0, 1.0),
-      )),
-      mesh_id: plane_mesh.uid(),
-      shader_id: ui_shader.uid(),
     });
 
     world.set_camera(CameraEntity::FlyCamera(fly_camera));
@@ -215,7 +204,8 @@ impl Game {
     );
     render_tasks.render(context).unwrap();
 
-    let console = ale_console_new(100);
+    let mut console = ale_console_new(100);
+    ale_opengl_fxaa_console_variable_register(&mut console);
 
     // Setup the opengl renderer;
     ale_opengl_blend_enable();
@@ -262,22 +252,26 @@ impl Game {
 
       world.render::<T>(render_tasks);
       render_tasks.render(&context).unwrap();
-
-      ale_opengl_console_render(
-        opengl_texture_context,
-        opengl_mesh_context,
-        opengl_shader_context,
-        &camera_render_info,
-        console,
-        screen_size,
-        inconsolata_font,
-      );
     });
 
     ale_opengl_render_frame_render(
       &self.opengl_main_render_frame_context,
       &self.opengl_shader_context,
       &self.opengl_mesh_context,
+      &vec![
+        Variable::F32_1("contrastThreshold".to_owned(), 0.0312),
+        Variable::F32_1("relativeThreshold".to_owned(), 0.063),
+      ],
+    );
+
+    ale_opengl_console_render(
+      opengl_texture_context,
+      opengl_mesh_context,
+      opengl_shader_context,
+      &camera_render_info,
+      console,
+      screen_size,
+      inconsolata_font,
     );
   }
 }

@@ -38,6 +38,8 @@ name = "ale_console"
 version = "0.1.0"
 dependencies = [
  "ale_input",
+ "ale_math",
+ "ale_variable",
 ]
 
 [[package]]
@@ -90,7 +92,17 @@ dependencies = [
  "ale_mesh",
  "ale_shader",
  "ale_texture",
+ "ale_variable",
  "gl",
+]
+
+[[package]]
+name = "ale_opengl_fxaa"
+version = "0.1.0"
+dependencies = [
+ "ale_console",
+ "ale_opengl",
+ "ale_variable",
 ]
 
 [[package]]
@@ -110,6 +122,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ale_variable"
+version = "0.1.0"
+dependencies = [
+ "ale_math",
+]
+
+[[package]]
 name = "alers"
 version = "0.1.1"
 dependencies = [
@@ -122,8 +141,10 @@ dependencies = [
  "ale_math",
  "ale_mesh",
  "ale_opengl",
+ "ale_opengl_fxaa",
  "ale_shader",
  "ale_texture",
+ "ale_variable",
  "approx 0.3.2",
  "async-std",
  "cgmath 0.17.0",

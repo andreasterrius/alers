@@ -1,7 +1,9 @@
+use crate::raw;
 use crate::raw::{create_shader, CreateShaderError};
 use ale_math::{Vector3, Vector4};
 use ale_shader::{ale_shader_new, Shader};
 use std::collections::HashMap;
+use ale_variable::Variable;
 
 pub struct OpenGLShaderId(pub u32);
 
@@ -23,8 +25,8 @@ pub fn ale_opengl_shader_context_new() -> OpenGLShaderContext {
   .unwrap();
 
   let render_frame_shader = ale_opengl_shader_new(&ale_shader_new(
-    include_str!("../resources/render_frame.vert").to_owned(),
-    include_str!("../resources/render_frame.frag").to_owned(),
+    include_str!("../resources/fxaa.vert").to_owned(),
+    include_str!("../resources/fxaa.frag").to_owned(),
   ))
   .unwrap();
 
@@ -44,27 +46,18 @@ pub fn ale_opengl_shader_new(shader: &Shader) -> Result<OpenGLShader, OpenGLShad
   Ok(OpenGLShader { id: shader })
 }
 
-#[derive(Clone)]
-pub struct OpenGLShaderVariable {
-  pub name: String,
-  pub opengl_shader_variable_type: OpenGLShaderVariableType,
-}
+pub fn ale_opengl_shader_activate(shader: &OpenGLShader, shader_vars: &Vec<Variable>) {
+  unsafe {
+    raw::use_shader(shader.id);
 
-pub fn ale_opengl_shader_variable_new(
-  name: String,
-  opengl_shader_variable_type: OpenGLShaderVariableType,
-) -> OpenGLShaderVariable {
-  OpenGLShaderVariable {
-    name,
-    opengl_shader_variable_type,
+    for shader_variable in shader_vars {
+      match shader_variable {
+        Variable::F32_1(name, ff) => raw::uniform1f(shader.id, &name, *ff),
+        Variable::F32_3(name, vec) => raw::uniform3f(shader.id, &name, vec.x, vec.y, vec.z),
+        Variable::F32_4(name, vec) => raw::uniform4f(shader.id, &name, vec.x, vec.y, vec.z, vec.w),
+      }
+    }
   }
-}
-
-#[derive(Clone)]
-pub enum OpenGLShaderVariableType {
-  F32_1(f32),
-  F32_3(Vector3<f32>),
-  F32_4(Vector4<f32>),
 }
 
 #[derive(Debug)]
