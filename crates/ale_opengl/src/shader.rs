@@ -2,8 +2,8 @@ use crate::raw;
 use crate::raw::{create_shader, CreateShaderError};
 use ale_math::{Vector3, Vector4};
 use ale_shader::{ale_shader_new, Shader};
-use std::collections::HashMap;
 use ale_variable::Variable;
+use std::collections::HashMap;
 
 pub struct OpenGLShaderId(pub u32);
 
@@ -55,6 +55,8 @@ pub fn ale_opengl_shader_activate(shader: &OpenGLShader, shader_vars: &Vec<Varia
         Variable::F32_1(name, ff) => raw::uniform1f(shader.id, &name, *ff),
         Variable::F32_3(name, vec) => raw::uniform3f(shader.id, &name, vec.x, vec.y, vec.z),
         Variable::F32_4(name, vec) => raw::uniform4f(shader.id, &name, vec.x, vec.y, vec.z, vec.w),
+        Variable::Bool(name, ff) => raw::uniform1i(shader.id, &name, if *ff { 1 } else { 0 }),
+        Variable::Void(_) => {}
       }
     }
   }

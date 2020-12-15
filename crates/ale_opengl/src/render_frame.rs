@@ -59,6 +59,6 @@ pub fn ale_opengl_render_frame_render(
       Some(_) => raw::draw_elements(opengl_ndc_mesh_plane.draw_size),
     }
 
-    //bind_framebuffer(0);
+    bind_framebuffer(0);
   }
 }

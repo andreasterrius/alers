@@ -12,7 +12,9 @@ use ale_opengl::mesh::{ale_opengl_mesh_context_new, OpenGLMeshContext};
 use ale_opengl::shader::{ale_opengl_shader_context_new, OpenGLShaderContext};
 use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
 
-use ale_console::{ale_console_input, ale_console_new, ale_console_variable_register, Console};
+use ale_console::{
+  ale_console_input, ale_console_new, ale_console_variable_has_event, ale_console_variable_register, Console,
+};
 use ale_opengl::console::ale_opengl_console_render;
 use ale_opengl::raw::enable_depth_test;
 use ale_opengl::render_frame::{
@@ -21,7 +23,10 @@ use ale_opengl::render_frame::{
 };
 use ale_opengl::text::ale_opengl_text_render;
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
-use ale_opengl_fxaa::ale_opengl_fxaa_console_variable_register;
+use ale_opengl_fxaa::{
+  ale_opengl_fxaa_console_variable_refresh, ale_opengl_fxaa_console_variable_register, ale_opengl_fxaa_new,
+  ale_opengl_fxaa_render, OpenGLFxaaContext,
+};
 use ale_shader::{ale_shader_new, Shader};
 use ale_texture::ale_texture_load;
 use ale_variable::Variable;
@@ -52,6 +57,7 @@ pub struct Game {
   opengl_shader_context: OpenGLShaderContext,
 
   opengl_main_render_frame_context: OpenGLRenderFrameContext,
+  opengl_fxaa_context: OpenGLFxaaContext,
 }
 
 impl Game {
@@ -65,6 +71,7 @@ impl Game {
     let opengl_shader_context = ale_opengl_shader_context_new();
 
     let opengl_main_render_frame_context = ale_opengl_render_frame_new(window.get_screen_size());
+    let opengl_fxaa_context = ale_opengl_fxaa_new();
 
     let screen_size = Vector2::new(800, 600);
 
@@ -205,7 +212,7 @@ impl Game {
     render_tasks.render(context).unwrap();
 
     let mut console = ale_console_new(100);
-    ale_opengl_fxaa_console_variable_register(&mut console);
+    ale_opengl_fxaa_console_variable_register(&opengl_fxaa_context, &mut console);
 
     // Setup the opengl renderer;
     ale_opengl_blend_enable();
@@ -220,6 +227,7 @@ impl Game {
       opengl_mesh_context,
       opengl_shader_context,
       opengl_main_render_frame_context,
+      opengl_fxaa_context,
     }
   }
 
@@ -231,6 +239,10 @@ impl Game {
     for input in &inputs {
       ale_console_input(&mut self.console, input);
     }
+
+    if ale_console_variable_has_event(&self.console) {
+      ale_opengl_fxaa_console_variable_refresh(&mut self.opengl_fxaa_context, &mut self.console);
+    }
   }
 
   pub fn tick(&mut self, delta_time: f32) {
@@ -238,40 +250,26 @@ impl Game {
   }
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T, context: &mut RenderContext) {
-    let opengl_texture_context = &mut self.opengl_texture_context;
-    let opengl_mesh_context = &self.opengl_mesh_context;
-    let opengl_shader_context = &self.opengl_shader_context;
-    let camera_render_info = self.world.get_camera_render_info();
-    let inconsolata_font = &mut self.inconsolata_font;
-    let console = &self.console;
     let world = &mut self.world;
-    let screen_size = self.screen_size;
-
+    // Capture the scene render to a render frame
     ale_opengl_render_frame_capture(&self.opengl_main_render_frame_context, || {
       ale_opengl_clear_render();
-
       world.render::<T>(render_tasks);
       render_tasks.render(&context).unwrap();
     });
 
-    ale_opengl_render_frame_render(
-      &self.opengl_main_render_frame_context,
-      &self.opengl_shader_context,
-      &self.opengl_mesh_context,
-      &vec![
-        Variable::F32_1("contrastThreshold".to_owned(), 0.0312),
-        Variable::F32_1("relativeThreshold".to_owned(), 0.063),
-      ],
-    );
+    // Render the frame with fxaa
+    ale_opengl_fxaa_render(&self.opengl_fxaa_context, &self.opengl_main_render_frame_context);
 
+    // Render the console after postprocessing
     ale_opengl_console_render(
-      opengl_texture_context,
-      opengl_mesh_context,
-      opengl_shader_context,
-      &camera_render_info,
-      console,
-      screen_size,
-      inconsolata_font,
+      &mut self.opengl_texture_context,
+      &self.opengl_mesh_context,
+      &self.opengl_shader_context,
+      &self.world.get_camera_render_info(),
+      &self.console,
+      self.screen_size,
+      &mut self.inconsolata_font,
     );
   }
 }
