@@ -6,7 +6,14 @@ in vec2 TexCoords;
 uniform sampler2D textureSampler;
 uniform float fxaa_contrast_threshold;
 uniform float fxaa_relative_threshold;
+uniform float fxaa_subpixel_blending;
 uniform bool fxaa_is_enabled;
+
+#define EDGE_STEP_COUNT 10
+#define EDGE_STEPS 1, 1.5, 2, 2, 2, 2, 2, 2, 2, 4
+#define EDGE_GUESS 8
+
+const float edgeSteps[EDGE_STEP_COUNT] = float[]( EDGE_STEPS );
 
 struct PixelData {
     float m, n, e, s, w;
@@ -17,6 +24,7 @@ struct PixelData {
 struct EdgeData {
     bool isHorizontal;
     float pixelStep;
+    float oppositeLuminance, gradient;
 };
 
 vec3 Saturate(vec3 color){
@@ -56,6 +64,11 @@ EdgeData DetermineEdge(PixelData p, vec2 texelSize){
     e.pixelStep = e.isHorizontal ? texelSize.y : texelSize.x;
     if (pGradient < nGradient) {
         e.pixelStep = -e.pixelStep;
+        e.oppositeLuminance = nLuminance;
+        e.gradient = nGradient;
+    } else {
+        e.oppositeLuminance = pLuminance;
+        e.gradient = pGradient;
     }
     
     return e;
@@ -68,7 +81,74 @@ float DeterminePixelBlendFactor(PixelData p){
     f = abs(f - p.m);
     f = SaturateFloat(f / p.contrast);
     float blendFactor = smoothstep(0, 1, f);
-    return blendFactor * blendFactor;
+    return blendFactor * blendFactor * fxaa_subpixel_blending;
+}
+
+float DetermineEdgeBlendFactor(PixelData p, EdgeData e, vec2 uv, vec2 texelSize){
+    vec2 uvEdge = uv;
+    vec2 edgeStep;
+    if(e.isHorizontal){
+        uvEdge.y += e.pixelStep * 0.5;
+        edgeStep = vec2(texelSize.x, 0);
+    }
+    else {
+        uvEdge.x += e.pixelStep * 0.5;
+        edgeStep = vec2(0, texelSize.y);
+    }
+
+    float edgeLuminance = (p.m + e.oppositeLuminance) * 0.5;
+    float gradientThreshold = e.gradient * 0.25;
+    vec2 puv = uvEdge + edgeStep * edgeStep[0];
+    float pLuminanceDelta = SampleLuminance(puv, 0, 0) - edgeLuminance;
+    bool pAtEnd = abs(pLuminanceDelta) >= gradientThreshold;
+
+    for (int i = 1; i < EDGE_STEP_COUNT && !pAtEnd; i++) {
+        puv += edgeStep * edgeSteps[i];
+        pLuminanceDelta = SampleLuminance(puv, 0, 0) - edgeLuminance;
+        pAtEnd = abs(pLuminanceDelta) >= gradientThreshold;
+    }
+    if (!pAtEnd) {
+        puv += edgeStep * EDGE_GUESS;
+    }
+
+    vec2 nuv = uvEdge - edgeStep * edgeStep[0];
+    float nLuminanceDelta = SampleLuminance(nuv, 0, 0) - edgeLuminance;
+    bool nAtEnd = abs(nLuminanceDelta) >= gradientThreshold;
+
+    for (int i = 1; i < EDGE_STEP_COUNT && !nAtEnd; i++) {
+        nuv -= edgeStep * edgeSteps[i];
+        nLuminanceDelta = SampleLuminance(nuv, 0, 0) - edgeLuminance;
+        nAtEnd = abs(nLuminanceDelta) >= gradientThreshold;
+    }
+    if (!nAtEnd) {
+        nuv -= edgeStep * EDGE_GUESS;
+    }
+
+    float pDistance, nDistance;
+    if (e.isHorizontal) {
+        pDistance = puv.x - uv.x;
+        nDistance = uv.x - nuv.x;
+    }
+    else {
+        pDistance = puv.y - uv.y;
+        nDistance = uv.y - nuv.y;
+    }
+
+    float shortestDistance;
+    bool deltaSign;
+    if (pDistance <= nDistance) {
+        shortestDistance = pDistance;
+        deltaSign = pLuminanceDelta >= 0;
+    }
+    else {
+        shortestDistance = nDistance;
+        deltaSign = nLuminanceDelta >= 0;
+    }
+
+    if (deltaSign == (p.m - edgeLuminance >= 0)) {
+        return 0;
+    }
+    return 0.5 - shortestDistance / (pDistance + nDistance);
 }
 
 PixelData SampleLuminanceNeighborhood(vec2 uv){
@@ -100,14 +180,17 @@ vec3 FXAA(vec2 uv, vec2 texelSize){
     PixelData p = SampleLuminanceNeighborhood(uv);
 
     if(ShouldSkipPixel(p)){
-        return textureLod(textureSampler, uv, 0.0).rgb;
+       return textureLod(textureSampler, uv, 0.0).rgb;
     }
 
     float pixelBlend = DeterminePixelBlendFactor(p);
     EdgeData e = DetermineEdge(p, texelSize);
 
-    if (e.isHorizontal) { uv.y += e.pixelStep * pixelBlend; }
-    else { uv.x += e.pixelStep * pixelBlend; }
+    float edgeBlend = DetermineEdgeBlendFactor(p, e, uv, texelSize);
+    float finalBlend = max(pixelBlend, edgeBlend);
+
+    if (e.isHorizontal) { uv.y += e.pixelStep * finalBlend; }
+    else { uv.x += e.pixelStep * finalBlend; }
 
     return textureLod(textureSampler, uv, 0.0).rgb;
     //return e.pixelStep < 0 ? vec3(1, 0, 0) : vec3(1);
