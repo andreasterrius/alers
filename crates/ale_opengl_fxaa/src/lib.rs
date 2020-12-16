@@ -4,13 +4,14 @@ use ale_console::{
 use ale_opengl::ale_opengl_clear_render;
 use ale_opengl::mesh::{ale_opengl_mesh_context_new, OpenGLMeshContext};
 use ale_opengl::render_frame::{ale_opengl_render_frame_render, OpenGLRenderFrameContext};
-use ale_opengl::shader::{ale_opengl_shader_context_new, OpenGLShaderContext};
+use ale_opengl::shader::{ale_opengl_shader_context_new, ale_opengl_shader_new, OpenGLShader, OpenGLShaderContext};
+use ale_shader::ale_shader_new;
 use ale_variable::{to_variable, ToVariable, Variable};
 use std::collections::hash_map::Entry;
 
 pub struct OpenGLFxaaContext {
-  pub(crate) opengl_mesh_context: OpenGLMeshContext,
-  pub(crate) opengl_shader_context: OpenGLShaderContext,
+  // The main fxaa shader
+  pub(crate) fxaa_shader: OpenGLShader,
 
   // Variables for shaders
   pub(crate) fxaa_relative_threshold: f32,
@@ -20,12 +21,14 @@ pub struct OpenGLFxaaContext {
 }
 
 pub fn ale_opengl_fxaa_new() -> OpenGLFxaaContext {
-  let opengl_mesh_context = ale_opengl_mesh_context_new();
-  let opengl_shader_context = ale_opengl_shader_context_new();
+  let fxaa_shader = ale_opengl_shader_new(&ale_shader_new(
+    include_str!("../resources/fxaa.vert").to_owned(),
+    include_str!("../resources/fxaa.frag").to_owned(),
+  ))
+  .unwrap();
 
   OpenGLFxaaContext {
-    opengl_mesh_context,
-    opengl_shader_context,
+    fxaa_shader,
     fxaa_relative_threshold: 0.0312,
     fxaa_contrast_threshold: 0.063,
     fxaa_subpixel_blending: 1.0,
@@ -58,8 +61,7 @@ pub fn ale_opengl_fxaa_render(
   ale_opengl_clear_render();
   ale_opengl_render_frame_render(
     &opengl_render_frame_context,
-    &opengl_fxaa_context.opengl_shader_context,
-    &opengl_fxaa_context.opengl_mesh_context,
+    &opengl_fxaa_context.fxaa_shader,
     &vec![
       to_variable!(opengl_fxaa_context.fxaa_contrast_threshold),
       to_variable!(opengl_fxaa_context.fxaa_relative_threshold),

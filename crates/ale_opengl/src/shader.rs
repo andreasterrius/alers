@@ -12,9 +12,6 @@ pub struct OpenGLShaderContext {
 
   // Use this to render text
   pub(crate) text_2d_shader: OpenGLShader,
-
-  // Use this to render render frames
-  pub(crate) render_frame_shader: OpenGLShader,
 }
 
 pub fn ale_opengl_shader_context_new() -> OpenGLShaderContext {
@@ -24,16 +21,9 @@ pub fn ale_opengl_shader_context_new() -> OpenGLShaderContext {
   ))
   .unwrap();
 
-  let render_frame_shader = ale_opengl_shader_new(&ale_shader_new(
-    include_str!("../resources/fxaa.vert").to_owned(),
-    include_str!("../resources/fxaa.frag").to_owned(),
-  ))
-  .unwrap();
-
   OpenGLShaderContext {
     shader: HashMap::new(),
     text_2d_shader,
-    render_frame_shader,
   }
 }
 

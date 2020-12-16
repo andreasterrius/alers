@@ -93,6 +93,7 @@ version = "0.1.0"
 dependencies = [
  "ale_console",
  "ale_opengl",
+ "ale_shader",
  "ale_variable",
 ]
 
