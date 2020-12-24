@@ -1,7 +1,4 @@
-use crate::{
-  ale_camera_new, ale_camera_render_info_calculate, ale_camera_set_rotation, ale_camera_translate, Camera,
-  CameraRenderInfo,
-};
+use crate::{Camera, CameraRenderInfo};
 use ale_input::{Action, Input, Key};
 use ale_math::prelude::*;
 use ale_math::{Deg, Quaternion, Vector2, Vector3, Zero};
@@ -21,67 +18,67 @@ pub struct FlyCamera {
   disable_input: bool,
 }
 
-pub fn ale_fly_camera_new(position: Vector3<f32>, viewport_size: Vector2<u32>, fov: f32) -> FlyCamera {
-  FlyCamera {
-    camera: ale_camera_new(position, viewport_size, fov),
-    delta_rotate_input: Vector2::zero(),
-    rotate_input: Vector2::zero(),
-    move_input: Vector3::zero(),
-    camera_speed: 10.0,
-    camera_rotate_speed: 100.0,
-    disable_input: false,
-  }
-}
-
-fn intern_fly_camera_input(fly_camera: &mut FlyCamera, input: &Input) {
-  if fly_camera.disable_input {
-    return;
-  }
-
-  match input {
-    // Handle movement
-    Input::Key(Key::A, _, Action::Press, _) => fly_camera.move_input.x += -10.0f32,
-    Input::Key(Key::D, _, Action::Press, _) => fly_camera.move_input.x += 10.0f32,
-    Input::Key(Key::W, _, Action::Press, _) => fly_camera.move_input.z += 10.0f32,
-    Input::Key(Key::S, _, Action::Press, _) => fly_camera.move_input.z += -10.0f32,
-    Input::Key(Key::A, _, Action::Release, _) => fly_camera.move_input.x += 10.0f32,
-    Input::Key(Key::D, _, Action::Release, _) => fly_camera.move_input.x += -10.0f32,
-    Input::Key(Key::W, _, Action::Release, _) => fly_camera.move_input.z += -10.0f32,
-    Input::Key(Key::S, _, Action::Release, _) => fly_camera.move_input.z += 10.0f32,
-    Input::Key(Key::Z, _, Action::Press, _) => fly_camera.disable_input = !fly_camera.disable_input,
-
-    Input::MouseMotion(x, y) => {
-      fly_camera.rotate_input.x += *x;
-      fly_camera.rotate_input.y += *y;
-      fly_camera.delta_rotate_input.x = *x;
-      fly_camera.delta_rotate_input.y = *y;
+impl FlyCamera {
+  pub fn new(position: Vector3<f32>, viewport_size: Vector2<u32>, fov: f32) -> FlyCamera {
+    FlyCamera {
+      camera: Camera::new(position, viewport_size, fov),
+      delta_rotate_input: Vector2::zero(),
+      rotate_input: Vector2::zero(),
+      move_input: Vector3::zero(),
+      camera_speed: 10.0,
+      camera_rotate_speed: 100.0,
+      disable_input: false,
     }
-    _ => {}
-  }
-}
-
-pub fn ale_fly_camera_inputs(fly_camera: &mut FlyCamera, inputs: &Vec<Input>) {
-  fly_camera.delta_rotate_input = Vector2::zero();
-  for input in inputs {
-    intern_fly_camera_input(fly_camera, &input);
   }
 
-  if !fly_camera.delta_rotate_input.is_zero() {
-    ale_camera_set_rotation(
-      &mut fly_camera.camera,
-      Quaternion::from_angle_y(-Deg(fly_camera.rotate_input.x * fly_camera.camera_rotate_speed))
-        * Quaternion::from_angle_x(-Deg(fly_camera.rotate_input.y * fly_camera.camera_rotate_speed)),
-    );
+  pub fn inputs(&mut self, inputs: &Vec<Input>) {
+    self.delta_rotate_input = Vector2::zero();
+    for input in inputs {
+      self.handle_input(&input);
+    }
+
+    if !self.delta_rotate_input.is_zero() {
+      self.camera.set_rotation(
+        Quaternion::from_angle_y(-Deg(self.rotate_input.x * self.camera_rotate_speed))
+          * Quaternion::from_angle_x(-Deg(self.rotate_input.y * self.camera_rotate_speed)),
+      );
+    }
   }
-}
 
-pub fn ale_fly_camera_tick(fly_camera: &mut FlyCamera, delta_time: f64) {
-  ale_camera_translate(
-    &mut fly_camera.camera,
-    fly_camera.move_input * fly_camera.camera_speed * (delta_time as f32),
-  );
-}
+  pub fn tick(&mut self, delta_time: f64) {
+    self
+      .camera
+      .translate(self.move_input * self.camera_speed * (delta_time as f32));
+  }
 
-pub fn ale_fly_camera_render_info_calculate(fly_camera: &mut FlyCamera) -> CameraRenderInfo {
-  ale_camera_render_info_calculate(&mut fly_camera.camera)
+  pub fn calculate_render_info(&mut self) -> CameraRenderInfo {
+    self.calculate_render_info()
+  }
+
+  fn handle_input(&mut self, input: &Input) {
+    if self.disable_input {
+      return;
+    }
+
+    match input {
+      // Handle movement
+      Input::Key(Key::A, _, Action::Press, _) => self.move_input.x += -10.0f32,
+      Input::Key(Key::D, _, Action::Press, _) => self.move_input.x += 10.0f32,
+      Input::Key(Key::W, _, Action::Press, _) => self.move_input.z += 10.0f32,
+      Input::Key(Key::S, _, Action::Press, _) => self.move_input.z += -10.0f32,
+      Input::Key(Key::A, _, Action::Release, _) => self.move_input.x += 10.0f32,
+      Input::Key(Key::D, _, Action::Release, _) => self.move_input.x += -10.0f32,
+      Input::Key(Key::W, _, Action::Release, _) => self.move_input.z += -10.0f32,
+      Input::Key(Key::S, _, Action::Release, _) => self.move_input.z += 10.0f32,
+      Input::Key(Key::Z, _, Action::Press, _) => self.disable_input = !self.disable_input,
+
+      Input::MouseMotion(x, y) => {
+        self.rotate_input.x += *x;
+        self.rotate_input.y += *y;
+        self.delta_rotate_input.x = *x;
+        self.delta_rotate_input.y = *y;
+      }
+      _ => {}
+    }
+  }
 }

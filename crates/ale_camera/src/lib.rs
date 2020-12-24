@@ -17,104 +17,102 @@ pub struct Camera {
   view_mat: Option<Matrix4<f32>>,
 }
 
-pub fn ale_camera_new(position: Vector3<f32>, viewport_size: Vector2<u32>, fov: f32) -> Camera {
-  let aspect_ratio = viewport_size.x as f32 / viewport_size.y as f32;
+impl Camera {
+  pub fn new(position: Vector3<f32>, viewport_size: Vector2<u32>, fov: f32) -> Camera {
+    let aspect_ratio = viewport_size.x as f32 / viewport_size.y as f32;
 
-  Camera {
-    transform: Transform::from_position_rotation(position, Quaternion::one()),
-    fov,
-    aspect_ratio,
-    viewport_size,
-    projection_mat: None,
-    orthographic_mat: None,
-    view_mat: None,
-  }
-}
-
-pub fn ale_camera_translate(camera: &mut Camera, translation: Vector3<f32>) {
-  if translation.is_zero() {
-    return;
-  }
-
-  let forward_dir = ale_camera_forward_dir_get(camera);
-  let right_dir = ale_camera_right_dir_get(camera);
-  camera
-    .transform
-    .translate(forward_dir * translation.z + right_dir * translation.x);
-  camera.view_mat = None;
-}
-
-pub fn ale_camera_set_rotation(camera: &mut Camera, rotation: Quaternion<f32>) {
-  if rotation.is_zero() {
-    return;
-  }
-
-  camera.transform.set_rotation(rotation);
-  camera.view_mat = None;
-}
-
-pub fn ale_camera_forward_dir_get(camera: &Camera) -> Vector3<f32> {
-  camera
-    .transform
-    .lcl_rotation
-    .rotate_vector(Vector3::unit_z())
-    .normalize()
-}
-
-pub fn ale_camera_right_dir_get(camera: &Camera) -> Vector3<f32> {
-  return ale_camera_forward_dir_get(camera).cross(Vector3::unit_y()).normalize();
-}
-
-fn ale_camera_recalculate_matrices(camera: &mut Camera) {
-  camera.orthographic_mat = None;
-  camera.projection_mat = None;
-  camera.view_mat = None;
-}
-
-fn ale_camera_view_mat_calculate(camera: &mut Camera) -> Matrix4<f32> {
-  match camera.view_mat {
-    None => {
-      camera.view_mat = Some(
-        Matrix4::from(camera.transform.lcl_rotation.invert()) * Matrix4::from_translation(camera.transform.position),
-      );
+    Camera {
+      transform: Transform::from_position_rotation(position, Quaternion::one()),
+      fov,
+      aspect_ratio,
+      viewport_size,
+      projection_mat: None,
+      orthographic_mat: None,
+      view_mat: None,
     }
-    Some(_) => (),
   }
 
-  camera.view_mat.unwrap()
-}
-
-fn ale_camera_projection_mat_calculate(camera: &mut Camera) -> Matrix4<f32> {
-  match camera.projection_mat {
-    None => camera.projection_mat = Some(perspective(Deg(camera.fov), camera.aspect_ratio, 0.1f32, 100.0f32)),
-    Some(_) => (),
-  }
-  camera.projection_mat.unwrap()
-}
-
-fn ale_camera_orthographic_mat_calculate(camera: &mut Camera) -> Matrix4<f32> {
-  match camera.orthographic_mat {
-    None => {
-      camera.orthographic_mat = Some(ortho(
-        0.0f32,
-        camera.viewport_size.x as f32,
-        camera.viewport_size.y as f32,
-        0.0,
-        -1.0,
-        1.0f32,
-      ))
+  pub fn translate(&mut self, translation: Vector3<f32>) {
+    if translation.is_zero() {
+      return;
     }
-    Some(_) => (),
-  }
-  camera.orthographic_mat.unwrap()
-}
 
-pub fn ale_camera_render_info_calculate(camera: &mut Camera) -> CameraRenderInfo {
-  CameraRenderInfo {
-    view: ale_camera_view_mat_calculate(camera),
-    projection: ale_camera_projection_mat_calculate(camera),
-    orthographic: ale_camera_orthographic_mat_calculate(camera),
-    position: camera.transform.position,
+    let forward_dir = self.get_forward_dir();
+    let right_dir = self.get_right_dir();
+    self
+      .transform
+      .translate(forward_dir * translation.z + right_dir * translation.x);
+    self.view_mat = None;
+  }
+
+  pub fn set_rotation(&mut self, rotation: Quaternion<f32>) {
+    if rotation.is_zero() {
+      return;
+    }
+
+    self.transform.set_rotation(rotation);
+    self.view_mat = None;
+  }
+
+  pub fn get_forward_dir(&mut self) -> Vector3<f32> {
+    self.transform.lcl_rotation.rotate_vector(Vector3::unit_z()).normalize()
+  }
+
+  pub fn get_right_dir(&mut self) -> Vector3<f32> {
+    return self.get_forward_dir().cross(Vector3::unit_y()).normalize();
+  }
+
+  fn recalculate_matrices(&mut self) {
+    self.orthographic_mat = None;
+    self.projection_mat = None;
+    self.view_mat = None;
+  }
+
+  fn calculate_view_mat(&mut self) -> Matrix4<f32> {
+    match self.view_mat {
+      None => {
+        self.view_mat = Some(
+          Matrix4::from(self.transform.lcl_rotation.invert()) * Matrix4::from_translation(self.transform.position),
+        );
+      }
+      Some(_) => (),
+    }
+
+    self.view_mat.unwrap()
+  }
+
+  fn calculate_projection_mat(&mut self) -> Matrix4<f32> {
+    match self.projection_mat {
+      None => self.projection_mat = Some(perspective(Deg(self.fov), self.aspect_ratio, 0.1f32, 100.0f32)),
+      Some(_) => (),
+    }
+    self.projection_mat.unwrap()
+  }
+
+  fn calculate_orthographic_mat(&mut self) -> Matrix4<f32> {
+    match self.orthographic_mat {
+      None => {
+        self.orthographic_mat = Some(ortho(
+          0.0f32,
+          self.viewport_size.x as f32,
+          self.viewport_size.y as f32,
+          0.0,
+          -1.0,
+          1.0f32,
+        ))
+      }
+      Some(_) => (),
+    }
+    self.orthographic_mat.unwrap()
+  }
+
+  pub fn calculate_render_info(&mut self) -> CameraRenderInfo {
+    CameraRenderInfo {
+      view: self.calculate_view_mat(),
+      projection: self.calculate_projection_mat(),
+      orthographic: self.calculate_orthographic_mat(),
+      position: self.transform.position,
+    }
   }
 }
 

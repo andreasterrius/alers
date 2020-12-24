@@ -53,7 +53,7 @@ impl Window {
     glfw_window.set_key_polling(true);
     glfw_window.set_cursor_pos_polling(true);
     glfw_window.set_framebuffer_size_polling(true);
-    //glfw_window.set_cursor_mode(CursorMode::Disabled);
+    //glfw_self.set_cursor_mode(CursorMode::Disabled);
 
     Window {
       glfw_window,
@@ -63,19 +63,19 @@ impl Window {
     }
   }
 
-  pub fn should_close(window: &Window) -> bool {
-    window.glfw_window.should_close()
+  pub fn should_close(&mut self) -> bool {
+    self.glfw_window.should_close()
   }
 
-  pub fn swap_buffers(window: &mut Window) {
-    window.glfw_window.swap_buffers();
+  pub fn swap_buffers(&mut self) {
+    self.glfw_window.swap_buffers();
   }
 
-  pub fn get_inputs(window: &mut Window) -> Vec<Input> {
+  pub fn get_inputs(&mut self) -> Vec<Input> {
     let mut inputs = vec![];
-    for (_, event) in glfw::flush_messages(&window.glfw_events) {
+    for (_, event) in glfw::flush_messages(&self.glfw_events) {
       match event {
-        glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => window.glfw_window.set_should_close(true),
+        glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => self.glfw_window.set_should_close(true),
         glfw::WindowEvent::Key(key, scancode, action, modifier) => {
           let input = Input::Key(
             translate_key(key),
@@ -85,17 +85,17 @@ impl Window {
           );
           inputs.push(input);
         }
-        glfw::WindowEvent::CursorPos(x, y) => inputs.push(match window.mouse_position {
+        glfw::WindowEvent::CursorPos(x, y) => inputs.push(match self.mouse_position {
           None => {
-            window.mouse_position = Some((x, y));
+            self.mouse_position = Some((x, y));
             Input::MouseMotion(0.0f32, 0.0f32)
           }
           Some(mouse_position) => {
             let result = Input::MouseMotion(
-              (x - mouse_position.0) as f32 / window.window_size.x as f32,
-              (y - mouse_position.1) as f32 / window.window_size.y as f32,
+              (x - mouse_position.0) as f32 / self.window_size.x as f32,
+              (y - mouse_position.1) as f32 / self.window_size.y as f32,
             );
-            window.mouse_position = Some((x, y));
+            self.mouse_position = Some((x, y));
             result
           }
         }),
@@ -108,11 +108,11 @@ impl Window {
     inputs
   }
 
-  pub fn get_screen_size(window: &Window) -> Vector2<u32> {
-    window.window_size
+  pub fn get_screen_size(&self) -> Vector2<u32> {
+    self.window_size
   }
 
-  pub fn get_proc_address(window: &mut Window, procname: &str) -> GLProc {
-    window.glfw_window.get_proc_address(procname)
+  pub fn get_proc_address(&mut self, procname: &str) -> GLProc {
+    self.glfw_window.get_proc_address(procname)
   }
 }
