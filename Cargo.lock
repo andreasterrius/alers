@@ -19,6 +19,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d2e7343e7fc9de883d1b0341e0b13970f764c14101234857d2ddafa1cb1cac2"
 
 [[package]]
+name = "ale_app"
+version = "0.1.0"
+dependencies = [
+ "ale_glfw",
+ "ale_input",
+ "ale_math",
+ "ale_opengl",
+]
+
+[[package]]
 name = "ale_autoid"
 version = "0.1.0"
 dependencies = [
@@ -49,6 +59,15 @@ dependencies = [
  "ale_math",
  "ale_texture",
  "rusttype 0.9.2",
+]
+
+[[package]]
+name = "ale_glfw"
+version = "0.1.0"
+dependencies = [
+ "ale_input",
+ "ale_math",
+ "glfw",
 ]
 
 [[package]]
@@ -133,10 +152,12 @@ dependencies = [
 name = "alers"
 version = "0.1.1"
 dependencies = [
+ "ale_app",
  "ale_autoid",
  "ale_camera",
  "ale_console",
  "ale_font",
+ "ale_glfw",
  "ale_gltf",
  "ale_input",
  "ale_math",
@@ -150,7 +171,6 @@ dependencies = [
  "async-std",
  "cgmath 0.17.0",
  "fbxcel-dom",
- "glfw",
  "gltf",
  "log 0.4.8",
  "rand 0.3.23",
@@ -399,9 +419,9 @@ dependencies = [
 
 [[package]]
 name = "cmake"
-version = "0.1.42"
+version = "0.1.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81fb25b677f8bf1eb325017cb6bb8452f87969db0fedb4f757b297bee78a7c62"
+checksum = "eb6210b637171dfba4cda12e579ac6dc73f5165ad56133e5d72ef3131f320855"
 dependencies = [
  "cc",
 ]
@@ -691,23 +711,23 @@ dependencies = [
 
 [[package]]
 name = "glfw"
-version = "0.34.0"
-source = "git+https://github.com/bjz/glfw-rs.git#2504446a5975120871993c8ee2b0c1a0376a389e"
+version = "0.41.0"
+source = "git+https://github.com/bjz/glfw-rs.git#563785d41bd44517df94576cd21a3404913103f3"
 dependencies = [
  "bitflags",
  "glfw-sys",
- "libc",
  "log 0.4.8",
  "objc",
  "raw-window-handle",
  "semver",
+ "winapi 0.3.8",
 ]
 
 [[package]]
 name = "glfw-sys"
-version = "3.3.0"
+version = "3.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f18d2cf180dd18d06142b26758d32aeb6c71ba0a37c7f3ddafee22b8a3247cd3"
+checksum = "0b567b13b593ec58ea912b2658ee6230ffe20a069fa5b771800acc69bb3a157e"
 dependencies = [
  "cmake",
 ]
@@ -1327,9 +1347,9 @@ dependencies = [
 
 [[package]]
 name = "raw-window-handle"
-version = "0.3.1"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9db80d08d3ed847ce4fb3def46de0af4bfb6155bd09bd6eaf28b5ac72541c1f1"
+checksum = "0a441a7a6c80ad6473bd4b74ec1c9a4c951794285bf941c2126f607c72e48211"
 dependencies = [
  "libc",
 ]

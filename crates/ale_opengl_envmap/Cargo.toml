@@ -1,0 +1,15 @@
+[package]
+name = "ale_opengl_envmap"
+version = "0.1.0"
+authors = ["Andreas Terrius <andreas.terrius@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ale_opengl = { path = "../../crates/ale_opengl" }
+ale_math = { path = "../../crates/ale_math" }
+ale_mesh = { path = "../../crates/ale_mesh" }
+ale_shader = { path = "../../crates/ale_shader" }
+ale_texture = { path = "../../crates/ale_texture" }
+ale_camera = { path = "../../crates/ale_camera" }

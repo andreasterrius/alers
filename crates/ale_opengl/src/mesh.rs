@@ -1,3 +1,4 @@
+use crate::raw;
 use crate::raw::{create_buffer, CreateBufferError};
 use ale_mesh::{ale_mesh_cube_new, ale_mesh_ndc_plane_new, ale_mesh_plane_new, Mesh, MeshId};
 use std::collections::HashMap;
@@ -7,8 +8,8 @@ pub struct OpenGLMeshId(pub u32);
 pub struct OpenGLMeshContext {
   pub(crate) mesh: HashMap<MeshId, OpenGLMesh>,
 
-  pub plane_opengl_mesh: OpenGLMesh,
-  pub cube_opengl_mesh: OpenGLMesh,
+  pub(crate) plane_opengl_mesh: OpenGLMesh,
+  pub(crate) cube_opengl_mesh: OpenGLMesh,
 }
 
 pub fn ale_opengl_mesh_context_new() -> OpenGLMeshContext {
@@ -17,6 +18,16 @@ pub fn ale_opengl_mesh_context_new() -> OpenGLMeshContext {
     plane_opengl_mesh: ale_opengl_mesh_new(&ale_mesh_plane_new()).unwrap(),
     cube_opengl_mesh: ale_opengl_mesh_new(&ale_mesh_cube_new()).unwrap(),
   }
+}
+
+pub fn ale_opengl_mesh_context_register<'a>(
+  opengl_mesh_context: &'a mut OpenGLMeshContext,
+  mesh: &Mesh,
+) -> &'a OpenGLMesh {
+  opengl_mesh_context
+    .mesh
+    .entry(mesh.uid())
+    .or_insert(ale_opengl_mesh_new(mesh).unwrap())
 }
 
 pub struct OpenGLMesh {
@@ -34,6 +45,16 @@ pub fn ale_opengl_mesh_new(mesh: &Mesh) -> Result<OpenGLMesh, OpenGLMeshError> {
     ebo,
     draw_size,
   })
+}
+
+pub fn ale_opengl_mesh_render(opengl_mesh: &OpenGLMesh) {
+  unsafe {
+    raw::bind_vao(opengl_mesh.vao);
+    match opengl_mesh.ebo {
+      None => raw::draw_arrays(0, opengl_mesh.draw_size),
+      Some(_) => raw::draw_elements(opengl_mesh.draw_size),
+    }
+  }
 }
 
 #[derive(Debug)]

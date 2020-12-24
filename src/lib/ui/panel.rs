@@ -1,9 +1,8 @@
-
 use crate::ui::{UIRenderInfo, UI};
-use std::rc::Rc;
-use ale_math::rect::Rect;
-use ale_math::color::Color;
 use ale_input::Input;
+use ale_math::color::Color;
+use ale_math::rect::Rect;
+use std::rc::Rc;
 
 pub struct Panel {
   rect: Rect,

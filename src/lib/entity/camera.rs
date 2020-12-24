@@ -1,4 +1,4 @@
-use ale_camera::flycamera::FlyCamera;
+use ale_camera::fly_camera::FlyCamera;
 use ale_camera::{Camera, CameraRenderInfo};
 use ale_input::Input;
 

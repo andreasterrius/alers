@@ -1,7 +1,7 @@
 use crate::ui::UIRenderInfo;
-use ale_math::rect::Rect;
-use ale_math::color::Color;
 use ale_input::Input;
+use ale_math::color::Color;
+use ale_math::rect::Rect;
 
 pub struct Button {
   rect: Rect,

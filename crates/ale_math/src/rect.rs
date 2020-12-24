@@ -1,3 +1,5 @@
+use crate::Vector2;
+
 #[derive(Debug, Clone)]
 pub enum OriginPoint {
   UpperLeft,
@@ -33,6 +35,16 @@ impl Rect {
       y,
       width,
       height,
+      origin_point: OriginPoint::UpperLeft,
+    }
+  }
+
+  pub fn from_vec(xy: Vector2<u32>) -> Rect {
+    Rect {
+      x: xy.x as i32,
+      y: xy.y as i32,
+      width: 0,
+      height: 0,
       origin_point: OriginPoint::UpperLeft,
     }
   }

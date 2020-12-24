@@ -1,0 +1,24 @@
+[package]
+name = "complete"
+version = "0.1.0"
+authors = ["Andreas Terrius <andreas.terrius@gmail.com>"]
+edition = "2018"
+
+
+[dependencies]
+ale_gltf = { path = "../../crates/ale_gltf" }
+ale_mesh = { path = "../../crates/ale_mesh" }
+ale_math = { path = "../../crates/ale_math" }
+ale_font = { path = "../../crates/ale_font" }
+ale_opengl = { path = "../../crates/ale_opengl" }
+ale_texture = { path = "../../crates/ale_texture" }
+ale_camera = { path = "../../crates/ale_camera" }
+ale_shader = { path = "../../crates/ale_shader" }
+ale_input = { path = "../../crates/ale_input" }
+ale_console = { path = "../../crates/ale_console" }
+ale_variable = { path = "../../crates/ale_variable" }
+ale_opengl_fxaa = { path = "../../crates/ale_opengl_fxaa" }
+ale_opengl_envmap = { path = "../../crates/ale_opengl_envmap" }
+ale_app = { path = "../../crates/ale_app" }
+ale_glfw = { path = "../../crates/ale_glfw" }
+ale_opengl_pbr = { path = "../../crates/ale_opengl_pbr" }

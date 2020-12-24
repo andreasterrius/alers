@@ -1,6 +1,6 @@
 use crate::ui::UI;
-use ale_math::rect::Rect;
 use ale_input::Input;
+use ale_math::rect::Rect;
 
 pub struct Text {
   rect: Rect,

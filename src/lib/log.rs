@@ -3,7 +3,10 @@ use std::fs::File;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn init() {
-  let now_ms = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis();
+  let now_ms = SystemTime::now()
+    .duration_since(UNIX_EPOCH)
+    .expect("Time went backwards")
+    .as_millis();
   CombinedLogger::init(vec![
     TermLogger::new(LevelFilter::Warn, Config::default(), TerminalMode::Mixed).unwrap(),
     WriteLogger::new(

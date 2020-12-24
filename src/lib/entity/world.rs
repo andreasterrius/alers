@@ -4,8 +4,8 @@ use crate::entity::skybox::SkyboxEntity;
 use crate::entity::ui::UIEntity;
 use crate::renderer::opengl::RenderTasks;
 use crate::ui::UI;
-use ale_input::Input;
 use ale_camera::CameraRenderInfo;
+use ale_input::Input;
 
 pub struct World {
   // List of pawns in the world
@@ -43,7 +43,7 @@ impl World {
     self.camera = camera;
   }
 
-  pub fn get_camera_render_info(&mut self) -> CameraRenderInfo  {
+  pub fn get_camera_render_info(&mut self) -> CameraRenderInfo {
     self.camera.get_camera_render_info().unwrap()
   }
 
