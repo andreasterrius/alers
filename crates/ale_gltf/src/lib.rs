@@ -3,50 +3,53 @@ use ale_mesh::buffer::{Buffer, SeparateBufferBuilder};
 use ale_mesh::Mesh;
 use gltf::mesh::util::{ReadIndices, ReadTexCoords};
 use gltf::mesh::Reader;
-use gltf::Gltf;
 use std::collections::HashMap;
 
-pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
-  let (gltf, buffers, _) = gltf::import(path).unwrap();
+pub struct Gltf;
 
-  let mut nodes = HashMap::new();
-  for node in gltf.nodes() {
-    //println!("Node #{} {:?}", node.index(), node.name());
+impl Gltf {
+  pub fn load(path: &str) -> Vec<(Transform, Mesh)> {
+    let (gltf, buffers, _) = gltf::import(path).unwrap();
 
-    match node.transform() {
-      gltf::scene::Transform::Matrix { .. } => {}
-      gltf::scene::Transform::Decomposed {
-        translation,
-        rotation,
-        scale,
-      } => {
-        let transform = Transform::from_all(translation.into(), rotation.into(), scale.into());
-        nodes.insert(node.index(), transform);
+    let mut nodes = HashMap::new();
+    for node in gltf.nodes() {
+      //println!("Node #{} {:?}", node.index(), node.name());
+
+      match node.transform() {
+        gltf::scene::Transform::Matrix { .. } => {}
+        gltf::scene::Transform::Decomposed {
+          translation,
+          rotation,
+          scale,
+        } => {
+          let transform = Transform::from_all(translation.into(), rotation.into(), scale.into());
+          nodes.insert(node.index(), transform);
+        }
       }
     }
-  }
 
-  let mut objects = vec![];
-  for mesh in gltf.meshes() {
-    //println!("Mesh #{}", mesh.index());
-    for primitive in mesh.primitives() {
-      //println!("- Primitive #{}", primitive.index());
-      let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+    let mut objects = vec![];
+    for mesh in gltf.meshes() {
+      //println!("Mesh #{}", mesh.index());
+      for primitive in mesh.primitives() {
+        //println!("- Primitive #{}", primitive.index());
+        let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
 
-      let positions = intern_get_positions(&reader);
-      let normals = intern_get_normals(&reader);
-      let tex_coords = intern_get_tex_coords(&reader);
-      let indices = intern_get_indices(&reader);
+        let positions = intern_get_positions(&reader);
+        let normals = intern_get_normals(&reader);
+        let tex_coords = intern_get_tex_coords(&reader);
+        let indices = intern_get_indices(&reader);
 
-      let vbuffer = intern_construct_vertices_buffer(positions, normals, tex_coords);
-      let ibuffer = intern_construct_indices_buffer(indices);
+        let vbuffer = intern_construct_vertices_buffer(positions, normals, tex_coords);
+        let ibuffer = intern_construct_indices_buffer(indices);
 
-      let ale_mesh = Mesh::new(vbuffer, Some(ibuffer));
-      objects.push((nodes.remove(&mesh.index()).unwrap(), ale_mesh));
+        let ale_mesh = Mesh::new(vbuffer, Some(ibuffer));
+        objects.push((nodes.remove(&mesh.index()).unwrap(), ale_mesh));
+      }
     }
-  }
 
-  return objects;
+    return objects;
+  }
 }
 
 fn intern_get_positions<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>

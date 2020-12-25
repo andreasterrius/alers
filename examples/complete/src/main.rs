@@ -1,20 +1,20 @@
-use ale_app::{ale_app_new, ale_app_run};
+use ale_app::App;
 use ale_camera::fly_camera::FlyCamera;
-use ale_gltf::ale_gltf_load;
+use ale_gltf::Gltf;
 use ale_math::{Vector2, Vector3};
 use ale_opengl::mesh::OpenGLMeshContext;
-use ale_opengl_envmap::{ale_opengl_envmap_new, ale_opengl_envmap_render};
+use ale_opengl_envmap::OpenGLEnvmap;
 use ale_opengl_pbr::OpenGLPBRContext;
-use ale_texture::ale_texture_load;
+use ale_texture::Texture;
 
 fn main() {
   let window_size = Vector2::new(1024, 800);
-  let mut app = ale_app_new(window_size);
-  let mut gltf = ale_gltf_load("/home/alether/Codes/Graphics/alers/examples/complete/resources/scene.gltf");
+  let mut app = App::new(window_size);
+  let mut gltf = Gltf::load("/home/alether/Codes/Graphics/alers/examples/complete/resources/scene.gltf");
   let mut hdr_texture =
-    ale_texture_load("/home/alether/Codes/Graphics/alers/examples/shared_resources/hdr_texture/GravelPlaza_REF.hdr")
+    Texture::load("/home/alether/Codes/Graphics/alers/examples/shared_resources/hdr_texture/GravelPlaza_REF.hdr")
       .unwrap();
-  let envmap = ale_opengl_envmap_new(&hdr_texture, window_size);
+  let envmap = OpenGLEnvmap::new(&hdr_texture, window_size);
   let mut fly_camera = FlyCamera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), window_size, 90.0f32);
 
   let pbr_context = OpenGLPBRContext::new();

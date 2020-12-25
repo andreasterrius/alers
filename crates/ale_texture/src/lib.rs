@@ -37,6 +37,34 @@ impl Texture {
       },
     }
   }
+
+  pub fn load(path: &str) -> Result<Texture, LoadTextureError> {
+    if path.ends_with(".hdr") {
+      let i = hdrldr::load(File::open(path)?)?;
+
+      let mut v = vec![];
+      for p in i.data {
+        v.push(p.r);
+        v.push(p.g);
+        v.push(p.b);
+      }
+
+      let v = intern_flip_byte_vertically(&v, i.width as u32, i.height as u32, 3);
+      Ok(Texture::new(
+        TexturePixel::RgbF32(v),
+        i.width as u32,
+        i.height as u32,
+        3,
+      ))
+    } else {
+      let i = image::open(path)?;
+
+      // TODO: i.raw_pixels() clones underlying bytes, find a way that doesn't
+      let v = intern_flip_byte_vertically(&i.to_bytes(), i.width() as u32, i.height() as u32, 3);
+      Ok(Texture::new(TexturePixel::RgbU8(v), i.width(), i.height(), 3))
+    }
+  }
+
 }
 
 #[derive(Debug)]
@@ -97,33 +125,6 @@ impl From<std::io::Error> for LoadTextureError {
 impl From<hdrldr::LoadError> for LoadTextureError {
   fn from(_: LoadError) -> Self {
     LoadTextureError::FileNotFound
-  }
-}
-
-pub fn ale_texture_load(path: &str) -> Result<Texture, LoadTextureError> {
-  if path.ends_with(".hdr") {
-    let i = hdrldr::load(File::open(path)?)?;
-
-    let mut v = vec![];
-    for p in i.data {
-      v.push(p.r);
-      v.push(p.g);
-      v.push(p.b);
-    }
-
-    let v = intern_flip_byte_vertically(&v, i.width as u32, i.height as u32, 3);
-    Ok(Texture::new(
-      TexturePixel::RgbF32(v),
-      i.width as u32,
-      i.height as u32,
-      3,
-    ))
-  } else {
-    let i = image::open(path)?;
-
-    // TODO: i.raw_pixels() clones underlying bytes, find a way that doesn't
-    let v = intern_flip_byte_vertically(&i.to_bytes(), i.width() as u32, i.height() as u32, 3);
-    Ok(Texture::new(TexturePixel::RgbU8(v), i.width(), i.height(), 3))
   }
 }
 

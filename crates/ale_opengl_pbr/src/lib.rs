@@ -5,7 +5,7 @@ use ale_mesh::{Mesh, MeshId};
 use ale_opengl::mesh::{OpenGLMesh, OpenGLMeshContext};
 use ale_opengl::raw;
 use ale_opengl::shader::OpenGLShader;
-use ale_opengl_envmap::{ale_opengl_envmap_bind_to_shader, OpenGLEnvmap};
+use ale_opengl_envmap::OpenGLEnvmap;
 use ale_shader::Shader;
 use ale_variable::Variable;
 use std::collections::HashMap;
@@ -40,7 +40,7 @@ impl OpenGLPBRContext {
 
       shader.activate(shader_variables);
       if let Some(opengl_envmap) = opengl_envmap {
-        ale_opengl_envmap_bind_to_shader(opengl_envmap, shader, "irradianceMap");
+        opengl_envmap.bind_to_shader(shader, "irradianceMap");
       }
 
       // Bind textures here

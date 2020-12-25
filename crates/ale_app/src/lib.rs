@@ -13,30 +13,32 @@ pub struct App {
   fixed_tick: FixedTick,
 }
 
-pub fn ale_app_new(window_size: Vector2<u32>) -> App {
-  // Initialize the engine
-  let mut backend = Backend::new();
-  let mut window = Window::new(&mut backend, window_size);
-  let fixed_tick = FixedTick::new();
+impl App {
+  pub fn new(window_size: Vector2<u32>) -> App {
+    // Initialize the engine
+    let mut backend = Backend::new();
+    let mut window = Window::new(&mut backend, window_size);
+    let fixed_tick = FixedTick::new();
 
-  // Load the function pointers for opengl
-  ale_opengl::raw::load_with(|symbol| window.get_proc_address(symbol) as *const _);
+    // Load the function pointers for opengl
+    ale_opengl::raw::load_with(|symbol| window.get_proc_address(symbol) as *const _);
 
-  App {
-    backend,
-    window,
-    fixed_tick,
+    App {
+      backend,
+      window,
+      fixed_tick,
+    }
   }
-}
 
-pub fn ale_app_run(app: &mut App) {
-  while !app.window.should_close() {
-    app.backend.poll_inputs();
+  pub fn run(app: &mut App) {
+    while !app.window.should_close() {
+      app.backend.poll_inputs();
 
-    app.fixed_tick.tick(&mut |delta_time| {});
+      app.fixed_tick.tick(&mut |delta_time| {});
 
-    OpenGL::clear_buffer();
+      OpenGL::clear_buffer();
 
-    app.window.swap_buffers();
+      app.window.swap_buffers();
+    }
   }
 }

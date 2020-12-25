@@ -27,90 +27,88 @@ enum ProjectionTarget<'a> {
   Texture2d(&'a OpenGLTexture),
 }
 
-pub fn ale_opengl_envmap_new(hdr_texture: &Texture, window_size: Vector2<u32>) -> OpenGLEnvmap {
-  let cube_mesh = OpenGLMesh::new(&Mesh::new_cube()).unwrap();
+impl OpenGLEnvmap {
+  pub fn new(hdr_texture: &Texture, window_size: Vector2<u32>) -> OpenGLEnvmap {
+    let cube_mesh = OpenGLMesh::new(&Mesh::new_cube()).unwrap();
 
-  let equirect_shader = OpenGLShader::new(&Shader::new(
-    include_str!("../resources/cubemap.vert").to_owned(),
-    include_str!("../resources/equirect.frag").to_owned(),
-  ))
-  .unwrap();
-  let irradiance_shader = OpenGLShader::new(&Shader::new(
-    include_str!("../resources/cubemap.vert").to_owned(),
-    include_str!("../resources/irradiance.frag").to_owned(),
-  ))
-  .unwrap();
-  let skybox_shader = OpenGLShader::new(&Shader::new(
-    include_str!("../resources/skybox.vert").to_owned(),
-    include_str!("../resources/skybox.frag").to_owned(),
-  ))
-  .unwrap();
+    let equirect_shader = OpenGLShader::new(&Shader::new(
+      include_str!("../resources/cubemap.vert").to_owned(),
+      include_str!("../resources/equirect.frag").to_owned(),
+    ))
+    .unwrap();
+    let irradiance_shader = OpenGLShader::new(&Shader::new(
+      include_str!("../resources/cubemap.vert").to_owned(),
+      include_str!("../resources/irradiance.frag").to_owned(),
+    ))
+    .unwrap();
+    let skybox_shader = OpenGLShader::new(&Shader::new(
+      include_str!("../resources/skybox.vert").to_owned(),
+      include_str!("../resources/skybox.frag").to_owned(),
+    ))
+    .unwrap();
 
-  let cubemap_size = Vector2::new(512, 512);
-  let convoluted_cubemap_size = Vector2::new(32, 32);
+    let cubemap_size = Vector2::new(512, 512);
+    let convoluted_cubemap_size = Vector2::new(32, 32);
 
-  let cubemap = unsafe { raw::create_cubemap(cubemap_size.x, cubemap_size.y) };
-  let convoluted_cubemap = unsafe { raw::create_cubemap(convoluted_cubemap_size.x, convoluted_cubemap_size.y) };
+    let cubemap = unsafe { raw::create_cubemap(cubemap_size.x, cubemap_size.y) };
+    let convoluted_cubemap = unsafe { raw::create_cubemap(convoluted_cubemap_size.x, convoluted_cubemap_size.y) };
 
-  let context = OpenGLEnvmap {
-    cube_mesh,
-    equirect_shader,
-    irradiance_shader,
-    skybox_shader,
-    cubemap_size,
-    cubemap,
-    convoluted_cubemap_size,
-    convoluted_cubemap,
-  };
+    let context = OpenGLEnvmap {
+      cube_mesh,
+      equirect_shader,
+      irradiance_shader,
+      skybox_shader,
+      cubemap_size,
+      cubemap,
+      convoluted_cubemap_size,
+      convoluted_cubemap,
+    };
 
-  let opengl_texture = OpenGLTexture::new(hdr_texture).unwrap();
+    let opengl_texture = OpenGLTexture::new(hdr_texture).unwrap();
 
-  intern_envmap_project(
-    &context.cube_mesh,
-    &context.equirect_shader,
-    ProjectionTarget::Texture2d(&opengl_texture),
-    cubemap_size,
-    cubemap,
-    window_size,
-  );
-  intern_envmap_project(
-    &context.cube_mesh,
-    &context.irradiance_shader,
-    ProjectionTarget::Cubemap(context.cubemap),
-    convoluted_cubemap_size,
-    convoluted_cubemap,
-    window_size,
-  );
+    intern_envmap_project(
+      &context.cube_mesh,
+      &context.equirect_shader,
+      ProjectionTarget::Texture2d(&opengl_texture),
+      cubemap_size,
+      cubemap,
+      window_size,
+    );
+    intern_envmap_project(
+      &context.cube_mesh,
+      &context.irradiance_shader,
+      ProjectionTarget::Cubemap(context.cubemap),
+      convoluted_cubemap_size,
+      convoluted_cubemap,
+      window_size,
+    );
 
-  context
-}
-
-pub fn ale_opengl_envmap_render(opengl_envmap: &OpenGLEnvmap, camera_render_info: &CameraRenderInfo) {
-  unsafe {
-    let shader = opengl_envmap.skybox_shader.id;
-    let cubemap = opengl_envmap.convoluted_cubemap;
-    let cube_mesh = &opengl_envmap.cube_mesh;
-
-    raw::use_shader(shader);
-    raw::uniform1i(shader, "environmentMap", 0);
-    raw::matrix4f(shader, "view", camera_render_info.view.as_ptr());
-    raw::matrix4f(shader, "projection", camera_render_info.projection.as_ptr());
-    raw::active_texture(0);
-    raw::bind_cubemap(cubemap);
-
-    cube_mesh.render();
+    context
   }
-}
 
-pub fn ale_opengl_envmap_bind_to_shader(
-  opengl_envmap: &OpenGLEnvmap,
-  opengl_shader: &OpenGLShader,
-  shader_variable_name: &str,
-) {
-  unsafe {
-    raw::uniform1i(opengl_shader.id, shader_variable_name, 0);
-    raw::active_texture(0);
-    raw::bind_cubemap(opengl_envmap.convoluted_cubemap);
+  pub fn render(&self, camera_render_info: &CameraRenderInfo) {
+    unsafe {
+      let shader = self.skybox_shader.id;
+      let cubemap = self.convoluted_cubemap;
+      let cube_mesh = &self.cube_mesh;
+
+      raw::use_shader(shader);
+      raw::uniform1i(shader, "environmentMap", 0);
+      raw::matrix4f(shader, "view", camera_render_info.view.as_ptr());
+      raw::matrix4f(shader, "projection", camera_render_info.projection.as_ptr());
+      raw::active_texture(0);
+      raw::bind_cubemap(cubemap);
+
+      cube_mesh.render();
+    }
+  }
+
+  pub fn bind_to_shader(&self, opengl_shader: &OpenGLShader, shader_variable_name: &str) {
+    unsafe {
+      raw::uniform1i(opengl_shader.id, shader_variable_name, 0);
+      raw::active_texture(0);
+      raw::bind_cubemap(self.convoluted_cubemap);
+    }
   }
 }
 
