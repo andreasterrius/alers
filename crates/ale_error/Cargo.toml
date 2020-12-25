@@ -1,5 +1,5 @@
 [package]
-name = "ale_mesh"
+name = "ale_error"
 version = "0.1.0"
 authors = ["Andreas Terrius <andreas.terrius@gmail.com>"]
 edition = "2018"
@@ -7,6 +7,3 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ale_autoid = { path = "../ale_autoid" }
-ale_ecs = { path = "../ale_ecs" }
-approx = "0.3.2"

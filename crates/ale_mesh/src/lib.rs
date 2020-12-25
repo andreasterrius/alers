@@ -1,5 +1,6 @@
 use crate::buffer::{Buffer, BufferBuilder, SeparateBufferBuilder};
 use ale_autoid::*;
+use ale_ecs::{Entity, EntityBuilder};
 
 pub mod buffer;
 
@@ -97,4 +98,8 @@ impl Mesh {
 
     Mesh::new(vertices, None)
   }
+}
+
+pub trait MeshComponent {
+  fn with_mesh(&mut self, mesh: &Mesh);
 }

@@ -1,6 +1,6 @@
 use ale_app::App;
 use ale_camera::fly_camera::FlyCamera;
-use ale_gltf::Gltf;
+use ale_gltf::glTF;
 use ale_math::{Vector2, Vector3};
 use ale_opengl::mesh::OpenGLMeshContext;
 use ale_opengl_envmap::OpenGLEnvmap;
@@ -10,7 +10,7 @@ use ale_texture::Texture;
 fn main() {
   let window_size = Vector2::new(1024, 800);
   let mut app = App::new(window_size);
-  let mut gltf = Gltf::load("/home/alether/Codes/Graphics/alers/examples/complete/resources/scene.gltf");
+  let mut gltf = glTF::load("/home/alether/Codes/Graphics/alers/examples/complete/resources/scene.gltf");
   let mut hdr_texture =
     Texture::load("/home/alether/Codes/Graphics/alers/examples/shared_resources/hdr_texture/GravelPlaza_REF.hdr")
       .unwrap();
@@ -20,7 +20,6 @@ fn main() {
   let pbr_context = OpenGLPBRContext::new();
   let mut mesh_context = OpenGLMeshContext::new();
 
-  //
   // ale_app_run(
   //   &mut app,
   //   &mut |inputs| {

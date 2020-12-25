@@ -22,3 +22,4 @@ ale_opengl_envmap = { path = "../../crates/ale_opengl_envmap" }
 ale_app = { path = "../../crates/ale_app" }
 ale_glfw = { path = "../../crates/ale_glfw" }
 ale_opengl_pbr = { path = "../../crates/ale_opengl_pbr" }
+ale_resource = { path = "../../crates/ale_resource" }

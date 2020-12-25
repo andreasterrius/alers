@@ -1,0 +1,3 @@
+struct AddOnTick;
+
+fn main() {}

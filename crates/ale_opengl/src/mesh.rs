@@ -1,5 +1,6 @@
 use crate::raw;
 use crate::raw::{create_buffer, CreateBufferError};
+use ale_autoid::Identifiable;
 use ale_mesh::{Mesh, MeshId};
 use std::collections::HashMap;
 

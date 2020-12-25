@@ -5,9 +5,9 @@ use gltf::mesh::util::{ReadIndices, ReadTexCoords};
 use gltf::mesh::Reader;
 use std::collections::HashMap;
 
-pub struct Gltf;
+pub struct glTF;
 
-impl Gltf {
+impl glTF {
   pub fn load(path: &str) -> Vec<(Transform, Mesh)> {
     let (gltf, buffers, _) = gltf::import(path).unwrap();
 

@@ -1,5 +1,5 @@
 [package]
-name = "ale_mesh"
+name = "ale_resource"
 version = "0.1.0"
 authors = ["Andreas Terrius <andreas.terrius@gmail.com>"]
 edition = "2018"
@@ -8,5 +8,4 @@ edition = "2018"
 
 [dependencies]
 ale_autoid = { path = "../ale_autoid" }
-ale_ecs = { path = "../ale_ecs" }
-approx = "0.3.2"
+ale_error = { path = "../ale_error" }
