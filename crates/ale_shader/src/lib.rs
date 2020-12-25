@@ -6,11 +6,13 @@ pub struct Shader {
   pub fragment_shader: String,
 }
 
-pub fn ale_shader_new(vertex_shader: String, fragment_shader: String) -> Shader {
-  Shader {
-    id: ShaderId::new(),
-    vertex_shader,
-    fragment_shader,
+impl Shader {
+  pub fn new(vertex_shader: String, fragment_shader: String) -> Shader {
+    Shader {
+      id: ShaderId::new(),
+      vertex_shader,
+      fragment_shader,
+    }
   }
 }
 

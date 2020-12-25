@@ -1,6 +1,6 @@
 use ale_math::transform::Transform;
 use ale_mesh::buffer::{Buffer, SeparateBufferBuilder};
-use ale_mesh::{ale_mesh_new, Mesh};
+use ale_mesh::Mesh;
 use gltf::mesh::util::{ReadIndices, ReadTexCoords};
 use gltf::mesh::Reader;
 use gltf::Gltf;
@@ -41,7 +41,7 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
       let vbuffer = intern_construct_vertices_buffer(positions, normals, tex_coords);
       let ibuffer = intern_construct_indices_buffer(indices);
 
-      let ale_mesh = ale_mesh_new(vbuffer, Some(ibuffer));
+      let ale_mesh = Mesh::new(vbuffer, Some(ibuffer));
       objects.push((nodes.remove(&mesh.index()).unwrap(), ale_mesh));
     }
   }

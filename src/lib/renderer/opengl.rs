@@ -14,10 +14,10 @@ use ale_camera::CameraRenderInfo;
 use ale_font::Font;
 use ale_math::rect::Rect;
 use ale_mesh::{Mesh, MeshId};
-use ale_opengl::mesh::{ale_opengl_mesh_new, OpenGLMesh, OpenGLMeshError};
+use ale_opengl::mesh::{new, OpenGLMesh, OpenGLMeshError};
 use ale_opengl::raw;
-use ale_opengl::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader, OpenGLShaderError};
-use ale_opengl::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureError};
+use ale_opengl::shader::{activate, new, OpenGLShader, OpenGLShaderError};
+use ale_opengl::texture::{new, OpenGLTexture, OpenGLTextureError};
 use ale_shader::{Shader, ShaderId};
 use ale_texture::{Texture, TextureId};
 use ale_variable::Variable;
@@ -53,17 +53,17 @@ impl RenderContext {
   }
 
   pub fn static_mesh(&mut self, mesh: &Mesh) -> Result<(), OpenGLMeshError> {
-    self.static_meshes.insert(mesh.uid(), ale_opengl_mesh_new(mesh)?);
+    self.static_meshes.insert(mesh.uid(), new(mesh)?);
     Ok(())
   }
 
   pub fn shader(&mut self, shader: &Shader) -> Result<(), OpenGLShaderError> {
-    self.shaders.insert(shader.uid(), ale_opengl_shader_new(shader)?);
+    self.shaders.insert(shader.uid(), new(shader)?);
     Ok(())
   }
 
   pub fn texture(&mut self, texture: &Texture) -> Result<(), OpenGLTextureError> {
-    self.textures.insert(texture.uid(), ale_opengl_texture_new(texture)?);
+    self.textures.insert(texture.uid(), new(texture)?);
     Ok(())
   }
 
@@ -279,7 +279,7 @@ impl RenderTasks for SimpleRenderTasks {
 
           unsafe {
             // Bind shader
-            ale_opengl_shader_activate(shader_draw_info, shader_variables);
+            activate(shader_draw_info, shader_variables);
 
             if let Some(cubemap_id) = &self.skybox {
               let irradiance_cubemap_draw_info = context

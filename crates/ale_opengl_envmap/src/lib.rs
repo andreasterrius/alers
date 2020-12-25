@@ -1,11 +1,11 @@
 use ale_camera::CameraRenderInfo;
 use ale_math::{perspective, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector2, Vector3};
-use ale_mesh::ale_mesh_cube_new;
-use ale_opengl::mesh::{ale_opengl_mesh_context_new, ale_opengl_mesh_new, ale_opengl_mesh_render, OpenGLMesh};
+use ale_mesh::Mesh;
+use ale_opengl::mesh::OpenGLMesh;
 use ale_opengl::raw;
-use ale_opengl::shader::{ale_opengl_shader_new, OpenGLShader};
-use ale_opengl::texture::{ale_opengl_texture_new, OpenGLTexture};
-use ale_shader::ale_shader_new;
+use ale_opengl::shader::OpenGLShader;
+use ale_opengl::texture::OpenGLTexture;
+use ale_shader::Shader;
 use ale_texture::Texture;
 
 pub struct OpenGLEnvmap {
@@ -28,19 +28,19 @@ enum ProjectionTarget<'a> {
 }
 
 pub fn ale_opengl_envmap_new(hdr_texture: &Texture, window_size: Vector2<u32>) -> OpenGLEnvmap {
-  let cube_mesh = ale_opengl_mesh_new(&ale_mesh_cube_new()).unwrap();
+  let cube_mesh = OpenGLMesh::new(&Mesh::new_cube()).unwrap();
 
-  let equirect_shader = ale_opengl_shader_new(&ale_shader_new(
+  let equirect_shader = OpenGLShader::new(&Shader::new(
     include_str!("../resources/cubemap.vert").to_owned(),
     include_str!("../resources/equirect.frag").to_owned(),
   ))
   .unwrap();
-  let irradiance_shader = ale_opengl_shader_new(&ale_shader_new(
+  let irradiance_shader = OpenGLShader::new(&Shader::new(
     include_str!("../resources/cubemap.vert").to_owned(),
     include_str!("../resources/irradiance.frag").to_owned(),
   ))
   .unwrap();
-  let skybox_shader = ale_opengl_shader_new(&ale_shader_new(
+  let skybox_shader = OpenGLShader::new(&Shader::new(
     include_str!("../resources/skybox.vert").to_owned(),
     include_str!("../resources/skybox.frag").to_owned(),
   ))
@@ -63,7 +63,7 @@ pub fn ale_opengl_envmap_new(hdr_texture: &Texture, window_size: Vector2<u32>) -
     convoluted_cubemap,
   };
 
-  let opengl_texture = ale_opengl_texture_new(hdr_texture).unwrap();
+  let opengl_texture = OpenGLTexture::new(hdr_texture).unwrap();
 
   intern_envmap_project(
     &context.cube_mesh,
@@ -98,7 +98,7 @@ pub fn ale_opengl_envmap_render(opengl_envmap: &OpenGLEnvmap, camera_render_info
     raw::active_texture(0);
     raw::bind_cubemap(cubemap);
 
-    ale_opengl_mesh_render(cube_mesh);
+    cube_mesh.render();
   }
 }
 

@@ -1,33 +1,22 @@
 use crate::raw;
 use crate::raw::{create_buffer, CreateBufferError};
-use ale_mesh::{ale_mesh_cube_new, ale_mesh_ndc_plane_new, ale_mesh_plane_new, Mesh, MeshId};
+use ale_mesh::{Mesh, MeshId};
 use std::collections::HashMap;
 
 pub struct OpenGLMeshId(pub u32);
 
 pub struct OpenGLMeshContext {
   pub(crate) mesh: HashMap<MeshId, OpenGLMesh>,
-
-  pub(crate) plane_opengl_mesh: OpenGLMesh,
-  pub(crate) cube_opengl_mesh: OpenGLMesh,
 }
 
-pub fn ale_opengl_mesh_context_new() -> OpenGLMeshContext {
-  OpenGLMeshContext {
-    mesh: HashMap::new(),
-    plane_opengl_mesh: ale_opengl_mesh_new(&ale_mesh_plane_new()).unwrap(),
-    cube_opengl_mesh: ale_opengl_mesh_new(&ale_mesh_cube_new()).unwrap(),
+impl OpenGLMeshContext {
+  pub fn new() -> OpenGLMeshContext {
+    OpenGLMeshContext { mesh: HashMap::new() }
   }
-}
 
-pub fn ale_opengl_mesh_context_register<'a>(
-  opengl_mesh_context: &'a mut OpenGLMeshContext,
-  mesh: &Mesh,
-) -> &'a OpenGLMesh {
-  opengl_mesh_context
-    .mesh
-    .entry(mesh.uid())
-    .or_insert(ale_opengl_mesh_new(mesh).unwrap())
+  pub fn register(&mut self, mesh: &Mesh) -> &OpenGLMesh {
+    self.mesh.entry(mesh.uid()).or_insert(OpenGLMesh::new(mesh).unwrap())
+  }
 }
 
 pub struct OpenGLMesh {
@@ -37,22 +26,24 @@ pub struct OpenGLMesh {
   pub draw_size: u32, //indices size, or vertex size
 }
 
-pub fn ale_opengl_mesh_new(mesh: &Mesh) -> Result<OpenGLMesh, OpenGLMeshError> {
-  let (vao, vbo, ebo, draw_size) = unsafe { create_buffer(&mesh.vertices, &mesh.indices)? };
-  Ok(OpenGLMesh {
-    vao,
-    _vbo: vbo,
-    ebo,
-    draw_size,
-  })
-}
+impl OpenGLMesh {
+  pub fn new(mesh: &Mesh) -> Result<OpenGLMesh, OpenGLMeshError> {
+    let (vao, vbo, ebo, draw_size) = unsafe { create_buffer(&mesh.vertices, &mesh.indices)? };
+    Ok(OpenGLMesh {
+      vao,
+      _vbo: vbo,
+      ebo,
+      draw_size,
+    })
+  }
 
-pub fn ale_opengl_mesh_render(opengl_mesh: &OpenGLMesh) {
-  unsafe {
-    raw::bind_vao(opengl_mesh.vao);
-    match opengl_mesh.ebo {
-      None => raw::draw_arrays(0, opengl_mesh.draw_size),
-      Some(_) => raw::draw_elements(opengl_mesh.draw_size),
+  pub fn render(&self) {
+    unsafe {
+      raw::bind_vao(self.vao);
+      match self.ebo {
+        None => raw::draw_arrays(0, self.draw_size),
+        Some(_) => raw::draw_elements(self.draw_size),
+      }
     }
   }
 }

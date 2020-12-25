@@ -2,9 +2,9 @@ use ale_app::{ale_app_new, ale_app_run};
 use ale_camera::fly_camera::FlyCamera;
 use ale_gltf::ale_gltf_load;
 use ale_math::{Vector2, Vector3};
-use ale_opengl::mesh::{ale_opengl_mesh_context_new, ale_opengl_mesh_render};
+use ale_opengl::mesh::OpenGLMeshContext;
 use ale_opengl_envmap::{ale_opengl_envmap_new, ale_opengl_envmap_render};
-use ale_opengl_pbr::{ale_opengl_pbr_new, ale_opengl_pbr_render};
+use ale_opengl_pbr::OpenGLPBRContext;
 use ale_texture::ale_texture_load;
 
 fn main() {
@@ -17,8 +17,8 @@ fn main() {
   let envmap = ale_opengl_envmap_new(&hdr_texture, window_size);
   let mut fly_camera = FlyCamera::new(Vector3::new(0.0f32, 0.0f32, -10.0f32), window_size, 90.0f32);
 
-  let pbr_context = ale_opengl_pbr_new();
-  let mut mesh_context = ale_opengl_mesh_context_new();
+  let pbr_context = OpenGLPBRContext::new();
+  let mut mesh_context = OpenGLMeshContext::new();
 
   //
   // ale_app_run(

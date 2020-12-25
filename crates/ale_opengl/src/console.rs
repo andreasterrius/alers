@@ -1,16 +1,13 @@
 use crate::mesh::OpenGLMeshContext;
 use crate::shader::OpenGLShaderContext;
-use crate::text::{ale_opengl_text_render, ale_opengl_text_render_layout};
-use crate::texture::OpenGLTextureContext;
+use crate::text::OpenGLTextContext;
 use ale_camera::CameraRenderInfo;
 use ale_console::Console;
-use ale_font::{ale_font_layout, Font};
+use ale_font::Font;
 use ale_math::Vector2;
 
 pub fn ale_opengl_console_render(
-  opengl_texture_context: &mut OpenGLTextureContext,
-  opengl_mesh_context: &OpenGLMeshContext,
-  opengl_shader_context: &OpenGLShaderContext,
+  opengl_text_context: &mut OpenGLTextContext,
   camera_render_info: &CameraRenderInfo,
   console: &Console,
   screen_size: Vector2<i32>,
@@ -21,37 +18,20 @@ pub fn ale_opengl_console_render(
     let font_size = 24;
 
     // Render current line buffer
-    let font_layout = ale_font_layout(
-      font,
+    let font_layout = font.layout(
       font_size,
       &format!("{}_", &console.line_buffer),
       Some(screen_size.clone()),
     );
     curr_pos.y -= font_size as f32;
-    ale_opengl_text_render_layout(
-      opengl_texture_context,
-      opengl_mesh_context,
-      opengl_shader_context,
-      camera_render_info,
-      &font_layout,
-      &font,
-      curr_pos,
-    );
+    opengl_text_context.render_layout(camera_render_info, &font_layout, &font, curr_pos);
 
     // Render existing lines
     for line in console.lines.iter().rev() {
-      let font_layout = ale_font_layout(font, font_size, line, Some(screen_size.clone()));
+      let font_layout = font.layout(font_size, line, Some(screen_size.clone()));
 
       curr_pos.y -= font_size as f32;
-      ale_opengl_text_render_layout(
-        opengl_texture_context,
-        opengl_mesh_context,
-        opengl_shader_context,
-        camera_render_info,
-        &font_layout,
-        &font,
-        curr_pos,
-      );
+      opengl_text_context.render_layout(camera_render_info, &font_layout, &font, curr_pos);
 
       if curr_pos.y < 0.0 {
         break;
