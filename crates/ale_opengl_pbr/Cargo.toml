@@ -14,3 +14,4 @@ ale_mesh = { path = "../ale_mesh" }
 ale_opengl_envmap = { path = "../ale_opengl_envmap" }
 ale_camera = { path = "../ale_camera" }
 ale_math = { path = "../ale_math" }
+ale_resource = { path = "../ale_resource" }

@@ -1,6 +1,7 @@
 use std::fs::File;
 
 use ale_autoid::*;
+use ale_resource::{Resource, ResourcePile};
 use hdrldr::LoadError;
 use image::{GenericImageView, ImageError};
 
@@ -64,7 +65,6 @@ impl Texture {
       Ok(Texture::new(TexturePixel::RgbU8(v), i.width(), i.height(), 3))
     }
   }
-
 }
 
 #[derive(Debug)]
@@ -102,6 +102,17 @@ pub enum TexturePixel {
 
   // 32 Bytes per channel
   RgbF32(Vec<f32>),
+}
+
+pub trait TextureLoader {
+  fn load_texture(&mut self, path: &str) -> Resource<Texture>;
+}
+
+impl TextureLoader for ResourcePile {
+  fn load_texture(&mut self, path: &str) -> Resource<Texture> {
+    let texture = Texture::load(&self.get_resource_path(path)).unwrap();
+    self.register(texture)
+  }
 }
 
 #[derive(Debug)]

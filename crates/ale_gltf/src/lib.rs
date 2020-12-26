@@ -1,11 +1,31 @@
 use ale_math::transform::Transform;
 use ale_mesh::buffer::{Buffer, SeparateBufferBuilder};
 use ale_mesh::Mesh;
+use ale_resource::{Resource, ResourcePile};
 use gltf::mesh::util::{ReadIndices, ReadTexCoords};
 use gltf::mesh::Reader;
 use std::collections::HashMap;
 
+#[allow(non_camel_case_types)]
 pub struct glTF;
+
+#[allow(non_camel_case_types)]
+pub trait glTFLoader {
+  fn load_gltf(&mut self, path: &str) -> Vec<(Transform, Resource<Mesh>)>;
+}
+
+impl glTFLoader for ResourcePile {
+  fn load_gltf(&mut self, path: &str) -> Vec<(Transform, Resource<Mesh>)> {
+    println!("{}", self.get_resource_path(path));
+    glTF::load(&self.get_resource_path(path))
+      .into_iter()
+      .map(|(t, m)| {
+        let resource_mesh = self.register(m);
+        (t, resource_mesh)
+      })
+      .collect()
+  }
+}
 
 impl glTF {
   pub fn load(path: &str) -> Vec<(Transform, Mesh)> {
@@ -14,7 +34,6 @@ impl glTF {
     let mut nodes = HashMap::new();
     for node in gltf.nodes() {
       //println!("Node #{} {:?}", node.index(), node.name());
-
       match node.transform() {
         gltf::scene::Transform::Matrix { .. } => {}
         gltf::scene::Transform::Decomposed {

@@ -1,6 +1,7 @@
 use crate::buffer::{Buffer, BufferBuilder, SeparateBufferBuilder};
 use ale_autoid::*;
 use ale_ecs::{Entity, EntityBuilder};
+use ale_resource::ResourcePile;
 
 pub mod buffer;
 

@@ -30,7 +30,7 @@ impl App {
     }
   }
 
-  pub fn run(app: &mut App) {
+  pub fn run(&mut self) {
     while !app.window.should_close() {
       app.backend.poll_inputs();
 

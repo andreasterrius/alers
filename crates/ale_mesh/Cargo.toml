@@ -9,4 +9,5 @@ edition = "2018"
 [dependencies]
 ale_autoid = { path = "../ale_autoid" }
 ale_ecs = { path = "../ale_ecs" }
+ale_resource = { path = "../ale_resource" }
 approx = "0.3.2"

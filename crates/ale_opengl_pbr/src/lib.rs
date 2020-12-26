@@ -6,7 +6,8 @@ use ale_opengl::mesh::{OpenGLMesh, OpenGLMeshContext};
 use ale_opengl::raw;
 use ale_opengl::shader::OpenGLShader;
 use ale_opengl_envmap::OpenGLEnvmap;
-use ale_shader::Shader;
+use ale_resource::ResourcePile;
+use ale_shader::{Shader, ShaderLoader};
 use ale_variable::Variable;
 use std::collections::HashMap;
 
@@ -15,18 +16,17 @@ pub struct OpenGLPBRContext {
 }
 
 impl OpenGLPBRContext {
-  pub fn new() -> OpenGLPBRContext {
-    let pbr_shader = OpenGLShader::new(&Shader::new(
-      include_str!("../resources/pbr.vert").to_owned(),
-      include_str!("../resources/pbr.frag").to_owned(),
-    ))
-    .unwrap();
+  pub fn new(resource_pile: &mut ResourcePile) -> OpenGLPBRContext {
+    let pbr_shader = resource_pile.load_shader("shader/pbr/pbr.vert", "shader/pbr/pbr.frag");
+    let opengl_pbr_shader = OpenGLShader::new(&pbr_shader.read()).unwrap();
 
-    OpenGLPBRContext { pbr_shader }
+    OpenGLPBRContext {
+      pbr_shader: opengl_pbr_shader,
+    }
   }
 
   pub fn render(
-    opengl_pbr_context: &OpenGLPBRContext,
+    &mut self,
     opengl_mesh_context: &mut OpenGLMeshContext,
     opengl_envmap: Option<&OpenGLEnvmap>,
     transform: &mut Transform,
@@ -35,7 +35,7 @@ impl OpenGLPBRContext {
     shader_variables: &Vec<Variable>,
   ) {
     unsafe {
-      let shader = &opengl_pbr_context.pbr_shader;
+      let shader = &self.pbr_shader;
       let ogl_mesh = opengl_mesh_context.register(mesh);
 
       shader.activate(shader_variables);

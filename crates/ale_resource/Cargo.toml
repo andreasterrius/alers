@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 ale_autoid = { path = "../ale_autoid" }
 ale_error = { path = "../ale_error" }
+parking_lot = "0.11.1"

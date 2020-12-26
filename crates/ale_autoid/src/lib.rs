@@ -1,7 +1,7 @@
 pub use snowflake::*;
 
 pub trait Identifiable {
-  type Ret;
+  type Ret: Into<ProcessUniqueId>;
   fn uid(&self) -> Self::Ret;
 }
 
@@ -12,6 +12,12 @@ macro_rules! struct_id_impl {
       type Ret = $id_ident;
       fn uid(&self) -> $id_ident {
         self.$field_ident
+      }
+    }
+
+    impl From<$struct_ident> for ProcessUniqueId {
+      fn from(t: $struct_ident) -> Self {
+        t.$field_ident.0
       }
     }
   };
@@ -33,6 +39,12 @@ macro_rules! struct_id {
     impl Default for $T {
       fn default() -> Self {
         $T::new()
+      }
+    }
+
+    impl From<$T> for ProcessUniqueId {
+      fn from(t: $T) -> ProcessUniqueId {
+        t.0
       }
     }
   };

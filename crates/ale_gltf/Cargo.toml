@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 ale_mesh = { path = "../ale_mesh" }
 ale_math = { path = "../ale_math" }
+ale_resource = { path = "../ale_resource" }
 
 [dependencies.gltf]
 version = "0.15"

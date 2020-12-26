@@ -1,10 +1,10 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BufferElementInfo {
   pub name: String,
   pub size: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Buffer<T: Clone> {
   data: Vec<T>,
   element_info: Vec<BufferElementInfo>,

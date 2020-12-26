@@ -8,5 +8,6 @@ edition = "2018"
 
 [dependencies]
 ale_autoid = { path = "../ale_autoid" }
+ale_resource = { path = "../ale_resource" }
 hdrldr = "0.1"
 image = "0.23.*"

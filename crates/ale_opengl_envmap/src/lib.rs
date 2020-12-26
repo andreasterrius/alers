@@ -5,7 +5,8 @@ use ale_opengl::mesh::OpenGLMesh;
 use ale_opengl::raw;
 use ale_opengl::shader::OpenGLShader;
 use ale_opengl::texture::OpenGLTexture;
-use ale_shader::Shader;
+use ale_resource::ResourcePile;
+use ale_shader::{Shader, ShaderLoader};
 use ale_texture::Texture;
 
 pub struct OpenGLEnvmap {
@@ -28,23 +29,26 @@ enum ProjectionTarget<'a> {
 }
 
 impl OpenGLEnvmap {
-  pub fn new(hdr_texture: &Texture, window_size: Vector2<u32>) -> OpenGLEnvmap {
+  pub fn new(hdr_texture: &Texture, window_size: Vector2<u32>, resource_pile: &mut ResourcePile) -> OpenGLEnvmap {
     let cube_mesh = OpenGLMesh::new(&Mesh::new_cube()).unwrap();
 
-    let equirect_shader = OpenGLShader::new(&Shader::new(
-      include_str!("../resources/cubemap.vert").to_owned(),
-      include_str!("../resources/equirect.frag").to_owned(),
-    ))
+    let equirect_shader = OpenGLShader::new(
+      &resource_pile
+        .load_shader("shader/envmap/cubemap.vert", "shader/envmap/equirect.frag")
+        .read(),
+    )
     .unwrap();
-    let irradiance_shader = OpenGLShader::new(&Shader::new(
-      include_str!("../resources/cubemap.vert").to_owned(),
-      include_str!("../resources/irradiance.frag").to_owned(),
-    ))
+    let irradiance_shader = OpenGLShader::new(
+      &resource_pile
+        .load_shader("shader/envmap/cubemap.vert", "shader/envmap/irradiance.frag")
+        .read(),
+    )
     .unwrap();
-    let skybox_shader = OpenGLShader::new(&Shader::new(
-      include_str!("../resources/skybox.vert").to_owned(),
-      include_str!("../resources/skybox.frag").to_owned(),
-    ))
+    let skybox_shader = OpenGLShader::new(
+      &resource_pile
+        .load_shader("shader/envmap/skybox.vert", "shader/envmap/skybox.frag")
+        .read(),
+    )
     .unwrap();
 
     let cubemap_size = Vector2::new(512, 512);
