@@ -16,4 +16,5 @@ ale_shader = { path = "../ale_shader" }
 ale_camera = { path = "../ale_camera" }
 ale_console = { path = "../ale_console" }
 ale_variable = { path = "../ale_variable" }
+ale_resource = { path = "../ale_resource" }
 gl = "0.6.2"

@@ -1,34 +1,25 @@
 use ale_autoid::{Identifiable, ProcessUniqueId};
 use ale_error::PassedError;
+use downcast_rs::impl_downcast;
+use downcast_rs::{Downcast, DowncastSync};
 use parking_lot::lock_api::RawRwLock;
 use parking_lot::RwLock;
 use std::any::{Any, TypeId};
-use std::borrow::Borrow;
+use std::borrow::{Borrow, BorrowMut};
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::fs::File;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 use std::path::Path;
+use std::rc::{Rc, Weak};
 use std::sync::Arc;
 
-// #[derive(Debug, Hash, Eq, PartialEq)]
-// struct ResourceKey {
-//   pub type_id: TypeId,
-//   pub uid: ProcessUniqueId,
-// }
-//
-// impl ResourceKey {
-//   pub fn new<T: 'static + Identifiable>(t: &T) -> ResourceKey {
-//     ResourceKey {
-//       type_id: TypeId::of::<T>(),
-//       uid: t.uid().into(),
-//     }
-//   }
-// }
-
-#[derive(Debug)]
 pub struct ResourcePile {
-  resources: HashMap<TypeId, HashMap<ProcessUniqueId, Arc<RwLock<dyn Any>>>>,
+  resources: HashMap<TypeId, HashMap<ProcessUniqueId, Arc<RwLock<dyn ResourceType>>>>,
+
+  observers: Vec<Weak<RefCell<dyn ResourcePileObserver>>>,
 
   base_path: String,
 }
@@ -46,21 +37,39 @@ impl ResourcePile {
 
     ResourcePile {
       resources: Default::default(),
+      observers: vec![],
       base_path: format!("{}/resources", home_path),
     }
   }
 
-  pub fn register<T: 'static + Identifiable>(&mut self, t: T) -> Resource<T> {
-    //let key = ResourceKey::new(&t);
+  pub fn add_observer<T: 'static + ResourcePileObserver>(&mut self, observer: Weak<RefCell<T>>) {
+    self.observers.push(observer);
+  }
+
+  pub fn register<T: Identifiable + ResourceType>(&mut self, t: T) -> Resource<T> {
     let key = t.uid().into();
     let arc = Arc::new(RwLock::new(t));
 
-    //self.resources.insert(key, arc.clone());
     self
       .resources
       .entry(TypeId::of::<T>())
       .or_insert(HashMap::new())
       .insert(key, arc.clone());
+
+    self.observers.retain(|x| match x.upgrade() {
+      Some(x) => true,
+      None => false,
+    });
+    for obs in &mut self.observers {
+      match obs.upgrade() {
+        Some(mut o) => o
+          .deref()
+          .borrow_mut()
+          .deref_mut()
+          .on_create(TypeId::of::<T>(), key, Resource::new(arc.clone())),
+        None => {}
+      }
+    }
 
     Resource::new(arc)
   }
@@ -70,13 +79,13 @@ impl ResourcePile {
   }
 }
 
-pub struct Resource<T> {
-  arc: Arc<RwLock<dyn Any>>,
+pub struct Resource<T: ?Sized> {
+  arc: Arc<RwLock<dyn ResourceType>>,
 
   phantom_data: PhantomData<T>,
 }
 
-impl<T> Clone for Resource<T> {
+impl<T: ?Sized> Clone for Resource<T> {
   fn clone(&self) -> Self {
     Self {
       arc: self.arc.clone(),
@@ -85,10 +94,10 @@ impl<T> Clone for Resource<T> {
   }
 }
 
-impl<T: 'static> Resource<T> {
-  pub fn new(arc: Arc<RwLock<dyn Any>>) -> Resource<T> {
+impl<T: ResourceType + ?Sized> Resource<T> {
+  pub fn new(arc: Arc<RwLock<dyn ResourceType>>) -> Resource<T> {
     Resource {
-      arc: arc,
+      arc,
       phantom_data: Default::default(),
     }
   }
@@ -102,13 +111,13 @@ impl<T: 'static> Resource<T> {
   }
 }
 
-pub struct ResourceReadGuard<'a, T> {
-  resource_rw_lock: &'a RwLock<dyn Any>,
+pub struct ResourceReadGuard<'a, T: ResourceType + ?Sized> {
+  resource_rw_lock: &'a RwLock<dyn ResourceType>,
 
-  phantom_data: PhantomData<T>,
+  phantom_data: PhantomData<&'a T>,
 }
 
-impl<'a, T> ResourceReadGuard<'a, T> {
+impl<'a, T: ResourceType + ?Sized> ResourceReadGuard<'a, T> {
   pub fn new(resource: &'a Resource<T>) -> ResourceReadGuard<T> {
     unsafe {
       resource.arc.raw().lock_shared();
@@ -118,9 +127,14 @@ impl<'a, T> ResourceReadGuard<'a, T> {
       }
     }
   }
+
+  pub fn cast<R: ResourceType>(&mut self) -> &R {
+    let k = unsafe { &*self.resource_rw_lock.data_ptr() };
+    k.downcast_ref::<R>().unwrap()
+  }
 }
 
-impl<'a, T> Drop for ResourceReadGuard<'a, T> {
+impl<'a, T: ResourceType + ?Sized> Drop for ResourceReadGuard<'a, T> {
   fn drop(&mut self) {
     unsafe {
       self.resource_rw_lock.raw().unlock_shared();
@@ -128,7 +142,7 @@ impl<'a, T> Drop for ResourceReadGuard<'a, T> {
   }
 }
 
-impl<'a, T: 'static> Deref for ResourceReadGuard<'a, T> {
+impl<'a, T: ResourceType> Deref for ResourceReadGuard<'a, T> {
   type Target = T;
   fn deref(&self) -> &Self::Target {
     let k = unsafe { &*self.resource_rw_lock.data_ptr() };
@@ -136,13 +150,13 @@ impl<'a, T: 'static> Deref for ResourceReadGuard<'a, T> {
   }
 }
 
-pub struct ResourceWriteGuard<'a, T> {
-  resource_rw_lock: &'a RwLock<dyn Any>,
+pub struct ResourceWriteGuard<'a, T: ResourceType + ?Sized> {
+  resource_rw_lock: &'a RwLock<dyn ResourceType>,
 
   phantom_data: PhantomData<T>,
 }
 
-impl<'a, T> ResourceWriteGuard<'a, T> {
+impl<'a, T: ResourceType + ?Sized> ResourceWriteGuard<'a, T> {
   pub fn new(resource: &'a Resource<T>) -> ResourceWriteGuard<'a, T> {
     unsafe {
       resource.arc.raw().lock_exclusive();
@@ -154,13 +168,13 @@ impl<'a, T> ResourceWriteGuard<'a, T> {
   }
 }
 
-impl<'a, T> Drop for ResourceWriteGuard<'a, T> {
+impl<'a, T: ResourceType + ?Sized> Drop for ResourceWriteGuard<'a, T> {
   fn drop(&mut self) {
     unsafe { self.resource_rw_lock.raw().unlock_exclusive() }
   }
 }
 
-impl<'a, T: 'static> Deref for ResourceWriteGuard<'a, T> {
+impl<'a, T: ResourceType> Deref for ResourceWriteGuard<'a, T> {
   type Target = T;
 
   fn deref(&self) -> &Self::Target {
@@ -168,7 +182,7 @@ impl<'a, T: 'static> Deref for ResourceWriteGuard<'a, T> {
   }
 }
 
-impl<'a, T: 'static> DerefMut for ResourceWriteGuard<'a, T> {
+impl<'a, T: ResourceType> DerefMut for ResourceWriteGuard<'a, T> {
   fn deref_mut(&mut self) -> &mut Self::Target {
     unsafe { &mut *self.resource_rw_lock.data_ptr() }
       .downcast_mut()
@@ -178,3 +192,10 @@ impl<'a, T: 'static> DerefMut for ResourceWriteGuard<'a, T> {
 
 unsafe impl<T> Sync for Resource<T> {}
 unsafe impl<T> Send for Resource<T> {}
+
+pub trait ResourceType: DowncastSync {}
+impl_downcast!(sync ResourceType);
+
+pub trait ResourcePileObserver {
+  fn on_create(&mut self, type_id: TypeId, process_unique_id: ProcessUniqueId, resource: Resource<dyn ResourceType>);
+}

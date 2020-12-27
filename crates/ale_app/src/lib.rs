@@ -30,15 +30,15 @@ impl App {
     }
   }
 
-  pub fn run(&mut self) {
-    while !app.window.should_close() {
-      app.backend.poll_inputs();
-
-      app.fixed_tick.tick(&mut |delta_time| {});
-
-      OpenGL::clear_buffer();
-
-      app.window.swap_buffers();
-    }
-  }
+  // pub fn run(&mut self) {
+  //   while !app.window.should_close() {
+  //     app.backend.poll_inputs();
+  //
+  //     app.fixed_tick.tick(&mut |delta_time| {});
+  //
+  //     OpenGL::clear_buffer();
+  //
+  //     app.window.swap_buffers();
+  //   }
+  // }
 }

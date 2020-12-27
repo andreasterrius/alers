@@ -1,7 +1,7 @@
 use crate::buffer::{Buffer, BufferBuilder, SeparateBufferBuilder};
 use ale_autoid::*;
 use ale_ecs::{Entity, EntityBuilder};
-use ale_resource::ResourcePile;
+use ale_resource::{ResourcePile, ResourceType};
 
 pub mod buffer;
 
@@ -100,6 +100,8 @@ impl Mesh {
     Mesh::new(vertices, None)
   }
 }
+
+impl ResourceType for Mesh {}
 
 pub trait MeshComponent {
   fn with_mesh(&mut self, mesh: &Mesh);

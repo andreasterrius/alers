@@ -10,3 +10,4 @@ edition = "2018"
 ale_autoid = { path = "../ale_autoid" }
 ale_error = { path = "../ale_error" }
 parking_lot = "0.11.1"
+downcast-rs = "1.2.0"

@@ -1,8 +1,11 @@
 use crate::raw;
 use crate::raw::{create_buffer, CreateBufferError};
+use crate::resource_pile::{OpenGLResourceLoader, OpenGLResourceRouter};
+use crate::route_loader;
 use ale_autoid::Identifiable;
 use ale_mesh::{Mesh, MeshId};
 use std::collections::HashMap;
+use std::ops::Deref;
 
 pub struct OpenGLMeshId(pub u32);
 
@@ -59,3 +62,12 @@ impl From<CreateBufferError> for OpenGLMeshError {
     OpenGLMeshError::CreateBufferError(error)
   }
 }
+
+pub struct OpenGLMeshLoader;
+
+impl OpenGLResourceLoader<Mesh, OpenGLMesh> for OpenGLMeshLoader {
+  fn create(&self, before: &Mesh) -> OpenGLMesh {
+    OpenGLMesh::new(before).unwrap()
+  }
+}
+route_loader!(OpenGLMeshLoader, Mesh);

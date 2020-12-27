@@ -1,7 +1,7 @@
 use std::fs::File;
 
 use ale_autoid::*;
-use ale_resource::{Resource, ResourcePile};
+use ale_resource::{Resource, ResourcePile, ResourceType};
 use hdrldr::LoadError;
 use image::{GenericImageView, ImageError};
 
@@ -165,3 +165,5 @@ fn test_flip_image_vertically() {
   let t = Texture::from_data(TexturePixel::RgbF32(k), 3, 2, 3);
   println!("{:?}", t.clone_data_flip_vertically());
 }
+
+impl ResourceType for Texture {}

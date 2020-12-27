@@ -1,6 +1,8 @@
 use crate::mesh::{OpenGLMesh, OpenGLMeshContext};
 use crate::raw;
 use crate::raw::{create_texture, CreateTextureError};
+use crate::resource_pile::OpenGLResourceLoader;
+use crate::route_loader;
 use crate::shader::{OpenGLShader, OpenGLShaderContext, OpenGLShaderId};
 use ale_camera::{Camera, CameraRenderInfo};
 use ale_font::{Font, FontTextureKey};
@@ -76,3 +78,12 @@ impl From<CreateTextureError> for OpenGLTextureError {
     OpenGLTextureError::CreateTextureError(e)
   }
 }
+
+pub struct OpenGLTextureLoader;
+
+impl OpenGLResourceLoader<Texture, OpenGLTexture> for OpenGLTextureLoader {
+  fn create(&self, before: &Texture) -> OpenGLTexture {
+    OpenGLTexture::new(before).unwrap()
+  }
+}
+route_loader!(OpenGLTextureLoader, Texture);

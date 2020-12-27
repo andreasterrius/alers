@@ -1,5 +1,5 @@
 use ale_autoid::*;
-use ale_resource::{Resource, ResourcePile};
+use ale_resource::{Resource, ResourcePile, ResourceType};
 use std::fs;
 use std::fs::File;
 use std::io::Read;
@@ -39,3 +39,5 @@ impl ShaderLoader for ResourcePile {
     self.register(shader)
   }
 }
+
+impl ResourceType for Shader {}
