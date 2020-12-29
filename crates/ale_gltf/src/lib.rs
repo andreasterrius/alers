@@ -16,7 +16,6 @@ pub trait glTFLoader {
 
 impl glTFLoader for ResourcePile {
   fn load_gltf(&mut self, path: &str) -> Vec<(Transform, Resource<Mesh>)> {
-    println!("{}", self.get_resource_path(path));
     glTF::load(&self.get_resource_path(path))
       .into_iter()
       .map(|(t, m)| {

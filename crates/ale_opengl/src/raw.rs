@@ -409,3 +409,10 @@ pub unsafe fn create_cubemap(w: u32, h: u32) -> u32 {
 
   return cubemap;
 }
+
+pub unsafe fn get_viewport_size() -> (u32, u32) {
+  let mut gl_viewport: Vec<GLint> = Vec::with_capacity(4);
+  gl_viewport.set_len(4);
+  gl::GetIntegerv(gl::VIEWPORT, gl_viewport.as_mut_ptr());
+  (gl_viewport[2] as u32, gl_viewport[3] as u32)
+}

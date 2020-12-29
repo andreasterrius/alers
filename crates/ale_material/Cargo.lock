@@ -106,7 +106,9 @@ dependencies = [
  "ale_shader",
  "ale_texture",
  "ale_variable",
+ "downcast-rs",
  "gl",
+ "parking_lot",
 ]
 
 [[package]]
@@ -120,6 +122,20 @@ dependencies = [
  "ale_resource",
  "ale_shader",
  "ale_texture",
+]
+
+[[package]]
+name = "ale_opengl_pbr"
+version = "0.1.0"
+dependencies = [
+ "ale_camera",
+ "ale_math",
+ "ale_mesh",
+ "ale_opengl",
+ "ale_opengl_envmap",
+ "ale_resource",
+ "ale_shader",
+ "ale_variable",
 ]
 
 [[package]]

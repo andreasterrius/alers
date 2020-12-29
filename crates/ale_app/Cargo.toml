@@ -11,3 +11,10 @@ ale_glfw = { path = "../ale_glfw" }
 ale_opengl = { path = "../ale_opengl" }
 ale_math = { path = "../ale_math" }
 ale_input = { path = "../ale_input" }
+ale_resource = { path = "../ale_resource" }
+ale_ecs = { path = "../ale_ecs" }
+
+ale_camera = { path = "../ale_camera" }
+ale_mesh = { path = "../ale_mesh" }
+ale_shader = { path = "../ale_shader"}
+ale_material = { path = "../ale_material" }

@@ -9,5 +9,7 @@ edition = "2018"
 [dependencies]
 ale_autoid = { path = "../ale_autoid" }
 ale_resource = { path = "../ale_resource" }
+ale_shader = { path = "../ale_shader" }
+ale_mesh = { path = "../ale_mesh" }
 hdrldr = "0.1"
 image = "0.23.*"

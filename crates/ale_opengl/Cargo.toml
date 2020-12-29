@@ -17,4 +17,8 @@ ale_camera = { path = "../ale_camera" }
 ale_console = { path = "../ale_console" }
 ale_variable = { path = "../ale_variable" }
 ale_resource = { path = "../ale_resource" }
+ale_ecs = { path = "../ale_ecs" }
+ale_material = { path = "../ale_material" }
 gl = "0.6.2"
+parking_lot = "0.11.1"
+downcast-rs = "1.2.0"

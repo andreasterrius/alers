@@ -1,6 +1,6 @@
 use crate::raw;
 use crate::raw::{create_shader, CreateShaderError};
-use crate::resource_pile::{OpenGLResourceLoader, OpenGLResourceRouter};
+use crate::resource_pile::{OpenGLResourceLoader, OpenGLResourcePile, OpenGLResourceRouter, OpenGLResourceType};
 use crate::route_loader;
 use ale_math::{Vector3, Vector4};
 use ale_shader::Shader;
@@ -46,6 +46,8 @@ impl OpenGLShader {
   }
 }
 
+impl OpenGLResourceType for OpenGLShader {}
+
 #[derive(Debug)]
 pub enum OpenGLShaderError {
   CompilationError(CreateShaderError),
@@ -60,7 +62,7 @@ impl From<CreateShaderError> for OpenGLShaderError {
 pub struct OpenGLShaderLoader;
 
 impl OpenGLResourceLoader<Shader, OpenGLShader> for OpenGLShaderLoader {
-  fn create(&self, before: &Shader) -> OpenGLShader {
+  fn create(&self, opengl_resource_pile: &OpenGLResourcePile, before: &Shader) -> OpenGLShader {
     OpenGLShader::new(before).unwrap()
   }
 }

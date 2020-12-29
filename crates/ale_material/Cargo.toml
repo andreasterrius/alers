@@ -1,5 +1,5 @@
 [package]
-name = "ale_opengl_pbr"
+name = "ale_material"
 version = "0.1.0"
 authors = ["Andreas Terrius <andreas.terrius@gmail.com>"]
 edition = "2018"
@@ -8,10 +8,9 @@ edition = "2018"
 
 [dependencies]
 ale_variable = { path = "../ale_variable" }
-ale_opengl = { path = "../ale_opengl" }
 ale_shader = { path = "../ale_shader" }
 ale_mesh = { path = "../ale_mesh" }
-ale_opengl_envmap = { path = "../ale_opengl_envmap" }
 ale_camera = { path = "../ale_camera" }
 ale_math = { path = "../ale_math" }
 ale_resource = { path = "../ale_resource" }
+ale_texture = { path = "../ale_texture" }

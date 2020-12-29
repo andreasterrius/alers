@@ -1,3 +1,5 @@
+pub mod envmap;
+
 use std::fs::File;
 
 use ale_autoid::*;
@@ -114,6 +116,7 @@ impl TextureLoader for ResourcePile {
     self.register(texture)
   }
 }
+
 
 #[derive(Debug)]
 pub enum LoadTextureError {

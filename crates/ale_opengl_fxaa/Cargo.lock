@@ -76,6 +76,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "ale_material"
+version = "0.1.0"
+dependencies = [
+ "ale_camera",
+ "ale_math",
+ "ale_mesh",
+ "ale_resource",
+ "ale_shader",
+ "ale_texture",
+ "ale_variable",
+]
+
+[[package]]
 name = "ale_math"
 version = "0.1.0"
 dependencies = [
@@ -99,14 +112,18 @@ dependencies = [
  "ale_autoid",
  "ale_camera",
  "ale_console",
+ "ale_ecs",
  "ale_font",
+ "ale_material",
  "ale_math",
  "ale_mesh",
  "ale_resource",
  "ale_shader",
  "ale_texture",
  "ale_variable",
+ "downcast-rs",
  "gl",
+ "parking_lot",
 ]
 
 [[package]]
@@ -115,6 +132,7 @@ version = "0.1.0"
 dependencies = [
  "ale_console",
  "ale_opengl",
+ "ale_resource",
  "ale_shader",
  "ale_variable",
 ]
@@ -142,7 +160,9 @@ name = "ale_texture"
 version = "0.1.0"
 dependencies = [
  "ale_autoid",
+ "ale_mesh",
  "ale_resource",
+ "ale_shader",
  "hdrldr",
  "image",
 ]

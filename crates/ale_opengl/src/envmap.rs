@@ -1,20 +1,23 @@
+use crate::mesh::OpenGLMesh;
+use crate::raw;
+use crate::resource_pile::{OpenGLResource, OpenGLResourceLoader, OpenGLResourcePile, OpenGLResourceType};
+use crate::route_loader;
+use crate::shader::OpenGLShader;
+use crate::texture::OpenGLTexture;
 use ale_camera::CameraRenderInfo;
 use ale_math::{perspective, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector2, Vector3};
 use ale_mesh::Mesh;
-use ale_opengl::mesh::OpenGLMesh;
-use ale_opengl::raw;
-use ale_opengl::shader::OpenGLShader;
-use ale_opengl::texture::OpenGLTexture;
-use ale_resource::ResourcePile;
+use ale_resource::{Resource, ResourcePile};
 use ale_shader::{Shader, ShaderLoader};
+use ale_texture::envmap::Envmap;
 use ale_texture::Texture;
 
 pub struct OpenGLEnvmap {
-  pub(crate) cube_mesh: OpenGLMesh,
+  pub(crate) cube_mesh: OpenGLResource<OpenGLMesh>,
 
-  pub(crate) equirect_shader: OpenGLShader,
-  pub(crate) irradiance_shader: OpenGLShader,
-  pub(crate) skybox_shader: OpenGLShader,
+  pub(crate) equirect_shader: OpenGLResource<OpenGLShader>,
+  pub(crate) irradiance_shader: OpenGLResource<OpenGLShader>,
+  pub(crate) skybox_shader: OpenGLResource<OpenGLShader>,
 
   pub(crate) cubemap_size: Vector2<u32>,
   pub(crate) cubemap: u32,
@@ -23,34 +26,19 @@ pub struct OpenGLEnvmap {
   pub(crate) convoluted_cubemap: u32,
 }
 
-enum ProjectionTarget<'a> {
+enum ProjectionTarget {
   Cubemap(u32),
-  Texture2d(&'a OpenGLTexture),
+  Texture2d(OpenGLResource<OpenGLTexture>),
 }
 
 impl OpenGLEnvmap {
-  pub fn new(hdr_texture: &Texture, window_size: Vector2<u32>, resource_pile: &mut ResourcePile) -> OpenGLEnvmap {
-    let cube_mesh = OpenGLMesh::new(&Mesh::new_cube()).unwrap();
-
-    let equirect_shader = OpenGLShader::new(
-      &resource_pile
-        .load_shader("shader/envmap/cubemap.vert", "shader/envmap/equirect.frag")
-        .read(),
-    )
-    .unwrap();
-    let irradiance_shader = OpenGLShader::new(
-      &resource_pile
-        .load_shader("shader/envmap/cubemap.vert", "shader/envmap/irradiance.frag")
-        .read(),
-    )
-    .unwrap();
-    let skybox_shader = OpenGLShader::new(
-      &resource_pile
-        .load_shader("shader/envmap/skybox.vert", "shader/envmap/skybox.frag")
-        .read(),
-    )
-    .unwrap();
-
+  pub fn new(
+    hdr_texture: OpenGLResource<OpenGLTexture>,
+    equirect_shader: OpenGLResource<OpenGLShader>,
+    irradiance_shader: OpenGLResource<OpenGLShader>,
+    skybox_shader: OpenGLResource<OpenGLShader>,
+    cube_mesh: OpenGLResource<OpenGLMesh>,
+  ) -> OpenGLEnvmap {
     let cubemap_size = Vector2::new(512, 512);
     let convoluted_cubemap_size = Vector2::new(32, 32);
 
@@ -68,23 +56,19 @@ impl OpenGLEnvmap {
       convoluted_cubemap,
     };
 
-    let opengl_texture = OpenGLTexture::new(hdr_texture).unwrap();
-
     intern_envmap_project(
-      &context.cube_mesh,
-      &context.equirect_shader,
-      ProjectionTarget::Texture2d(&opengl_texture),
+      &context.cube_mesh.read(),
+      &context.equirect_shader.read(),
+      ProjectionTarget::Texture2d(hdr_texture),
       cubemap_size,
       cubemap,
-      window_size,
     );
     intern_envmap_project(
-      &context.cube_mesh,
-      &context.irradiance_shader,
+      &context.cube_mesh.read(),
+      &context.irradiance_shader.read(),
       ProjectionTarget::Cubemap(context.cubemap),
       convoluted_cubemap_size,
       convoluted_cubemap,
-      window_size,
     );
 
     context
@@ -92,7 +76,7 @@ impl OpenGLEnvmap {
 
   pub fn render(&self, camera_render_info: &CameraRenderInfo) {
     unsafe {
-      let shader = self.skybox_shader.id;
+      let shader = self.skybox_shader.read().id;
       let cubemap = self.convoluted_cubemap;
       let cube_mesh = &self.cube_mesh;
 
@@ -103,7 +87,7 @@ impl OpenGLEnvmap {
       raw::active_texture(0);
       raw::bind_cubemap(cubemap);
 
-      cube_mesh.render();
+      cube_mesh.read().render();
     }
   }
 
@@ -122,10 +106,11 @@ fn intern_envmap_project(
   projection_target: ProjectionTarget,
   projection_size: Vector2<u32>,
   cubemap_id: u32, // render target
-  window_size: Vector2<u32>,
 ) {
   let cube_mesh = cube_mesh;
   let equirect_shader = shader;
+  let (ori_view_x, ori_view_y) = unsafe { raw::get_viewport_size() };
+  let original_viewport_size = Vector2::new(ori_view_x, ori_view_y);
 
   let projection = perspective(Deg(90.0f32), 1.0f32, 0.1f32, 10.0f32);
   let views = vec![
@@ -151,7 +136,7 @@ fn intern_envmap_project(
         raw::bind_cubemap(c);
       }
       ProjectionTarget::Texture2d(c) => {
-        raw::bind_texture(c.id.0);
+        raw::bind_texture(c.read().id.0);
       }
     };
 
@@ -169,6 +154,44 @@ fn intern_envmap_project(
     raw::bind_vao(0);
     // unbind framebuffer
     raw::bind_framebuffer(0);
-    raw::set_viewport(0, 0, window_size.x, window_size.y);
+    raw::set_viewport(0, 0, original_viewport_size.x, original_viewport_size.y);
   }
 }
+
+pub struct OpenGLEnvmapLoader;
+
+impl OpenGLResourceLoader<Envmap, OpenGLEnvmap> for OpenGLEnvmapLoader {
+  fn create(&self, opengl_resource_pile: &OpenGLResourcePile, resource: &Envmap) -> OpenGLEnvmap {
+    let hdr_texture = opengl_resource_pile
+      .retrieve(&*resource.texture.read())
+      .unwrap()
+      .clone();
+    let equirect_shader = opengl_resource_pile
+      .retrieve(&*resource.equirect_shader.read())
+      .unwrap()
+      .clone();
+    let irradiance_shader = opengl_resource_pile
+      .retrieve(&*resource.irradiance_shader.read())
+      .unwrap()
+      .clone();
+    let skybox_shader = opengl_resource_pile
+      .retrieve(&*resource.skybox_shader.read())
+      .unwrap()
+      .clone();
+    let cube_mesh = opengl_resource_pile
+      .retrieve(&*resource.cube_mesh.read())
+      .unwrap()
+      .clone();
+
+    OpenGLEnvmap::new(
+      hdr_texture,
+      equirect_shader,
+      irradiance_shader,
+      skybox_shader,
+      cube_mesh,
+    )
+  }
+}
+route_loader!(OpenGLEnvmapLoader, Envmap);
+
+impl OpenGLResourceType for OpenGLEnvmap {}

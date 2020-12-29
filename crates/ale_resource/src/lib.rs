@@ -62,16 +62,17 @@ impl ResourcePile {
     });
     for obs in &mut self.observers {
       match obs.upgrade() {
-        Some(mut o) => o
-          .deref()
-          .borrow_mut()
-          .deref_mut()
-          .on_create(TypeId::of::<T>(), key, Resource::new(arc.clone())),
+        Some(mut o) => {
+          o.deref()
+            .borrow_mut()
+            .deref_mut()
+            .on_create(TypeId::of::<T>(), key, Resource::new(arc.clone(), key))
+        }
         None => {}
       }
     }
 
-    Resource::new(arc)
+    Resource::new(arc, key)
   }
 
   pub fn get_resource_path(&self, path: &str) -> String {
@@ -82,22 +83,34 @@ impl ResourcePile {
 pub struct Resource<T: ?Sized> {
   arc: Arc<RwLock<dyn ResourceType>>,
 
+  id: ProcessUniqueId,
+
   phantom_data: PhantomData<T>,
+}
+
+impl<T> Identifiable for Resource<T> {
+  type Ret = ProcessUniqueId;
+
+  fn uid(&self) -> Self::Ret {
+    self.id
+  }
 }
 
 impl<T: ?Sized> Clone for Resource<T> {
   fn clone(&self) -> Self {
     Self {
       arc: self.arc.clone(),
+      id: self.id.clone(),
       phantom_data: Default::default(),
     }
   }
 }
 
 impl<T: ResourceType + ?Sized> Resource<T> {
-  pub fn new(arc: Arc<RwLock<dyn ResourceType>>) -> Resource<T> {
+  pub fn new(arc: Arc<RwLock<dyn ResourceType>>, id: ProcessUniqueId) -> Resource<T> {
     Resource {
       arc,
+      id,
       phantom_data: Default::default(),
     }
   }

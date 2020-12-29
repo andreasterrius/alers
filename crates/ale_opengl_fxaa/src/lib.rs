@@ -1,15 +1,17 @@
 use ale_console::Console;
 use ale_opengl::mesh::OpenGLMeshContext;
 use ale_opengl::render_frame::OpenGLRenderFrameContext;
+use ale_opengl::resource_pile::OpenGLResource;
 use ale_opengl::shader::{OpenGLShader, OpenGLShaderContext};
-use ale_opengl::OpenGL;
+use ale_opengl::OpenGLRenderer;
+use ale_resource::Resource;
 use ale_shader::Shader;
 use ale_variable::{to_variable, ToVariable, Variable};
 use std::collections::hash_map::Entry;
 
-pub struct OpenGLFxaaContext {
+pub struct OpenGLFXAA {
   // The main fxaa shader
-  pub(crate) fxaa_shader: OpenGLShader,
+  pub(crate) fxaa_shader: OpenGLResource<OpenGLShader>,
 
   // Variables for shaders
   pub(crate) fxaa_relative_threshold: f32,
@@ -18,15 +20,9 @@ pub struct OpenGLFxaaContext {
   pub(crate) fxaa_is_enabled: bool,
 }
 
-impl OpenGLFxaaContext {
-  pub fn new() -> OpenGLFxaaContext {
-    let fxaa_shader = OpenGLShader::new(&Shader::new(
-      include_str!("../resources/fxaa.vert").to_owned(),
-      include_str!("../resources/fxaa.frag").to_owned(),
-    ))
-    .unwrap();
-
-    OpenGLFxaaContext {
+impl OpenGLFXAA {
+  pub fn new(fxaa_shader: OpenGLResource<OpenGLShader>) -> OpenGLFXAA {
+    OpenGLFXAA {
       fxaa_shader,
       fxaa_relative_threshold: 0.0312,
       fxaa_contrast_threshold: 0.063,
@@ -50,9 +46,9 @@ impl OpenGLFxaaContext {
   }
 
   pub fn render(&self, opengl_render_frame_context: &OpenGLRenderFrameContext) {
-    OpenGL::clear_buffer();
+    OpenGLRenderer::clear_buffer();
     opengl_render_frame_context.render(
-      &self.fxaa_shader,
+      &self.fxaa_shader.read(),
       &vec![
         to_variable!(self.fxaa_contrast_threshold),
         to_variable!(self.fxaa_relative_threshold),

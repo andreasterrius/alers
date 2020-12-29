@@ -18,8 +18,7 @@ ale_input = { path = "../../crates/ale_input" }
 ale_console = { path = "../../crates/ale_console" }
 ale_variable = { path = "../../crates/ale_variable" }
 ale_opengl_fxaa = { path = "../../crates/ale_opengl_fxaa" }
-ale_opengl_envmap = { path = "../../crates/ale_opengl_envmap" }
-ale_opengl_pbr = { path = "../../crates/ale_opengl_pbr" }
+ale_material = { path = "../../crates/ale_material" }
 ale_app = { path = "../../crates/ale_app" }
 ale_glfw = { path = "../../crates/ale_glfw" }
 ale_resource = { path = "../../crates/ale_resource" }

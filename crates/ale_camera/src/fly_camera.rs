@@ -52,7 +52,7 @@ impl FlyCamera {
   }
 
   pub fn calculate_render_info(&mut self) -> CameraRenderInfo {
-    self.calculate_render_info()
+    self.camera.calculate_render_info()
   }
 
   fn handle_input(&mut self, input: &Input) {

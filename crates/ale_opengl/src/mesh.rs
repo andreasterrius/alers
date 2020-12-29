@@ -1,6 +1,6 @@
 use crate::raw;
 use crate::raw::{create_buffer, CreateBufferError};
-use crate::resource_pile::{OpenGLResourceLoader, OpenGLResourceRouter};
+use crate::resource_pile::{OpenGLResourceLoader, OpenGLResourcePile, OpenGLResourceRouter, OpenGLResourceType};
 use crate::route_loader;
 use ale_autoid::Identifiable;
 use ale_mesh::{Mesh, MeshId};
@@ -52,6 +52,8 @@ impl OpenGLMesh {
   }
 }
 
+impl OpenGLResourceType for OpenGLMesh {}
+
 #[derive(Debug)]
 pub enum OpenGLMeshError {
   CreateBufferError(CreateBufferError),
@@ -66,7 +68,7 @@ impl From<CreateBufferError> for OpenGLMeshError {
 pub struct OpenGLMeshLoader;
 
 impl OpenGLResourceLoader<Mesh, OpenGLMesh> for OpenGLMeshLoader {
-  fn create(&self, before: &Mesh) -> OpenGLMesh {
+  fn create(&self, opengl_resource_pile: &OpenGLResourcePile, before: &Mesh) -> OpenGLMesh {
     OpenGLMesh::new(before).unwrap()
   }
 }
