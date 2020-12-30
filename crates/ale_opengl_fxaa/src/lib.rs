@@ -9,7 +9,7 @@ use ale_shader::ale_shader_new;
 use ale_variable::{to_variable, ToVariable, Variable};
 use std::collections::hash_map::Entry;
 
-pub struct OpenGLFxaaContext {
+pub struct OpenGLFXAAContext {
   // The main fxaa shader
   pub(crate) fxaa_shader: OpenGLShader,
 
@@ -20,14 +20,14 @@ pub struct OpenGLFxaaContext {
   pub(crate) fxaa_is_enabled: bool,
 }
 
-pub fn ale_opengl_fxaa_new() -> OpenGLFxaaContext {
+pub fn ale_opengl_fxaa_new() -> OpenGLFXAAContext {
   let fxaa_shader = ale_opengl_shader_new(&ale_shader_new(
     include_str!("../resources/fxaa.vert").to_owned(),
     include_str!("../resources/fxaa.frag").to_owned(),
   ))
   .unwrap();
 
-  OpenGLFxaaContext {
+  OpenGLFXAAContext {
     fxaa_shader,
     fxaa_relative_threshold: 0.0312,
     fxaa_contrast_threshold: 0.063,
@@ -36,14 +36,14 @@ pub fn ale_opengl_fxaa_new() -> OpenGLFxaaContext {
   }
 }
 
-pub fn ale_opengl_fxaa_console_variable_register(opengl_fxaa_context: &OpenGLFxaaContext, console: &mut Console) {
+pub fn ale_opengl_fxaa_console_variable_register(opengl_fxaa_context: &OpenGLFXAAContext, console: &mut Console) {
   ale_console_variable_register(console, to_variable!(opengl_fxaa_context.fxaa_relative_threshold));
   ale_console_variable_register(console, to_variable!(opengl_fxaa_context.fxaa_contrast_threshold));
   ale_console_variable_register(console, to_variable!(opengl_fxaa_context.fxaa_subpixel_blending));
   ale_console_variable_register(console, to_variable!(opengl_fxaa_context.fxaa_is_enabled));
 }
 
-pub fn ale_opengl_fxaa_console_variable_refresh(opengl_fxaa_context: &mut OpenGLFxaaContext, console: &mut Console) {
+pub fn ale_opengl_fxaa_console_variable_refresh(opengl_fxaa_context: &mut OpenGLFXAAContext, console: &mut Console) {
   opengl_fxaa_context.fxaa_relative_threshold =
     ale_console_variable_event_handle(console, to_variable!(opengl_fxaa_context.fxaa_relative_threshold));
   opengl_fxaa_context.fxaa_contrast_threshold =
@@ -55,7 +55,7 @@ pub fn ale_opengl_fxaa_console_variable_refresh(opengl_fxaa_context: &mut OpenGL
 }
 
 pub fn ale_opengl_fxaa_render(
-  opengl_fxaa_context: &OpenGLFxaaContext,
+  opengl_fxaa_context: &OpenGLFXAAContext,
   opengl_render_frame_context: &OpenGLRenderFrameContext,
 ) {
   ale_opengl_clear_render();

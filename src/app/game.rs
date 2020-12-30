@@ -25,7 +25,7 @@ use ale_opengl::text::ale_opengl_text_render;
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_opengl_fxaa::{
   ale_opengl_fxaa_console_variable_refresh, ale_opengl_fxaa_console_variable_register, ale_opengl_fxaa_new,
-  ale_opengl_fxaa_render, OpenGLFxaaContext,
+  ale_opengl_fxaa_render, OpenGLFXAAContext,
 };
 use ale_shader::{ale_shader_new, Shader};
 use ale_texture::ale_texture_load;
@@ -57,7 +57,7 @@ pub struct Game {
   opengl_shader_context: OpenGLShaderContext,
 
   opengl_main_render_frame_context: OpenGLRenderFrameContext,
-  opengl_fxaa_context: OpenGLFxaaContext,
+  opengl_fxaa_context: OpenGLFXAAContext,
 }
 
 impl Game {
@@ -75,27 +75,13 @@ impl Game {
 
     let screen_size = Vector2::new(800, 600);
 
-    //let resource_base_path = "E:\\Codes\\Repos\\alers\\resources";
-    //let shader_base_path = "E:\\Codes\\Repos\\alers\\shaders";
     let resource_base_path = "/home/alether/Codes/Graphics/alers/resources";
     let shader_base_path = "/home/alether/Codes/Graphics/alers/shaders";
-
-    // Load meshes
-    // let meshes = resource::fbx_convert::to_static_meshes(
-    //   resource::fbx::load(&format!("{}/{}", resource_base_path, "test/scene.fbx")).unwrap(),
-    // )
-    // .unwrap();
 
     let meshes = ale_gltf_load(&format!("{}/{}", resource_base_path, "test/sceneg.gltf"));
 
     let cube_mesh = ale_mesh_cube_new();
     let plane_mesh = ale_mesh_plane_new();
-
-    // Load skeletal meshes
-    // let _skeletal_meshes = resource::fbx_convert::to_skeletal_meshes(
-    //   resource::fbx::load(&format!("{}/{}", resource_base_path, "test/anim_begin.fbx")).unwrap(),
-    // )
-    // .unwrap();
 
     // Load shaders
     let pbr_shader = ale_shader_new(
