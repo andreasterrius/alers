@@ -39,10 +39,11 @@ float LinearRgbToLuminance(vec3 linearRgb) {
 	return dot(linearRgb, vec3(0.2126729f,  0.7151522f, 0.0721750f));
 }
 
-float SampleLuminance(vec2 uv, int plusU, int plusV){
-    vec3 ori = vec3(textureOffset(textureSampler, uv, ivec2(plusU, plusV)));
-    return LinearRgbToLuminance(Saturate(ori));
-}
+//float SampleLuminance(vec2 uv, int plusU, int plusV){
+//    vec3 ori = vec3(textureOffset(textureSampler, uv, ivec2(plusU, plusV)));
+//    return LinearRgbToLuminance(Saturate(ori));
+//}
+#define SampleLuminance(uv, plusU, plusV) LinearRgbToLuminance(Saturate(vec3(textureOffset(textureSampler, uv, ivec2(plusU, plusV)))))
 
 EdgeData DetermineEdge(PixelData p, vec2 texelSize){
     EdgeData e;
@@ -146,7 +147,7 @@ float DetermineEdgeBlendFactor(PixelData p, EdgeData e, vec2 uv, vec2 texelSize)
     }
 
     if (deltaSign == (p.m - edgeLuminance >= 0)) {
-        return 0;
+        return 0.0;
     }
     return 0.5 - shortestDistance / (pDistance + nDistance);
 }
@@ -176,7 +177,7 @@ bool ShouldSkipPixel(PixelData p){
     return p.contrast < threshold;
 }
 
-vec3 FXAA(vec2 uv, vec2 texelSize){
+vec3 FXAA(vec2 uv, ivec2 coords, vec2 texelSize){
     PixelData p = SampleLuminanceNeighborhood(uv);
 
     if(ShouldSkipPixel(p)){
@@ -204,10 +205,13 @@ void main()
     ivec2 textureSize = textureSize(textureSampler,0);
     vec2 texelSize = vec2(1.0/float(textureSize.x),1.0/float(textureSize.y));
 
-    vec3 lumi = FXAA(TexCoords.st, texelSize).rgb;
+    vec2 texCoordsPixelF = TexCoords.st * textureSize;
+    ivec2 texCoordsPixel = ivec2(texCoordsPixelF.xy);
+
+    vec3 lumi = FXAA(TexCoords.st, texCoordsPixel, texelSize).rgb;
     vec3 color = textureLod(textureSampler, TexCoords.st, 0.0).rgb;
 
-    vec3 finalColor = mix(color, lumi, fxaa_is_enabled);
+    vec3 finalColor = mix(color, lumi, float(fxaa_is_enabled));
     FragColor = vec4(finalColor, 1.0);
     //FragColor = vec4(texelSize.x, texelSize.y, 0.0, 1.0);
 }
