@@ -64,14 +64,14 @@ impl FlyCamera {
 
     match input {
       // Handle movement
-      Input::Key(Key::A, _, Action::Press, _) => self.move_input.x += -10.0f32,
-      Input::Key(Key::D, _, Action::Press, _) => self.move_input.x += 10.0f32,
-      Input::Key(Key::W, _, Action::Press, _) => self.move_input.z += 10.0f32,
-      Input::Key(Key::S, _, Action::Press, _) => self.move_input.z += -10.0f32,
-      Input::Key(Key::A, _, Action::Release, _) => self.move_input.x += 10.0f32,
-      Input::Key(Key::D, _, Action::Release, _) => self.move_input.x += -10.0f32,
-      Input::Key(Key::W, _, Action::Release, _) => self.move_input.z += -10.0f32,
-      Input::Key(Key::S, _, Action::Release, _) => self.move_input.z += 10.0f32,
+      Input::Key(Key::A, _, Action::Press, _) => self.move_input.x += -1.0f32,
+      Input::Key(Key::D, _, Action::Press, _) => self.move_input.x += 1.0f32,
+      Input::Key(Key::W, _, Action::Press, _) => self.move_input.z += 1.0f32,
+      Input::Key(Key::S, _, Action::Press, _) => self.move_input.z += -1.0f32,
+      Input::Key(Key::A, _, Action::Release, _) => self.move_input.x += 1.0f32,
+      Input::Key(Key::D, _, Action::Release, _) => self.move_input.x += -1.0f32,
+      Input::Key(Key::W, _, Action::Release, _) => self.move_input.z += -1.0f32,
+      Input::Key(Key::S, _, Action::Release, _) => self.move_input.z += 1.0f32,
       Input::Key(Key::Z, _, Action::Press, _) => self.disable_input = !self.disable_input,
 
       Input::MouseMotion(x, y) => {

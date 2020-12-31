@@ -1,7 +1,8 @@
 use crate::mesh::{ale_opengl_mesh_new, OpenGLMesh};
 use crate::shader::{ale_opengl_shader_new, OpenGLShader};
 use ale_console::{ale_console_variable_event_handle, ale_console_variable_register, Console};
-use ale_mesh::ale_mesh_bounding_box_new;
+use ale_math::transform::Transform;
+use ale_mesh::{ale_mesh_bounding_box_new, Mesh};
 use ale_shader::ale_shader_new;
 use ale_variable::{to_variable, ToVariable};
 
@@ -40,4 +41,15 @@ pub fn ale_opengl_wire_console_variable_refresh(opengl_wire_context: &mut OpenGL
     ale_console_variable_event_handle(console, to_variable!(opengl_wire_context.wire_thickness));
 }
 
-pub fn ale_opengl_wire_boundingbox_render() {}
+pub fn ale_opengl_wire_boundingbox_render(
+  opengl_wire_context: &mut OpenGLWireContext,
+  meshes: &Vec<(Transform, Mesh)>,
+) {
+  if !opengl_wire_context.wire_render_enable {
+    return;
+  }
+
+  //activate shader
+  //pass transform
+  //render box
+}

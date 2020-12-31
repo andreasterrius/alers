@@ -7,7 +7,7 @@ use ale_gltf::ale_gltf_load;
 use ale_input::Input;
 use ale_math::color::Color;
 use ale_math::rect::Rect;
-use ale_mesh::{ale_mesh_cube_new, ale_mesh_plane_new};
+use ale_mesh::{ale_mesh_cube_new, ale_mesh_plane_new, Mesh};
 use ale_opengl::mesh::{ale_opengl_mesh_context_new, OpenGLMeshContext};
 use ale_opengl::shader::{ale_opengl_shader_context_new, OpenGLShaderContext};
 use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
@@ -15,6 +15,7 @@ use ale_opengl::texture::{ale_opengl_texture_context_new, OpenGLTextureContext};
 use ale_console::{
   ale_console_input, ale_console_new, ale_console_variable_has_event, ale_console_variable_register, Console,
 };
+use ale_math::transform::Transform;
 use ale_opengl::console::ale_opengl_console_render;
 use ale_opengl::raw::enable_depth_test;
 use ale_opengl::render_frame::{
@@ -23,8 +24,8 @@ use ale_opengl::render_frame::{
 };
 use ale_opengl::text::{ale_opengl_text_font_context_new, ale_opengl_text_render, OpenGLTextFontContext};
 use ale_opengl::wire::{
-  ale_opengl_wire_console_variable_refresh, ale_opengl_wire_console_variable_register, ale_opengl_wire_context_new,
-  OpenGLWireContext,
+  ale_opengl_wire_boundingbox_render, ale_opengl_wire_console_variable_refresh,
+  ale_opengl_wire_console_variable_register, ale_opengl_wire_context_new, OpenGLWireContext,
 };
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_opengl_fxaa::{
@@ -60,6 +61,8 @@ pub struct Game {
   opengl_font_context: OpenGLTextFontContext,
   opengl_fxaa_context: OpenGLFXAAContext,
   opengl_wire_context: OpenGLWireContext,
+
+  meshes: Vec<(Transform, Mesh)>,
 }
 
 impl Game {
@@ -124,10 +127,10 @@ impl Game {
 
     let mut world = World::new();
 
-    for mesh in meshes {
+    for (transform, mesh) in &meshes {
       world.add_pawn(PawnEntity {
-        transform: mesh.0,
-        static_mesh_id: mesh.1.uid(),
+        transform: *transform,
+        static_mesh_id: mesh.uid(),
         shader_id: pbr_shader.uid(),
         textures: vec![],
         shader_variables: vec![
@@ -137,7 +140,7 @@ impl Game {
           Variable::F32_1("ao".to_owned(), 0.5f32),
         ],
       });
-      context.static_mesh(&mesh.1).unwrap();
+      context.static_mesh(&mesh).unwrap();
     }
 
     world.set_skybox(SkyboxEntity {
@@ -210,6 +213,7 @@ impl Game {
       opengl_font_context,
       opengl_fxaa_context,
       opengl_wire_context,
+      meshes,
     }
   }
 
@@ -241,6 +245,9 @@ impl Game {
       world.render::<T>(render_tasks);
       render_tasks.render(&context).unwrap();
     });
+
+    // Render wireframe if enabled
+    ale_opengl_wire_boundingbox_render(&mut self.opengl_wire_context, &self.meshes);
 
     // Render the frame with fxaa
     ale_opengl_fxaa_render(&self.opengl_fxaa_context, &self.opengl_main_render_frame_context);

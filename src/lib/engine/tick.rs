@@ -50,7 +50,7 @@ impl FixedStep {
 
   pub fn should_tick(&self) -> bool {
     // Save the last tick for the next frame
-    if self.accumulator >= self.frame_step {
+    if self.accumulator >= 10e-7 {
       return true;
     }
     return false;
