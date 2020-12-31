@@ -32,9 +32,9 @@ fn main() {
 
     tick.prepare_tick();
     while tick.should_tick() {
+      tick.tick();
       game.tick(tick.delta_time());
 
-      tick.tick();
     }
 
     // Initialize render queue & assign render tasks

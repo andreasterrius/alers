@@ -5,6 +5,7 @@ pub mod render_frame;
 pub mod shader;
 pub mod text;
 pub mod texture;
+pub mod wire;
 
 pub fn ale_opengl_clear_render() {
   // Clear the screen buffer

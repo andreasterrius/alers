@@ -20,7 +20,7 @@ pub struct OpenGLFXAAContext {
   pub(crate) fxaa_is_enabled: bool,
 }
 
-pub fn ale_opengl_fxaa_new() -> OpenGLFXAAContext {
+pub fn ale_opengl_fxaa_context_new() -> OpenGLFXAAContext {
   let fxaa_shader = ale_opengl_shader_new(&ale_shader_new(
     include_str!("../resources/fxaa.vert").to_owned(),
     include_str!("../resources/fxaa.frag").to_owned(),

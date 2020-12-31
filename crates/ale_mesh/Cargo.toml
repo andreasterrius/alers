@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 ale_autoid = { path = "../ale_autoid" }
+ale_math = { path = "../ale_math" }

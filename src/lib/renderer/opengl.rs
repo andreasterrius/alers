@@ -46,12 +46,6 @@ impl RenderContext {
     }
   }
 
-  pub fn setup(&mut self) {
-    unsafe {
-      raw::enable_depth_test();
-    }
-  }
-
   pub fn static_mesh(&mut self, mesh: &Mesh) -> Result<(), OpenGLMeshError> {
     self.static_meshes.insert(mesh.uid(), ale_opengl_mesh_new(mesh)?);
     Ok(())

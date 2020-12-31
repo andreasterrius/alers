@@ -33,7 +33,7 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
       //println!("- Primitive #{}", primitive.index());
       let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
 
-      let positions = intern_get_positions(&reader);
+      let (positions, bb_min, bb_max) = intern_get_positions(&reader);
       let normals = intern_get_normals(&reader);
       let tex_coords = intern_get_tex_coords(&reader);
       let indices = intern_get_indices(&reader);
@@ -41,7 +41,7 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
       let vbuffer = intern_construct_vertices_buffer(positions, normals, tex_coords);
       let ibuffer = intern_construct_indices_buffer(indices);
 
-      let ale_mesh = ale_mesh_new(vbuffer, Some(ibuffer));
+      let ale_mesh = ale_mesh_new(vbuffer, Some(ibuffer), (bb_min.into(), bb_max.into()));
       objects.push((nodes.remove(&mesh.index()).unwrap(), ale_mesh));
     }
   }
@@ -49,19 +49,30 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
   return objects;
 }
 
-fn intern_get_positions<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>
+fn intern_get_positions<'a, 's, F>(reader: &Reader<'a, 's, F>) -> (Vec<f32>, (f32, f32, f32), (f32, f32, f32))
 where
   F: Clone + Fn(gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut positions = vec![];
+  let mut min = (f32::MIN, f32::MIN, f32::MIN);
+  let mut max = (f32::MAX, f32::MAX, f32::MAX);
+  // Also returns the bounding box for this mesh
   if let Some(read_positions) = reader.read_positions() {
     for rp in read_positions {
       positions.push(rp[0]);
       positions.push(rp[1]);
       positions.push(rp[2]);
+
+      min.0 = f32::min(min.0, rp[0]);
+      min.1 = f32::min(min.1, rp[1]);
+      min.2 = f32::min(min.2, rp[2]);
+
+      max.0 = f32::max(max.0, rp[0]);
+      max.1 = f32::max(max.1, rp[1]);
+      max.2 = f32::max(max.2, rp[2]);
     }
   }
-  return positions;
+  return (positions, min, max);
 }
 
 fn intern_get_normals<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>

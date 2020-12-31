@@ -32,7 +32,13 @@ pub struct OpenGLShader {
 }
 
 pub fn ale_opengl_shader_new(shader: &Shader) -> Result<OpenGLShader, OpenGLShaderError> {
-  let shader = unsafe { create_shader(&shader.vertex_shader, &shader.fragment_shader)? };
+  let shader = unsafe {
+    create_shader(
+      &shader.vertex_shader,
+      &shader.fragment_shader,
+      shader.geometry_shader.as_deref(),
+    )?
+  };
   Ok(OpenGLShader { id: shader })
 }
 

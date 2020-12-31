@@ -57,14 +57,19 @@ impl FixedStep {
   }
 
   pub fn tick(&mut self) {
-    self.accumulator -= self.frame_step;
+    if self.accumulator < self.frame_step {
+      self.delta_time = self.frame_step;
+      self.accumulator = 0.0;
+    } else {
+      self.delta_time = self.frame_step;
+      self.accumulator -= self.frame_step;
+    }
   }
 
   pub fn prepare_tick(&mut self) {
-    self.delta_time =
+    self.accumulator =
       (Instant::now().duration_since(self.previous_time).subsec_nanos() as f64 / 1000000000.0f64) as f32;
     self.previous_time = Instant::now();
-    self.accumulator += self.delta_time;
   }
 
   pub fn tick_delta_time(&self) -> f32 {

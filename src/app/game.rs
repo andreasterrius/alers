@@ -21,10 +21,14 @@ use ale_opengl::render_frame::{
   ale_opengl_render_frame_capture, ale_opengl_render_frame_new, ale_opengl_render_frame_render,
   OpenGLRenderFrameContext,
 };
-use ale_opengl::text::ale_opengl_text_render;
+use ale_opengl::text::{ale_opengl_text_font_context_new, ale_opengl_text_render, OpenGLTextFontContext};
+use ale_opengl::wire::{
+  ale_opengl_wire_console_variable_refresh, ale_opengl_wire_console_variable_register, ale_opengl_wire_context_new,
+  OpenGLWireContext,
+};
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_opengl_fxaa::{
-  ale_opengl_fxaa_console_variable_refresh, ale_opengl_fxaa_console_variable_register, ale_opengl_fxaa_new,
+  ale_opengl_fxaa_console_variable_refresh, ale_opengl_fxaa_console_variable_register, ale_opengl_fxaa_context_new,
   ale_opengl_fxaa_render, OpenGLFXAAContext,
 };
 use ale_shader::{ale_shader_new, Shader};
@@ -52,12 +56,10 @@ pub struct Game {
 
   console: Console,
 
-  opengl_texture_context: OpenGLTextureContext,
-  opengl_mesh_context: OpenGLMeshContext,
-  opengl_shader_context: OpenGLShaderContext,
-
   opengl_main_render_frame_context: OpenGLRenderFrameContext,
+  opengl_font_context: OpenGLTextFontContext,
   opengl_fxaa_context: OpenGLFXAAContext,
+  opengl_wire_context: OpenGLWireContext,
 }
 
 impl Game {
@@ -66,12 +68,10 @@ impl Game {
   }
 
   pub fn load(context: &mut RenderContext, window: &Window) -> Game {
-    let opengl_texture_context = ale_opengl_texture_context_new();
-    let opengl_mesh_context = ale_opengl_mesh_context_new();
-    let opengl_shader_context = ale_opengl_shader_context_new();
-
     let opengl_main_render_frame_context = ale_opengl_render_frame_new(window.get_screen_size());
-    let opengl_fxaa_context = ale_opengl_fxaa_new();
+    let opengl_fxaa_context = ale_opengl_fxaa_context_new();
+    let opengl_wire_context = ale_opengl_wire_context_new();
+    let opengl_font_context = ale_opengl_text_font_context_new();
 
     let screen_size = Vector2::new(800, 600);
 
@@ -113,10 +113,7 @@ impl Game {
     let convoluted_cubemap = resource::cubemap::Cubemap::new(Rect::new(32, 32));
 
     // Load fonts
-    let mut inconsolata_font = ale_font_load(&format!(
-      "{}/{}",
-      resource_base_path, "font/Inconsolata/static/Inconsolata-Regular.ttf"
-    ));
+    let mut inconsolata_font = ale_font_load(&format!("{}/{}", resource_base_path, "font/Inconsolata-Regular.ttf"));
 
     // Load camera
     let fly_camera = FlyCamera::new(Camera::new(
@@ -169,7 +166,6 @@ impl Game {
 
     // Texture registration
     context.texture(&texture).unwrap();
-    context.setup();
 
     // Conduct a render pass here for our equirect projection
     let mut render_tasks = SimpleRenderTasks::new();
@@ -199,21 +195,21 @@ impl Game {
 
     let mut console = ale_console_new(100);
     ale_opengl_fxaa_console_variable_register(&opengl_fxaa_context, &mut console);
+    ale_opengl_wire_console_variable_register(&opengl_wire_context, &mut console);
 
     // Setup the opengl renderer;
     ale_opengl_blend_enable();
-    //ale_opengl_depth_test_enable();
+    ale_opengl_depth_test_enable();
 
     Game {
       world,
       inconsolata_font,
       console,
       screen_size,
-      opengl_texture_context,
-      opengl_mesh_context,
-      opengl_shader_context,
       opengl_main_render_frame_context,
+      opengl_font_context,
       opengl_fxaa_context,
+      opengl_wire_context,
     }
   }
 
@@ -228,6 +224,7 @@ impl Game {
 
     if ale_console_variable_has_event(&self.console) {
       ale_opengl_fxaa_console_variable_refresh(&mut self.opengl_fxaa_context, &mut self.console);
+      ale_opengl_wire_console_variable_refresh(&mut self.opengl_wire_context, &mut self.console);
     }
   }
 
@@ -237,6 +234,7 @@ impl Game {
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T, context: &mut RenderContext) {
     let world = &mut self.world;
+
     // Capture the scene render to a render frame
     ale_opengl_render_frame_capture(&self.opengl_main_render_frame_context, || {
       ale_opengl_clear_render();
@@ -249,9 +247,7 @@ impl Game {
 
     // Render the console after postprocessing
     ale_opengl_console_render(
-      &mut self.opengl_texture_context,
-      &self.opengl_mesh_context,
-      &self.opengl_shader_context,
+      &mut self.opengl_font_context,
       &self.world.get_camera_render_info(),
       &self.console,
       self.screen_size,

@@ -180,6 +180,7 @@ pub unsafe fn create_buffer(
 pub enum CreateShaderError {
   VertexShaderError(String),
   FragmentShaderError(String),
+  GeometryShaderError(String),
 
   LinkingShaderError(String),
 }
@@ -187,6 +188,7 @@ pub enum CreateShaderError {
 pub unsafe fn create_shader(
   vertex_shader_source: &str,
   fragment_shader_source: &str,
+  geometry_shader_source: Option<&str>,
 ) -> Result<u32, CreateShaderError> {
   // vertex shader
   let vertex_shader = gl::CreateShader(gl::VERTEX_SHADER);
@@ -232,10 +234,37 @@ pub unsafe fn create_shader(
     )));
   }
 
+  //geometry shader
+  let geometry_shader = if let Some(geometry_shader_source) = geometry_shader_source {
+    let geometry_shader = gl::CreateShader(gl::GEOMETRY_SHADER);
+    let c_str_geom = CString::new(geometry_shader_source.as_bytes()).unwrap();
+    gl::ShaderSource(geometry_shader, 1, &c_str_geom.as_ptr(), ptr::null());
+    gl::CompileShader(geometry_shader);
+    if success != gl::TRUE as GLint {
+      gl::GetShaderInfoLog(
+        geometry_shader,
+        512,
+        ptr::null_mut(),
+        info_log.as_mut_ptr() as *mut GLchar,
+      );
+      return Err(CreateShaderError::GeometryShaderError(format!(
+        "Geometry shader compilation failed: {}",
+        String::from_utf8_lossy(&info_log)
+      )));
+    }
+    Some(geometry_shader)
+  } else {
+    None
+  };
+
   // link shaders
   let shader_program = gl::CreateProgram();
   gl::AttachShader(shader_program, vertex_shader);
+  if let Some(geometry_shader) = geometry_shader {
+    gl::AttachShader(shader_program, geometry_shader);
+  }
   gl::AttachShader(shader_program, fragment_shader);
+
   gl::LinkProgram(shader_program);
   // check for linking errors
   gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut success);
@@ -252,6 +281,9 @@ pub unsafe fn create_shader(
     )));
   }
   gl::DeleteShader(vertex_shader);
+  if let Some(geometry_shader) = geometry_shader {
+    gl::DeleteShader(geometry_shader);
+  }
   gl::DeleteShader(fragment_shader);
 
   Ok(shader_program)
