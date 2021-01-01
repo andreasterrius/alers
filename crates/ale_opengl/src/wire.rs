@@ -15,6 +15,7 @@ pub struct OpenGLWireContext {
   pub bounding_box_shader: OpenGLShader,
 
   pub wire_render_enable: bool,
+  // from 0 to 1
   pub wire_thickness: f32,
 }
 
@@ -28,7 +29,7 @@ pub fn ale_opengl_wire_context_new() -> OpenGLWireContext {
     bounding_box_mesh: ale_opengl_mesh_new(&ale_mesh_bounding_box_new()).unwrap(),
     bounding_box_shader: ale_opengl_shader_new(&wire_shader).unwrap(),
     wire_render_enable: true,
-    wire_thickness: 1.0,
+    wire_thickness: 0.01,
   }
 }
 
@@ -54,7 +55,7 @@ pub fn ale_opengl_wire_boundingbox_render(
   }
 
   let shader = &opengl_wire_context.bounding_box_shader;
-  ale_opengl_shader_activate(shader, &vec![]);
+  ale_opengl_shader_activate(shader, &vec![to_variable!(opengl_wire_context.wire_thickness)]);
   unsafe {
     raw::matrix4f(shader.id, "view", camera_render_info.view.as_ptr());
     raw::matrix4f(shader.id, "projection", camera_render_info.projection.as_ptr());

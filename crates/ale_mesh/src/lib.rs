@@ -4,6 +4,7 @@ use ale_math::transform::Transform;
 use ale_math::{Array, Matrix4, Vector3};
 
 pub mod buffer;
+pub mod sdf;
 
 #[derive(Debug)]
 pub struct Mesh {
