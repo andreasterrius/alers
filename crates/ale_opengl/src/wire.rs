@@ -1,8 +1,11 @@
 use crate::mesh::{ale_opengl_mesh_new, OpenGLMesh};
-use crate::shader::{ale_opengl_shader_new, OpenGLShader};
+use crate::raw;
+use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader};
+use ale_camera::CameraRenderInfo;
 use ale_console::{ale_console_variable_event_handle, ale_console_variable_register, Console};
 use ale_math::transform::Transform;
-use ale_mesh::{ale_mesh_bounding_box_new, Mesh};
+use ale_math::{Array, Matrix, Vector3};
+use ale_mesh::{ale_mesh_bounding_box_matrix, ale_mesh_bounding_box_new, Mesh};
 use ale_shader::ale_shader_new;
 use ale_variable::{to_variable, ToVariable};
 
@@ -24,8 +27,8 @@ pub fn ale_opengl_wire_context_new() -> OpenGLWireContext {
   OpenGLWireContext {
     bounding_box_mesh: ale_opengl_mesh_new(&ale_mesh_bounding_box_new()).unwrap(),
     bounding_box_shader: ale_opengl_shader_new(&wire_shader).unwrap(),
-    wire_render_enable: false,
-    wire_thickness: 0.0,
+    wire_render_enable: true,
+    wire_thickness: 1.0,
   }
 }
 
@@ -43,13 +46,28 @@ pub fn ale_opengl_wire_console_variable_refresh(opengl_wire_context: &mut OpenGL
 
 pub fn ale_opengl_wire_boundingbox_render(
   opengl_wire_context: &mut OpenGLWireContext,
-  meshes: &Vec<(Transform, Mesh)>,
+  meshes: &mut Vec<(Transform, Mesh)>,
+  camera_render_info: &CameraRenderInfo,
 ) {
   if !opengl_wire_context.wire_render_enable {
     return;
   }
 
-  //activate shader
-  //pass transform
-  //render box
+  let shader = &opengl_wire_context.bounding_box_shader;
+  ale_opengl_shader_activate(shader, &vec![]);
+  unsafe {
+    raw::matrix4f(shader.id, "view", camera_render_info.view.as_ptr());
+    raw::matrix4f(shader.id, "projection", camera_render_info.projection.as_ptr());
+
+    for (transform, mesh) in meshes {
+      let mut bb_transform = ale_mesh_bounding_box_matrix(mesh.bounding_box);
+
+      raw::matrix4f(shader.id, "model", bb_transform.as_ptr());
+      raw::bind_vao(opengl_wire_context.bounding_box_mesh.vao);
+      match opengl_wire_context.bounding_box_mesh.ebo {
+        None => raw::draw_arrays(0, opengl_wire_context.bounding_box_mesh.draw_size),
+        Some(_) => raw::draw_elements(opengl_wire_context.bounding_box_mesh.draw_size),
+      }
+    }
+  }
 }

@@ -1,10 +1,10 @@
 use crate::data::display_info::DisplayInfo;
 use crate::window::input_translator::{translate_action, translate_key, translate_modifier, translate_scancode};
 use ale_input::Input;
+use ale_math::Vector2;
 use glfw::{Action, Context, CursorMode, Key, WindowEvent};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, RwLock};
-use ale_math::Vector2;
 
 pub mod input_translator;
 
@@ -41,7 +41,7 @@ impl<'a> WindowCreator<'a> {
     glfw_window.set_key_polling(true);
     glfw_window.set_cursor_pos_polling(true);
     glfw_window.set_framebuffer_size_polling(true);
-    glfw_window.set_cursor_mode(CursorMode::Disabled);
+    glfw_window.set_cursor_mode(CursorMode::Normal);
 
     // gl: load all OpenGL function pointers
     // ---------------------------------------
@@ -86,6 +86,12 @@ impl Window {
             translate_action(action),
             translate_modifier(modifier),
           );
+          if key == glfw::Key::I {
+            self.glfw_window.set_cursor_mode(CursorMode::Normal);
+          }
+          if key == glfw::Key::O {
+            self.glfw_window.set_cursor_mode(CursorMode::Disabled);
+          }
           inputs.push(input);
         }
         glfw::WindowEvent::CursorPos(x, y) => inputs.push(match self.mouse_position {

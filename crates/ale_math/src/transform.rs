@@ -37,6 +37,24 @@ impl Transform {
     }
   }
 
+  pub fn from_position_scale(position: Vector3<f32>, scale: Vector3<f32>) -> Transform {
+    Transform {
+      position,
+      scale,
+      lcl_rotation: Quaternion::one(),
+      matrix: None,
+    }
+  }
+
+  pub fn from_scale(scale: Vector3<f32>) -> Transform {
+    Transform {
+      position : Vector3::zero(),
+      scale,
+      lcl_rotation: Quaternion::one(),
+      matrix: None,
+    }
+  }
+
   pub fn from_all(position: Vector3<f32>, lcl_rotation: Quaternion<f32>, scale: Vector3<f32>) -> Transform {
     Transform {
       position,

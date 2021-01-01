@@ -1,4 +1,6 @@
 use ale_math::transform::Transform;
+use ale_math::Decomposed;
+use ale_math::Matrix4;
 use ale_mesh::buffer::{Buffer, SeparateBufferBuilder};
 use ale_mesh::{ale_mesh_new, Mesh};
 use gltf::mesh::util::{ReadIndices, ReadTexCoords};
@@ -11,10 +13,12 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
 
   let mut nodes = HashMap::new();
   for node in gltf.nodes() {
-    //println!("Node #{} {:?}", node.index(), node.name());
+    //println!("Node #{} {:?} {:?}", node.index(), node.name(), node);
 
     match node.transform() {
-      gltf::scene::Transform::Matrix { .. } => {}
+      gltf::scene::Transform::Matrix { matrix } => {
+        // do nothing for now
+      }
       gltf::scene::Transform::Decomposed {
         translation,
         rotation,
@@ -54,8 +58,8 @@ where
   F: Clone + Fn(gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut positions = vec![];
-  let mut min = (f32::MIN, f32::MIN, f32::MIN);
-  let mut max = (f32::MAX, f32::MAX, f32::MAX);
+  let mut min = (f32::MAX, f32::MAX, f32::MAX);
+  let mut max = (f32::MIN, f32::MIN, f32::MIN);
   // Also returns the bounding box for this mesh
   if let Some(read_positions) = reader.read_positions() {
     for rp in read_positions {
@@ -72,6 +76,12 @@ where
       max.2 = f32::max(max.2, rp[2]);
     }
   }
+
+  if positions.len() == 0 {
+    min = (0.0, 0.0, 0.0);
+    max = (0.0, 0.0, 0.0);
+  }
+
   return (positions, min, max);
 }
 

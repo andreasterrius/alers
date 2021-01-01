@@ -238,16 +238,20 @@ impl Game {
 
   pub fn render<T: RenderTasks>(&mut self, render_tasks: &mut T, context: &mut RenderContext) {
     let world = &mut self.world;
+    let camera_render_info = world.get_camera_render_info();
+
+    let opengl_wire_context = &mut self.opengl_wire_context;
+    let meshes = &mut self.meshes;
 
     // Capture the scene render to a render frame
     ale_opengl_render_frame_capture(&self.opengl_main_render_frame_context, || {
       ale_opengl_clear_render();
+
       world.render::<T>(render_tasks);
       render_tasks.render(&context).unwrap();
-    });
 
-    // Render wireframe if enabled
-    ale_opengl_wire_boundingbox_render(&mut self.opengl_wire_context, &self.meshes);
+      ale_opengl_wire_boundingbox_render(opengl_wire_context, meshes, &camera_render_info);
+    });
 
     // Render the frame with fxaa
     ale_opengl_fxaa_render(&self.opengl_fxaa_context, &self.opengl_main_render_frame_context);
