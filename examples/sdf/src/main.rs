@@ -36,7 +36,7 @@ struct SDFDemo;
 
 impl App<State> for SDFDemo {
   fn load(&mut self, context: &mut RenderContext, window: &Window) -> State {
-    let mut sphere = ale_gltf_load(&ale_app_resource_path("gltf/sphere.gltf"));
+    let mut sphere = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf"));
     let fly_camera = FlyCamera::new(Camera::new(
       Vector3::from_value(0.0),
       window.get_display_info().dimension.clone(),
