@@ -1,12 +1,10 @@
-use crate::data::display_info::DisplayInfo;
-use crate::window::input_translator::{translate_action, translate_key, translate_modifier, translate_scancode};
+use crate::display_info::DisplayInfo;
+use crate::input_translator::{translate_action, translate_key, translate_modifier, translate_scancode};
 use ale_input::Input;
 use ale_math::Vector2;
 use glfw::{Action, Context, CursorMode, Key, WindowEvent};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, RwLock};
-
-pub mod input_translator;
 
 pub struct WindowCreator<'a> {
   glfw: &'a mut glfw::Glfw,

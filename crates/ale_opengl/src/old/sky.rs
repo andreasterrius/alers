@@ -2,7 +2,7 @@
 // Original paper by: Eric Bruneton, Fabrice Neyret. Precomputed Atmospheric Scattering. Computer Graphics Forum, Wiley, 2008,
 // https://hal.inria.fr/inria-00288758/en
 
-use cgmath::Vector3;
+use ale_math::Vector3;
 
 struct AtmosphereParameters {
   // Solar irradiance at the top of the atmosphere

@@ -1,29 +1,23 @@
 use std::collections::HashMap;
 
-use cgmath::prelude::*;
-use cgmath::{Deg, Matrix, Matrix4, Point3, Vector2, Vector3, Vector4};
-
-use crate::renderer::constant::{CAMERA_POSITION, MODEL, PROJECTION, VIEW};
-use crate::renderer::opengl::cubemap::{CubemapDrawInfo, CubemapError};
-use crate::renderer::opengl::RenderError::{
+use crate::mesh::{ale_opengl_mesh_new, OpenGLMesh, OpenGLMeshError};
+use crate::old::constant::{CAMERA_POSITION, MODEL, PROJECTION, VIEW};
+use crate::old::cubemap::{Cubemap, CubemapId};
+use crate::old::cubemap::{CubemapDrawInfo, CubemapError};
+use crate::old::opengl::RenderError::{
   NoCameraSet, UnregisteredCubemap, UnregisteredMesh, UnregisteredShader, UnregisteredTexture,
 };
-use crate::resource::cubemap::{Cubemap, CubemapId};
-use crate::ui::UIRenderInfo;
+use crate::raw;
+use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader, OpenGLShaderError};
+use crate::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureError};
 use ale_camera::CameraRenderInfo;
 use ale_font::Font;
 use ale_math::rect::Rect;
+use ale_math::{perspective, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector3};
 use ale_mesh::{Mesh, MeshId};
-use ale_opengl::mesh::{ale_opengl_mesh_new, OpenGLMesh, OpenGLMeshError};
-use ale_opengl::raw;
-use ale_opengl::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader, OpenGLShaderError};
-use ale_opengl::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureError};
 use ale_shader::{Shader, ShaderId};
 use ale_texture::{Texture, TextureId};
 use ale_variable::Variable;
-
-pub mod cubemap;
-pub mod renderbuffer;
 
 pub struct RenderContext {
   static_meshes: HashMap<MeshId, OpenGLMesh>,
@@ -122,18 +116,12 @@ enum Renderable {
     #[allow(dead_code)]
     shader_variables: Vec<Variable>,
   },
-
-  UIElement {
-    ui_shader_id: ShaderId,
-    plane_mesh_id: MeshId,
-    ui_render_info: UIRenderInfo,
-  },
 }
 
 pub trait RenderTasks {
   fn with_camera(&mut self, camera_render_info: CameraRenderInfo);
 
-  fn queue_ui(&mut self, ui_shader_id: ShaderId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo);
+  // fn queue_ui(&mut self, ui_shader_id: ShaderId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo);
 
   fn queue_static_mesh(
     &mut self,
@@ -191,13 +179,13 @@ impl RenderTasks for SimpleRenderTasks {
     self.camera_render_info = Some(camera_render_info);
   }
 
-  fn queue_ui(&mut self, ui_shader_id: ShaderId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo) {
-    self.renderables.push(Renderable::UIElement {
-      ui_shader_id,
-      plane_mesh_id,
-      ui_render_info,
-    });
-  }
+  // fn queue_ui(&mut self, ui_shader_id: ShaderId, plane_mesh_id: MeshId, ui_render_info: UIRenderInfo) {
+  //   self.renderables.push(Renderable::UIElement {
+  //     ui_shader_id,
+  //     plane_mesh_id,
+  //     ui_render_info,
+  //   });
+  // }
 
   fn queue_static_mesh(
     &mut self,
@@ -339,14 +327,14 @@ impl RenderTasks for SimpleRenderTasks {
             .get_cubemap(&cubemap_id)
             .ok_or(UnregisteredCubemap(*cubemap_id))?;
 
-          let projection = cgmath::perspective(Deg(90.0f32), 1.0f32, 0.1f32, 10.0f32);
+          let projection = perspective(Deg(90.0f32), 1.0f32, 0.1f32, 10.0f32);
           let views = vec![
-            cgmath::Matrix4::look_at(Point3::origin(), Point3::new(1.0f32, 0.0, 0.0), -Vector3::unit_y()),
-            cgmath::Matrix4::look_at(Point3::origin(), Point3::new(-1.0f32, 0.0, 0.0), -Vector3::unit_y()),
-            cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 1.0, 0.0), Vector3::unit_z()),
-            cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, -1.0, 0.0), -Vector3::unit_z()),
-            cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, 1.0), -Vector3::unit_y()),
-            cgmath::Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, -1.0), -Vector3::unit_y()),
+            Matrix4::look_at(Point3::origin(), Point3::new(1.0f32, 0.0, 0.0), -Vector3::unit_y()),
+            Matrix4::look_at(Point3::origin(), Point3::new(-1.0f32, 0.0, 0.0), -Vector3::unit_y()),
+            Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 1.0, 0.0), Vector3::unit_z()),
+            Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, -1.0, 0.0), -Vector3::unit_z()),
+            Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, 1.0), -Vector3::unit_y()),
+            Matrix4::look_at(Point3::origin(), Point3::new(0.0f32, 0.0, -1.0), -Vector3::unit_y()),
           ];
           let equirect_shader = shader_draw_info.id;
 
@@ -424,44 +412,44 @@ impl RenderTasks for SimpleRenderTasks {
             }
           }
         }
-        Renderable::UIElement {
-          ui_shader_id,
-          plane_mesh_id,
-          ui_render_info,
-        } => {
-          let shader_draw_info = context
-            .get_shader(&ui_shader_id)
-            .ok_or(UnregisteredShader(*ui_shader_id))?;
-          let mesh_draw_info = context
-            .get_static_mesh(&plane_mesh_id)
-            .ok_or(UnregisteredMesh(*plane_mesh_id))?;
-          let camera_render_info = self.camera_render_info.as_ref().ok_or(NoCameraSet)?;
-
-          unsafe {
-            raw::bind_vao(mesh_draw_info.vao);
-            raw::use_shader(shader_draw_info.id);
-            raw::uniform4f(
-              shader_draw_info.id,
-              "possize",
-              ui_render_info.rect.get_x() as f32,
-              ui_render_info.rect.get_y() as f32,
-              ui_render_info.rect.get_width() as f32,
-              ui_render_info.rect.get_height() as f32,
-            );
-            let (r, g, b, a) = ui_render_info.color.get_rgba();
-            raw::uniform4f(shader_draw_info.id, "color", r, g, b, a);
-            raw::matrix4f(shader_draw_info.id, VIEW, camera_render_info.view.as_ptr());
-            raw::matrix4f(
-              shader_draw_info.id,
-              PROJECTION,
-              camera_render_info.orthographic.as_ptr(),
-            );
-            match mesh_draw_info.ebo {
-              None => raw::draw_arrays(0, mesh_draw_info.draw_size),
-              Some(_) => raw::draw_elements(mesh_draw_info.draw_size),
-            }
-          }
-        }
+        // Renderable::UIElement {
+        //   ui_shader_id,
+        //   plane_mesh_id,
+        //   ui_render_info,
+        // } => {
+        //   let shader_draw_info = context
+        //     .get_shader(&ui_shader_id)
+        //     .ok_or(UnregisteredShader(*ui_shader_id))?;
+        //   let mesh_draw_info = context
+        //     .get_static_mesh(&plane_mesh_id)
+        //     .ok_or(UnregisteredMesh(*plane_mesh_id))?;
+        //   let camera_render_info = self.camera_render_info.as_ref().ok_or(NoCameraSet)?;
+        //
+        //   unsafe {
+        //     raw::bind_vao(mesh_draw_info.vao);
+        //     raw::use_shader(shader_draw_info.id);
+        //     raw::uniform4f(
+        //       shader_draw_info.id,
+        //       "possize",
+        //       ui_render_info.rect.get_x() as f32,
+        //       ui_render_info.rect.get_y() as f32,
+        //       ui_render_info.rect.get_width() as f32,
+        //       ui_render_info.rect.get_height() as f32,
+        //     );
+        //     let (r, g, b, a) = ui_render_info.color.get_rgba();
+        //     raw::uniform4f(shader_draw_info.id, "color", r, g, b, a);
+        //     raw::matrix4f(shader_draw_info.id, VIEW, camera_render_info.view.as_ptr());
+        //     raw::matrix4f(
+        //       shader_draw_info.id,
+        //       PROJECTION,
+        //       camera_render_info.orthographic.as_ptr(),
+        //     );
+        //     match mesh_draw_info.ebo {
+        //       None => raw::draw_arrays(0, mesh_draw_info.draw_size),
+        //       Some(_) => raw::draw_elements(mesh_draw_info.draw_size),
+        //     }
+        //   }
+        // }
         _ => {}
       }
     }

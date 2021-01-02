@@ -38,6 +38,8 @@ name = "ale_console"
 version = "0.1.0"
 dependencies = [
  "ale_input",
+ "ale_math",
+ "ale_variable",
 ]
 
 [[package]]
@@ -68,6 +70,7 @@ name = "ale_mesh"
 version = "0.1.0"
 dependencies = [
  "ale_autoid",
+ "ale_math",
 ]
 
 [[package]]
@@ -81,6 +84,7 @@ dependencies = [
  "ale_mesh",
  "ale_shader",
  "ale_texture",
+ "ale_variable",
  "gl",
 ]
 
@@ -98,6 +102,13 @@ dependencies = [
  "ale_autoid",
  "hdrldr",
  "image",
+]
+
+[[package]]
+name = "ale_variable"
+version = "0.1.0"
+dependencies = [
+ "ale_math",
 ]
 
 [[package]]

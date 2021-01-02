@@ -19,6 +19,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d2e7343e7fc9de883d1b0341e0b13970f764c14101234857d2ddafa1cb1cac2"
 
 [[package]]
+name = "ale_app"
+version = "0.1.0"
+dependencies = [
+ "ale_input",
+ "ale_math",
+ "ale_opengl",
+ "glfw",
+]
+
+[[package]]
 name = "ale_autoid"
 version = "0.1.0"
 dependencies = [
@@ -86,6 +96,7 @@ dependencies = [
 name = "ale_opengl"
 version = "0.1.0"
 dependencies = [
+ "ale_autoid",
  "ale_camera",
  "ale_console",
  "ale_font",
@@ -134,6 +145,7 @@ dependencies = [
 name = "alers"
 version = "0.1.1"
 dependencies = [
+ "ale_app",
  "ale_autoid",
  "ale_camera",
  "ale_console",
@@ -149,9 +161,6 @@ dependencies = [
  "ale_variable",
  "approx 0.3.2",
  "async-std",
- "cgmath 0.17.0",
- "fbxcel-dom",
- "glfw",
  "gltf",
  "log 0.4.8",
  "rand 0.3.23",
@@ -171,12 +180,6 @@ dependencies = [
  "libc",
  "pkg-config",
 ]
-
-[[package]]
-name = "anyhow"
-version = "1.0.22"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e19f23ab207147bbdbcdfa7f7e4ca5e84963d79bae3937074682177ab9150968"
 
 [[package]]
 name = "approx"
@@ -400,9 +403,9 @@ dependencies = [
 
 [[package]]
 name = "cmake"
-version = "0.1.42"
+version = "0.1.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81fb25b677f8bf1eb325017cb6bb8452f87969db0fedb4f757b297bee78a7c62"
+checksum = "eb6210b637171dfba4cda12e579ac6dc73f5165ad56133e5d72ef3131f320855"
 dependencies = [
  "cc",
 ]
@@ -588,33 +591,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fbxcel"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1acfaf922faf71f283b73190b4f5df5b8c2101d0e2eeee34590c2ca511b2aaa0"
-dependencies = [
- "byteorder",
- "indextree",
- "libflate",
- "log 0.4.8",
- "string-interner",
-]
-
-[[package]]
-name = "fbxcel-dom"
-version = "0.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20ae006b4cfc7020fb976d9f1b08d35da42fd59ae5e2fb4b4566be811944a7e8"
-dependencies = [
- "anyhow",
- "fbxcel",
- "log 0.4.8",
- "mint",
- "rgb",
- "string-interner",
-]
-
-[[package]]
 name = "fuchsia-cprng"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -692,23 +668,23 @@ dependencies = [
 
 [[package]]
 name = "glfw"
-version = "0.34.0"
-source = "git+https://github.com/bjz/glfw-rs.git#2504446a5975120871993c8ee2b0c1a0376a389e"
+version = "0.41.0"
+source = "git+https://github.com/bjz/glfw-rs.git#563785d41bd44517df94576cd21a3404913103f3"
 dependencies = [
  "bitflags",
  "glfw-sys",
- "libc",
  "log 0.4.8",
  "objc",
  "raw-window-handle",
  "semver",
+ "winapi 0.3.8",
 ]
 
 [[package]]
 name = "glfw-sys"
-version = "3.3.0"
+version = "3.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f18d2cf180dd18d06142b26758d32aeb6c71ba0a37c7f3ddafee22b8a3247cd3"
+checksum = "0b567b13b593ec58ea912b2658ee6230ffe20a069fa5b771800acc69bb3a157e"
 dependencies = [
  "cmake",
 ]
@@ -789,12 +765,6 @@ dependencies = [
  "scoped_threadpool",
  "tiff",
 ]
-
-[[package]]
-name = "indextree"
-version = "4.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df86f0c82859379c2e9068f42fb345d4c0fba1bb09fcc52454ec19131a2aa068"
 
 [[package]]
 name = "inflections"
@@ -887,18 +857,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a31a0627fdf1f6a39ec0dd577e101440b7db22672c0901fe00a9a6fbb5c24e8"
 
 [[package]]
-name = "libflate"
-version = "0.1.27"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9135df43b1f5d0e333385cb6e7897ecd1a43d7d11b91ac003f4d2c2d2401fdd"
-dependencies = [
- "adler32",
- "crc32fast",
- "rle-decode-fast",
- "take_mut",
-]
-
-[[package]]
 name = "linked-hash-map"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -970,12 +928,6 @@ dependencies = [
  "adler",
  "autocfg 1.0.1",
 ]
-
-[[package]]
-name = "mint"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8d80717448454e312cb3148adab19943f1553a8fbc828a39b0e91911f488130"
 
 [[package]]
 name = "mio"
@@ -1328,9 +1280,9 @@ dependencies = [
 
 [[package]]
 name = "raw-window-handle"
-version = "0.3.1"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9db80d08d3ed847ce4fb3def46de0af4bfb6155bd09bd6eaf28b5ac72541c1f1"
+checksum = "0a441a7a6c80ad6473bd4b74ec1c9a4c951794285bf941c2126f607c72e48211"
 dependencies = [
  "libc",
 ]
@@ -1385,18 +1337,6 @@ dependencies = [
  "redox_syscall",
  "rust-argon2",
 ]
-
-[[package]]
-name = "rgb"
-version = "0.8.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2089e4031214d129e201f8c3c8c2fe97cd7322478a0d1cdf78e7029b0042efdb"
-
-[[package]]
-name = "rle-decode-fast"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cabe4fa914dec5870285fa7f71f602645da47c486e68486d2b4ceb4a343e90ac"
 
 [[package]]
 name = "rodio"
@@ -1573,12 +1513,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "string-interner"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd710eadff449a1531351b0e43eb81ea404336fa2f56c777427ab0e32a4cf183"
-
-[[package]]
 name = "syn"
 version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1600,12 +1534,6 @@ dependencies = [
  "syn",
  "unicode-xid",
 ]
-
-[[package]]
-name = "take_mut"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f764005d11ee5f36500a149ace24e00e3da98b0158b3e2d53a7495660d3f4d60"
 
 [[package]]
 name = "term"

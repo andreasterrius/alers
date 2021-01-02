@@ -1,7 +1,5 @@
 use crate::window::WindowCreator;
 
-pub mod tick;
-
 pub struct Engine {
   glfw: glfw::Glfw,
 }

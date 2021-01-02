@@ -12,15 +12,6 @@ path = "src/lib/lib.rs"
 name = "bin"
 path = "src/app/bin.rs"
 
-[target.'cfg(windows)'.dependencies.glfw]
-version = "0.34.0"
-git = "https://github.com/bjz/glfw-rs.git"
-default-features = false
-
-[target.'cfg(unix)'.dependencies.glfw]
-version = "0.34.0"
-git = "https://github.com/bjz/glfw-rs.git"
-
 [dependencies.async-std]
 version = "1.0.0"
 features = ["attributes"]
@@ -30,6 +21,7 @@ version = "0.15"
 features = ["extras", "names"]
 
 [dependencies]
+ale_app = { path = "crates/ale_app" }
 ale_gltf = { path = "crates/ale_gltf" }
 ale_mesh = { path = "crates/ale_mesh" }
 ale_autoid = { path = "crates/ale_autoid" }
@@ -43,8 +35,6 @@ ale_input = { path = "crates/ale_input" }
 ale_console = { path = "crates/ale_console" }
 ale_variable = { path = "crates/ale_variable" }
 ale_opengl_fxaa = { path = "crates/ale_opengl_fxaa" }
-fbxcel-dom = "0.0.4"
-cgmath = "0.17.0"
 time = "0.1"
 rand = "0.3"
 rodio = "0.5.2"
