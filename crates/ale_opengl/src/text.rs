@@ -18,8 +18,8 @@ pub struct OpenGLTextFontContext {
 
 pub fn ale_opengl_text_font_context_new() -> OpenGLTextFontContext {
   let text_2d_shader = ale_opengl_shader_new(&ale_shader_new(
-    include_str!("../../../shaders/text_2d.vert").to_owned(),
-    include_str!("../../../shaders/text_2d.frag").to_owned(),
+    include_str!("../../../resources/shaders/text_2d.vert").to_owned(),
+    include_str!("../../../resources/shaders/text_2d.frag").to_owned(),
   ))
   .unwrap();
 

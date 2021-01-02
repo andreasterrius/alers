@@ -3,6 +3,7 @@ use crate::tick::{FixedStep, WorldTick};
 use crate::window::Window;
 use ale_input::Input;
 use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
+use std::path::Path;
 
 pub mod display_info;
 pub mod engine;
@@ -51,4 +52,15 @@ pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
 
     window.swap_buffers();
   }
+}
+
+pub fn ale_app_resource_path(path: &str) -> String {
+  let p = Path::new(env!("CARGO_MANIFEST_DIR"))
+    .parent()
+    .unwrap()
+    .parent()
+    .unwrap()
+    .join("resources")
+    .join(path);
+  p.to_str().unwrap().to_owned()
 }

@@ -13,7 +13,7 @@ impl<'a> Iterator for MeshTriangleIterator<'a> {
   fn next(&mut self) -> Option<Self::Item> {
     match &self.mesh.indices {
       None => {
-        let mut c = self.curr;
+        let c = self.curr;
         let vert = &self.mesh.vertices;
         if c + 8 >= vert.len() {
           return None;
@@ -22,11 +22,11 @@ impl<'a> Iterator for MeshTriangleIterator<'a> {
         let t2 = Vector3::new(vert[c + 3], vert[c + 4], vert[c + 5]);
         let t3 = Vector3::new(vert[c + 6], vert[c + 7], vert[c + 8]);
 
-        c += 9;
+        self.curr += 9;
         Some((t1, t2, t3))
       }
       Some(ind) => {
-        let mut c = self.curr;
+        let c = self.curr;
         let vert = &self.mesh.vertices;
         if c + 2 >= ind.len() {
           return None;
@@ -40,7 +40,7 @@ impl<'a> Iterator for MeshTriangleIterator<'a> {
         let index = ind[c + 2] as usize;
         let t3 = Vector3::new(vert[index], vert[index + 1], vert[index + 2]);
 
-        c += 3;
+        self.curr += 3;
         Some((t1, t2, t3))
       }
     }

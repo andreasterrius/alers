@@ -1,4 +1,4 @@
-use crate::Camera;
+use crate::{Camera, CameraRenderInfo};
 use ale_input::{Action, Input, Key};
 use ale_math::prelude::*;
 use ale_math::{Deg, Quaternion, Vector2, Vector3, Zero};
@@ -37,6 +37,10 @@ impl FlyCamera {
 
   pub fn camera_mut(&mut self) -> &mut Camera {
     &mut self.camera
+  }
+
+  pub fn get_camera_render_info(&mut self) -> CameraRenderInfo {
+    self.camera.camera_render_info()
   }
 
   pub fn input(&mut self, inputs: &Vec<Input>) {

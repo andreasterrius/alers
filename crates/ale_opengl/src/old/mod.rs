@@ -1,4 +1,3 @@
-pub mod constant;
 pub mod cubemap;
 pub mod opengl;
 pub mod renderbuffer;

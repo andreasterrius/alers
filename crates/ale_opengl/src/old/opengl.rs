@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
+use crate::constant::{CAMERA_POSITION, MODEL, PROJECTION, VIEW};
 use crate::mesh::{ale_opengl_mesh_new, OpenGLMesh, OpenGLMeshError};
-use crate::old::constant::{CAMERA_POSITION, MODEL, PROJECTION, VIEW};
 use crate::old::cubemap::{Cubemap, CubemapId};
 use crate::old::cubemap::{CubemapDrawInfo, CubemapError};
 use crate::old::opengl::RenderError::{

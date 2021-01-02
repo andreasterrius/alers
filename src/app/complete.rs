@@ -74,7 +74,7 @@ impl App<State> for CompleteExample {
     let screen_size = Vector2::new(800, 600);
 
     let resource_base_path = "/home/alether/Codes/Graphics/alers/resources";
-    let shader_base_path = "/home/alether/Codes/Graphics/alers/shaders";
+    let shader_base_path = "/home/alether/Codes/Graphics/alers/resources/shaders";
 
     let meshes = ale_gltf_load(&format!("{}/{}", resource_base_path, "test/sceneg.gltf"));
 

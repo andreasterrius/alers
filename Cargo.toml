@@ -5,8 +5,8 @@ authors = ["Alether <gotenwinz99@gmail.com>"]
 edition = "2018"
 
 [[bin]]
-name = "bin"
-path = "src/app/bin.rs"
+name = "complete"
+path = "src/app/complete.rs"
 
 [dependencies.async-std]
 version = "1.0.0"

@@ -2,6 +2,7 @@
 pub const VIEW: &str = "view";
 pub const MODEL: &str = "model";
 pub const PROJECTION: &str = "projection";
+pub const ENVIRONMENT_MAP: &str = "environmentMap";
 
 pub const ALBEDO: &str = "albedo";
 pub const METALLIC: &str = "metallic";

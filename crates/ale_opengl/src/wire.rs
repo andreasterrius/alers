@@ -21,8 +21,8 @@ pub struct OpenGLWireContext {
 
 pub fn ale_opengl_wire_context_new() -> OpenGLWireContext {
   let wire_shader = ale_shader_new(
-    include_str!("../../../shaders/wire.vert").to_owned(),
-    include_str!("../../../shaders/wire.frag").to_owned(),
+    include_str!("../../../resources/shaders/wire.vert").to_owned(),
+    include_str!("../../../resources/shaders/wire.frag").to_owned(),
   );
 
   OpenGLWireContext {
