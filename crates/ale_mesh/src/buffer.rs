@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 #[derive(Debug)]
 pub struct BufferElementInfo {
   pub name: String,
@@ -50,6 +52,14 @@ impl<T: Clone> Buffer<T> {
   // Get pointer to the start of the data
   pub fn as_ptr(&self) -> *const T {
     self.data.as_ptr()
+  }
+}
+
+impl<T: Clone> Index<usize> for Buffer<T> {
+  type Output = T;
+
+  fn index(&self, index: usize) -> &Self::Output {
+    &self.data[index]
   }
 }
 

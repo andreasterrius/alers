@@ -5,6 +5,12 @@ use ale_math::{Array, Matrix4, Vector3};
 
 pub mod buffer;
 pub mod sdf;
+pub mod iter;
+
+const VERTEX: &str = "vertex";
+const NORMAL: &str = "normal";
+const UV: &str = "uv";
+const BARYCENTRIC: &str = "barycentric";
 
 #[derive(Debug)]
 pub struct Mesh {
