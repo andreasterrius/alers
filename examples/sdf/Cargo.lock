@@ -930,6 +930,7 @@ dependencies = [
  "ale_math",
  "ale_mesh",
  "ale_opengl",
+ "ale_texture",
 ]
 
 [[package]]

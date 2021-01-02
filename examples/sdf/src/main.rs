@@ -11,8 +11,12 @@ use ale_math::{Array, Vector3};
 use ale_mesh::sdf::{ale_mesh_sdf_new, MeshSDF};
 use ale_mesh::Mesh;
 use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
+use ale_opengl::pbr::{
+  ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
+};
 use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_context_new, OpenGLWireContext};
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
+use ale_texture::ale_texture_load;
 
 fn main() {
   ale_app_run(SDFDemo, DisplayInfo::new(Rect::new(1024, 800)));
@@ -25,13 +29,14 @@ struct State {
   sphere_sdf: MeshSDF,
 
   opengl_wire_context: OpenGLWireContext,
+  opengl_pbr_context: OpenGLPBRContext,
 }
 
 struct SDFDemo;
 
 impl App<State> for SDFDemo {
   fn load(&mut self, context: &mut RenderContext, window: &Window) -> State {
-    let sphere = ale_gltf_load(&ale_app_resource_path("gltf/sphere.gltf"));
+    let mut sphere = ale_gltf_load(&ale_app_resource_path("gltf/sphere.gltf"));
     let fly_camera = FlyCamera::new(Camera::new(
       Vector3::from_value(0.0),
       window.get_display_info().dimension.clone(),
@@ -39,6 +44,10 @@ impl App<State> for SDFDemo {
     ));
     let sphere_sdf = ale_mesh_sdf_new(&sphere[0].1, 1);
     let opengl_wire_context = ale_opengl_wire_context_new();
+
+    let hdr_texture = ale_texture_load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();
+    let opengl_pbr_context =
+      ale_opengl_pbr_context_new(&hdr_texture, &window.get_display_info().dimension, &mut sphere);
 
     ale_opengl_blend_enable();
     ale_opengl_depth_test_enable();
@@ -48,6 +57,7 @@ impl App<State> for SDFDemo {
       sphere,
       sphere_sdf,
       opengl_wire_context,
+      opengl_pbr_context,
     }
   }
 
@@ -64,6 +74,13 @@ impl App<State> for SDFDemo {
 
     let camera_render_info = state.fly_camera.get_camera_render_info();
 
+    ale_opengl_pbr_render_envmap(&state.opengl_pbr_context, &camera_render_info);
+    ale_opengl_pbr_render(
+      &state.opengl_pbr_context,
+      &mut state.sphere,
+      &camera_render_info,
+      &vec![],
+    );
     ale_opengl_wire_boundingbox_render(&mut state.opengl_wire_context, &mut state.sphere, &camera_render_info);
   }
 }

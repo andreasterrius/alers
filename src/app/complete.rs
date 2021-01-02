@@ -1,4 +1,4 @@
-use ale_app::{ale_app_run, App};
+use ale_app::{ale_app_resource_path, ale_app_run, App};
 
 use std::fs;
 
@@ -76,7 +76,8 @@ impl App<State> for CompleteExample {
     let resource_base_path = "/home/alether/Codes/Graphics/alers/resources";
     let shader_base_path = "/home/alether/Codes/Graphics/alers/resources/shaders";
 
-    let meshes = ale_gltf_load(&format!("{}/{}", resource_base_path, "test/sceneg.gltf"));
+    // let meshes = ale_gltf_load(&format!("{}/{}", resource_base_path, "test/sceneg.gltf"));
+    let meshes = ale_gltf_load(&ale_app_resource_path("gltf/sphere.gltf"));
 
     let cube_mesh = ale_mesh_cube_new();
     let plane_mesh = ale_mesh_plane_new();
@@ -104,7 +105,7 @@ impl App<State> for CompleteExample {
     );
 
     // Load textures
-    let texture = ale_texture_load(&format!("{}/{}", resource_base_path, "test/hdr/GravelPlaza_Env.hdr")).unwrap();
+    let texture = ale_texture_load(&format!("{}/{}", resource_base_path, "hdr/GravelPlaza_Env.hdr")).unwrap();
 
     // Load cubemap
     let cubemap = Cubemap::new(Rect::new(512, 512));
