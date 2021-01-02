@@ -23,6 +23,10 @@ use ale_math::transform::Transform;
 use ale_math::{Vector2, Vector3};
 use ale_opengl::console::ale_opengl_console_render;
 use ale_opengl::old::cubemap::Cubemap;
+use ale_opengl::old::entity::camera::CameraEntity;
+use ale_opengl::old::entity::pawn::PawnEntity;
+use ale_opengl::old::entity::skybox::SkyboxEntity;
+use ale_opengl::old::entity::world::World;
 use ale_opengl::old::opengl::{ProjectionTarget, RenderContext, RenderTasks, SimpleRenderTasks};
 use ale_opengl::raw::enable_depth_test;
 use ale_opengl::render_frame::{
@@ -42,15 +46,6 @@ use ale_opengl_fxaa::{
 use ale_shader::{ale_shader_new, Shader};
 use ale_texture::ale_texture_load;
 use ale_variable::Variable;
-use alers::entity::camera::CameraEntity;
-use alers::entity::pawn::PawnEntity;
-use alers::entity::skybox::SkyboxEntity;
-use alers::entity::ui::UIEntity;
-use alers::entity::world::World;
-use alers::resource;
-use alers::ui::panel::Panel;
-use alers::ui::UI;
-use log::info;
 
 pub struct State {
   world: World,

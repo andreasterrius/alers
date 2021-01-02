@@ -7,6 +7,7 @@ use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
 pub mod display_info;
 pub mod engine;
 pub mod input_translator;
+pub mod log;
 pub mod tick;
 pub mod window;
 

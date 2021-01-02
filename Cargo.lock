@@ -26,6 +26,8 @@ dependencies = [
  "ale_math",
  "ale_opengl",
  "glfw",
+ "log 0.4.8",
+ "simplelog",
 ]
 
 [[package]]
@@ -100,6 +102,7 @@ dependencies = [
  "ale_camera",
  "ale_console",
  "ale_font",
+ "ale_input",
  "ale_math",
  "ale_mesh",
  "ale_shader",
@@ -162,11 +165,9 @@ dependencies = [
  "approx 0.3.2",
  "async-std",
  "gltf",
- "log 0.4.8",
  "rand 0.3.23",
  "rodio",
  "rusttype 0.3.0",
- "simplelog",
  "time",
  "unicode-normalization",
 ]

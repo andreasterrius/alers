@@ -4,10 +4,6 @@ version = "0.1.1"
 authors = ["Alether <gotenwinz99@gmail.com>"]
 edition = "2018"
 
-[lib]
-name = "alers"
-path = "src/lib/lib.rs"
-
 [[bin]]
 name = "bin"
 path = "src/app/bin.rs"
@@ -40,6 +36,4 @@ rand = "0.3"
 rodio = "0.5.2"
 rusttype = "0.3.0"
 unicode-normalization = "0.1.0"
-simplelog = "0.7.4"
-log = "0.4.8"
 approx = "0.3.2"

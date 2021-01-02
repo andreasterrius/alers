@@ -18,3 +18,5 @@ git = "https://github.com/bjz/glfw-rs.git"
 ale_math = { path = "../ale_math" }
 ale_input = { path = "../ale_input" }
 ale_opengl = { path = "../ale_opengl" }
+simplelog = "0.7.4"
+log = "0.4.8"

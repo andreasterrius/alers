@@ -1,11 +1,9 @@
-use crate::entity::camera::CameraEntity;
-use crate::entity::pawn::PawnEntity;
-use crate::entity::skybox::SkyboxEntity;
-use crate::entity::ui::UIEntity;
-use crate::ui::UI;
+use crate::old::entity::camera::CameraEntity;
+use crate::old::entity::pawn::PawnEntity;
+use crate::old::entity::skybox::SkyboxEntity;
+use crate::old::opengl::RenderTasks;
 use ale_camera::CameraRenderInfo;
 use ale_input::Input;
-use ale_opengl::old::opengl::RenderTasks;
 
 pub struct World {
   // List of pawns in the world
@@ -16,9 +14,6 @@ pub struct World {
 
   // Active skybox
   skybox: Option<SkyboxEntity>,
-
-  // Active UI
-  ui: Vec<UIEntity>,
 }
 
 impl World {
@@ -27,7 +22,6 @@ impl World {
       pawns: vec![],
       camera: CameraEntity::None,
       skybox: None,
-      ui: vec![],
     }
   }
 
@@ -45,10 +39,6 @@ impl World {
 
   pub fn get_camera_render_info(&mut self) -> CameraRenderInfo {
     self.camera.get_camera_render_info().unwrap()
-  }
-
-  pub fn add_ui(&mut self, ui: UIEntity) {
-    self.ui.push(ui)
   }
 
   pub fn input(&mut self, inputs: &Vec<Input>) {

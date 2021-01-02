@@ -81,6 +81,7 @@ dependencies = [
  "ale_camera",
  "ale_console",
  "ale_font",
+ "ale_input",
  "ale_math",
  "ale_mesh",
  "ale_shader",

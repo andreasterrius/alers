@@ -1,5 +1,5 @@
 use ale_mesh::MeshId;
-use ale_opengl::old::cubemap::CubemapId;
+use crate::old::cubemap::CubemapId;
 use ale_shader::ShaderId;
 
 pub struct SkyboxEntity {
