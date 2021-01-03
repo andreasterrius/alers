@@ -3,6 +3,9 @@ use crate::Mesh;
 use ale_math::num_traits::clamp;
 use ale_math::{dot, InnerSpace};
 use ale_math::{vec1, Vector3};
+use rayon::prelude::{ParallelBridge, ParallelIterator};
+use std::cmp::Ordering;
+use std::time::Instant;
 
 pub struct MeshSDF {
   dist: Vec<Vec<Vec<f32>>>,
@@ -55,6 +58,8 @@ pub fn ale_mesh_point_triangle_closest_dist(tri: (Vector3<f32>, Vector3<f32>, Ve
 }
 
 pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
+  let start_time = Instant::now();
+
   let (min, max) = mesh.bounding_box;
   let size = max - min;
   let step = size / reso as f32;
@@ -62,6 +67,7 @@ pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
 
   let mut dist = vec![vec![vec![0.0; reso as usize]; reso as usize]; reso as usize];
   for i in 0..reso {
+    let inner_start_time = Instant::now();
     for j in 0..reso {
       for k in 0..reso {
         let x = offset.x + step.x * i as f32;
@@ -69,14 +75,31 @@ pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
         let z = offset.z + step.z * k as f32;
         let xyz = Vector3::new(x, y, z);
 
-        let mut min_dist = f32::MAX;
-        for tri in ale_mesh_triangle_iter_new(mesh) {
-          let dist = ale_mesh_point_triangle_closest_dist(tri, xyz.clone());
-          min_dist = f32::min(dist, min_dist);
-        }
+        //let mut min_dist = f32::MAX;
+        // for tri in ale_mesh_triangle_iter_new(mesh) {
+        //   let dist = ale_mesh_point_triangle_closest_dist(tri, xyz.clone());
+        //   min_dist = f32::min(dist, min_dist);
+        // }
+        let mut min_dist = ale_mesh_triangle_iter_new(mesh)
+          .par_bridge()
+          .map(|tri| ale_mesh_point_triangle_closest_dist(tri, xyz.clone()))
+          .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Greater))
+          .unwrap();
+
+        dist[i as usize][j as usize][k as usize] = min_dist;
       }
     }
+    println!(
+      "{}: {} ms",
+      i,
+      Instant::now().duration_since(inner_start_time).as_millis()
+    );
   }
+
+  println!(
+    "SDF generation done : {} ms",
+    Instant::now().duration_since(start_time).as_millis()
+  );
 
   MeshSDF { dist }
 }

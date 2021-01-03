@@ -42,7 +42,7 @@ impl App<State> for SDFDemo {
       window.get_display_info().dimension.clone(),
       90.0,
     ));
-    let sphere_sdf = ale_mesh_sdf_new(&sphere[0].1, 1);
+    let sphere_sdf = ale_mesh_sdf_new(&sphere[0].1, 10);
     let opengl_wire_context = ale_opengl_wire_context_new();
 
     let hdr_texture = ale_texture_load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();

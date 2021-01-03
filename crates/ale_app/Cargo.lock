@@ -83,6 +83,7 @@ version = "0.1.0"
 dependencies = [
  "ale_autoid",
  "ale_math",
+ "rayon",
 ]
 
 [[package]]
