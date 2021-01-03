@@ -18,6 +18,11 @@ pub struct Mesh {
   pub vertices: Buffer<f32>,
   pub indices: Option<Buffer<i32>>,
   pub bounding_box: (Vector3<f32>, Vector3<f32>),
+
+  // Cache so this can be faster
+  pub vertex_offset: Option<usize>,
+  pub uv_offset: Option<usize>,
+  pub normal_offset: Option<usize>,
 }
 
 pub struct Tri {
@@ -34,11 +39,18 @@ pub fn ale_mesh_new(
   indices: Option<Buffer<i32>>,
   bounding_box: (Vector3<f32>, Vector3<f32>),
 ) -> Mesh {
+  let vertex_offset = vertices.offset("vertex");
+  let uv_offset = vertices.offset("uv");
+  let normal_offset = vertices.offset("normal");
+
   Mesh {
     id: MeshId::new(),
     vertices,
     indices,
     bounding_box,
+    vertex_offset,
+    uv_offset,
+    normal_offset,
   }
 }
 
@@ -195,48 +207,79 @@ pub fn ale_mesh_bounding_box_matrix(bounding_box: (Vector3<f32>, Vector3<f32>)) 
 }
 
 pub fn ale_mesh_tri_len(mesh: &Mesh) -> usize {
-  mesh.vertices.total_row_len()
+  mesh.vertices.total_row_len() / 3
 }
 
 pub fn ale_mesh_tri_get(mesh: &Mesh, i: usize) -> Option<Tri> {
-  if i > mesh.vertices.total_row_len() {
+  let column_len = mesh.vertices.total_column_len();
+  if i > ale_mesh_tri_len(mesh) {
     return None;
   }
 
-  None
-  /*
-  match &mesh.indices {
-    None =>
-      let c = self.curr;
-      let vert = &self.mesh.vertices;
-      if c + 8 >= vert.len() {
-        return None;
-      }
-      let t1 = Vector3::new(vert[c], vert[c + 1], vert[c + 2]);
-      let t2 = Vector3::new(vert[c + 3], vert[c + 4], vert[c + 5]);
-      let t3 = Vector3::new(vert[c + 6], vert[c + 7], vert[c + 8]);
+  let vertex_offset = mesh.vertex_offset.expect("This mesh doesn't have positions");
+  let uv_offset = mesh.uv_offset.expect("This mesh doesn't have UVs");
+  let normal_offset = mesh.normal_offset.expect("This mesh doesn't have normal");
 
-      self.curr += 9;
-      Some((t1, t2, t3))
+  let tri = match &mesh.indices {
+    None => {
+      let s0 = i * 3;
+      let s1 = (i * 3) + column_len;
+      let s2 = (i * 3) + (2 * column_len);
+      let vert = &mesh.vertices;
+
+      let (p0, p1, p2) = (s0 + vertex_offset, s1 + vertex_offset, s2 + vertex_offset);
+      let position = [
+        Vector3::new(vert[p0], vert[p0 + 1], vert[p0 + 2]),
+        Vector3::new(vert[p1], vert[p1 + 1], vert[p1 + 1]),
+        Vector3::new(vert[p2], vert[p2 + 1], vert[p2 + 2]),
+      ];
+      let (u0, u1, u2) = (s0 + uv_offset, s1 + uv_offset, s2 + uv_offset);
+      let uv = [
+        Vector2::new(vert[u0], vert[u0 + 1]),
+        Vector2::new(vert[u1], vert[u1 + 1]),
+        Vector2::new(vert[u2], vert[u2 + 1]),
+      ];
+
+      let (n0, n1, n2) = (s0 + normal_offset, s1 + normal_offset, s2 + normal_offset);
+      let normal = [
+        Vector3::new(vert[n0], vert[n0 + 1], vert[n0 + 2]),
+        Vector3::new(vert[n1], vert[n1 + 1], vert[n1 + 1]),
+        Vector3::new(vert[n2], vert[n2 + 1], vert[n2 + 2]),
+      ];
+
+      Tri { position, normal, uv }
     }
     Some(ind) => {
-      let c = self.curr;
-      let vert = &self.mesh.vertices;
-      if c + 2 >= ind.len() {
-        return None;
-      }
-      let index = ind[c] as usize;
-      let t1 = Vector3::new(vert[index], vert[index + 1], vert[index + 2]);
+      let (s0, s1, s2) = (
+        ind[i * 3] as usize * column_len,
+        ind[i * 3 + 1] as usize * column_len,
+        ind[i * 3 + 2] as usize * column_len,
+      );
+      let vert = &mesh.vertices;
 
-      let index = ind[c + 1] as usize;
-      let t2 = Vector3::new(vert[index], vert[index + 1], vert[index + 2]);
+      let (p0, p1, p2) = (s0 + vertex_offset, s1 + vertex_offset, s2 + vertex_offset);
+      let position = [
+        Vector3::new(vert[p0], vert[p0 + 1], vert[p0 + 2]),
+        Vector3::new(vert[p1], vert[p1 + 1], vert[p1 + 1]),
+        Vector3::new(vert[p2], vert[p2 + 1], vert[p2 + 2]),
+      ];
+      let (u0, u1, u2) = (s0 + uv_offset, s1 + uv_offset, s2 + uv_offset);
+      let uv = [
+        Vector2::new(vert[u0], vert[u0 + 1]),
+        Vector2::new(vert[u1], vert[u1 + 1]),
+        Vector2::new(vert[u2], vert[u2 + 1]),
+      ];
 
-      let index = ind[c + 2] as usize;
-      let t3 = Vector3::new(vert[index], vert[index + 1], vert[index + 2]);
+      let (n0, n1, n2) = (s0 + normal_offset, s1 + normal_offset, s2 + normal_offset);
+      let normal = [
+        Vector3::new(vert[n0], vert[n0 + 1], vert[n0 + 2]),
+        Vector3::new(vert[n1], vert[n1 + 1], vert[n1 + 1]),
+        Vector3::new(vert[n2], vert[n2 + 1], vert[n2 + 2]),
+      ];
 
-      self.curr += 3;
-      Some((t1, t2, t3))
+      Tri { position, normal, uv }
     }
-  }
-   */
+  };
+
+  Some(tri)
 }

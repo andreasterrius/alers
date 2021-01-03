@@ -61,6 +61,10 @@ impl<T: Clone> Buffer<T> {
   pub fn as_ptr(&self) -> *const T {
     self.data.as_ptr()
   }
+
+  pub fn offset(&self, name: &str) -> Option<usize> {
+    self.element_info_offset.get(name).cloned()
+  }
 }
 
 impl<T: Clone> Index<usize> for Buffer<T> {
