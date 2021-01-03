@@ -103,7 +103,7 @@ impl<T: Clone> BufferBuilder<T> {
       size,
     });
 
-    self.element_info_offset.insert(name.to_owned(), size);
+    self.element_info_offset.insert(name.to_owned(), self.column_len);
 
     self.column_len += size;
     self
