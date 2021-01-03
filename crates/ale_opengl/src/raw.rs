@@ -149,7 +149,7 @@ pub unsafe fn create_buffer(
 
   let mut count = 0;
   let mut start = 0;
-  let total_row_size = (vertices.total_row_size() * mem::size_of::<GLfloat>()) as GLsizeiptr;
+  let total_row_size = (vertices.total_column_len() * mem::size_of::<GLfloat>()) as GLsizeiptr;
   for element in vertices.elements() {
     //println!("{:?} {:?}", start, count);
     let stride = (start * mem::size_of::<GLfloat>()) as *const c_void;

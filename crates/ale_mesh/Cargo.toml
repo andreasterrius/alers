@@ -10,3 +10,4 @@ edition = "2018"
 ale_autoid = { path = "../ale_autoid" }
 ale_math = { path = "../ale_math" }
 rayon = "1.5.0"
+approx = "0.3.2"

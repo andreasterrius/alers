@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ops::Index;
 
 #[derive(Debug)]
@@ -9,34 +10,37 @@ pub struct BufferElementInfo {
 #[derive(Debug)]
 pub struct Buffer<T: Clone> {
   data: Vec<T>,
-  element_info: Vec<BufferElementInfo>,
+  element_info_order: Vec<BufferElementInfo>,
+
+  // Lookup from the name and the offset it has
+  element_info_offset: HashMap<String, usize>,
 
   // Denotes how many attributes a row contains
-  total_row_size: usize,
+  column_len: usize,
 
   // Denotes the actual size of the buffer
-  size: usize,
+  row_len: usize,
 }
 
 impl<T: Clone> Buffer<T> {
   pub fn elements(&self) -> &Vec<BufferElementInfo> {
-    &self.element_info
+    &self.element_info_order
   }
 
   pub fn element_iter(&self, name: &str) -> Option<BufferElementIterator<T>> {
     let mut size_now = 0;
-    for i in 0..self.element_info.len() {
-      let info = &self.element_info[i];
+    for i in 0..self.element_info_order.len() {
+      let info = &self.element_info_order[i];
       if &info.name == name {
         return Some(BufferElementIterator {
           data: &self.data,
-          offset: self.total_row_size - info.size,
+          offset: self.column_len - info.size,
           ctr: 0,
           size: info.size,
           index: size_now,
         });
       }
-      size_now += self.element_info[i].size;
+      size_now += self.element_info_order[i].size;
     }
     None
   }
@@ -45,8 +49,12 @@ impl<T: Clone> Buffer<T> {
     self.data.len()
   }
 
-  pub fn total_row_size(&self) -> usize {
-    self.total_row_size
+  pub fn total_column_len(&self) -> usize {
+    self.column_len
+  }
+
+  pub fn total_row_len(&self) -> usize {
+    self.row_len
   }
 
   // Get pointer to the start of the data
@@ -71,15 +79,17 @@ pub enum BufferBuildError {
 pub struct BufferBuilder<T: Clone> {
   data: Vec<T>,
   element_info: Vec<BufferElementInfo>,
-  total_row_size: usize,
+  element_info_offset: HashMap<String, usize>,
+  column_len: usize,
 }
 
 impl<T: Clone> BufferBuilder<T> {
   pub fn new(data: Vec<T>) -> BufferBuilder<T> {
     BufferBuilder {
       data,
-      total_row_size: 0,
+      column_len: 0,
       element_info: vec![],
+      element_info_offset: HashMap::new(),
     }
   }
 
@@ -88,17 +98,21 @@ impl<T: Clone> BufferBuilder<T> {
       name: name.to_owned(),
       size,
     });
-    self.total_row_size += size;
+
+    self.element_info_offset.insert(name.to_owned(), size);
+
+    self.column_len += size;
     self
   }
 
   pub fn build(self) -> Result<Buffer<T>, BufferBuildError> {
-    let size = self.data.len() / self.total_row_size;
+    let size = self.data.len() / self.column_len;
     Ok(Buffer {
       data: self.data,
-      element_info: self.element_info,
-      total_row_size: self.total_row_size,
-      size,
+      element_info_order: self.element_info,
+      element_info_offset: self.element_info_offset,
+      column_len: self.column_len,
+      row_len: size,
     })
   }
 }
@@ -106,7 +120,8 @@ impl<T: Clone> BufferBuilder<T> {
 pub struct SeparateBufferBuilder<T: Clone> {
   element_data: Vec<Vec<T>>,
   element_info: Vec<BufferElementInfo>,
-  total_row_size: usize,
+  element_offset: HashMap<String, usize>,
+  total_column_size: usize,
 }
 
 impl<T: Clone> SeparateBufferBuilder<T> {
@@ -114,7 +129,8 @@ impl<T: Clone> SeparateBufferBuilder<T> {
     SeparateBufferBuilder {
       element_data: vec![],
       element_info: vec![],
-      total_row_size: 0,
+      element_offset: HashMap::new(),
+      total_column_size: 0,
     }
   }
 
@@ -124,7 +140,8 @@ impl<T: Clone> SeparateBufferBuilder<T> {
       name: name.to_owned(),
       size,
     });
-    self.total_row_size += size;
+    self.element_offset.insert(name.to_owned(), self.total_column_size);
+    self.total_column_size += size;
     self
   }
 
@@ -151,9 +168,10 @@ impl<T: Clone> SeparateBufferBuilder<T> {
 
     Ok(Buffer {
       data,
-      element_info: self.element_info,
-      total_row_size: self.total_row_size,
-      size: column_size,
+      element_info_order: self.element_info,
+      element_info_offset: self.element_offset,
+      column_len: self.total_column_size,
+      row_len: column_size,
     })
   }
 }
@@ -208,6 +226,10 @@ pub fn test_buffers() {
     .build()
     .unwrap();
 
+  assert_eq!(buffer.element_info_offset.get("vertex"), Some(&0));
+  assert_eq!(buffer.element_info_offset.get("uv"), Some(&3));
+  assert_eq!(buffer.element_info_offset.get("normal"), Some(&5));
+
   let vertices_expected = vec![1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
   let vertices: Vec<f32> = buffer.element_iter("vertex").unwrap().collect();
   for i in 0..vertices.len() {
@@ -241,6 +263,10 @@ pub fn test_separate_buffers() {
     .info("normal", 3, normals_data.clone())
     .build()
     .unwrap();
+
+  assert_eq!(buffer.element_info_offset.get("vertex"), Some(&0));
+  assert_eq!(buffer.element_info_offset.get("uv"), Some(&3));
+  assert_eq!(buffer.element_info_offset.get("normal"), Some(&5));
 
   let vertices: Vec<f64> = buffer.element_iter("vertex").unwrap().collect();
   let uvs: Vec<f64> = buffer.element_iter("uv").unwrap().collect();
