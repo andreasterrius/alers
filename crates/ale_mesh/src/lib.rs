@@ -204,7 +204,7 @@ pub fn ale_mesh_bounding_box_matrix(bounding_box: (Vector3<f32>, Vector3<f32>)) 
   // let transform = Transform::from_position_scale(center, size);
   // transform
 
-  Matrix4::from_translation(-center) * Matrix4::from_nonuniform_scale(size.x, size.y, size.z)
+  Matrix4::from_translation(center) * Matrix4::from_nonuniform_scale(size.x, size.y, size.z)
 }
 
 pub fn ale_mesh_tri_len(mesh: &Mesh) -> usize {

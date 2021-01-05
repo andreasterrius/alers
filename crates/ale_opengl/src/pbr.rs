@@ -7,7 +7,7 @@ use crate::texture::{ale_opengl_texture_new, OpenGLTexture};
 use ale_camera::CameraRenderInfo;
 use ale_math::rect::Rect;
 use ale_math::transform::Transform;
-use ale_math::{perspective, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector3};
+use ale_math::{perspective, Array, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector3};
 use ale_mesh::{ale_mesh_cube_new, Mesh, MeshId};
 use ale_shader::{ale_shader_new, Shader};
 use ale_texture::{ale_texture_load, Texture};
@@ -158,6 +158,7 @@ pub fn ale_opengl_pbr_render(
         .expect(&format!("{:?} is not a pbr registered mesh", m.uid()));
 
       // Pass uniforms
+      //let mut t = Transform::new();
       raw::matrix4f(pbr_shader.id, MODEL, t.matrix().as_ptr());
 
       // Bind Array Buffer
@@ -189,6 +190,61 @@ pub fn ale_opengl_pbr_render_envmap(opengl_pbr_context: &OpenGLPBRContext, camer
     match cube_mesh.ebo {
       None => raw::draw_arrays(0, cube_mesh.draw_size),
       Some(_) => raw::draw_elements(cube_mesh.draw_size),
+    }
+  }
+}
+
+pub fn ale_opengl_pbr_render_debug(
+  opengl_pbr_context: &OpenGLPBRContext,
+  point: Vector3<f32>,
+  size: f32,
+  color: Vector3<f32>,
+  camera_render_info: &CameraRenderInfo,
+) {
+  unsafe {
+    let pbr_shader = &opengl_pbr_context.pbr_shader;
+    let cubemap = opengl_pbr_context.convoluted_cubemap;
+
+    // Bind shader
+    ale_opengl_shader_activate(
+      pbr_shader,
+      &vec![
+        Variable::F32_3("albedo".to_owned(), color),
+        Variable::F32_1("metallic".to_owned(), 0.0f32),
+        Variable::F32_1("roughness".to_owned(), 0.5f32),
+        Variable::F32_1("ao".to_owned(), 0.5f32),
+      ],
+    );
+
+    raw::uniform1i(pbr_shader.id, "irradianceMap", 0);
+    raw::active_texture(0);
+    raw::bind_cubemap(cubemap);
+
+    let camera_position = camera_render_info.position;
+    raw::uniform3f(
+      pbr_shader.id,
+      CAMERA_POSITION,
+      camera_position.x,
+      camera_position.y,
+      camera_position.z,
+    );
+
+    raw::matrix4f(pbr_shader.id, VIEW, camera_render_info.view.as_ptr());
+    raw::matrix4f(pbr_shader.id, PROJECTION, camera_render_info.projection.as_ptr());
+
+    let mut t = Transform::from_position_scale(point, Vector3::from_value(size));
+    let ogl_mesh = &opengl_pbr_context.cube_mesh;
+
+    // Pass uniforms
+    raw::matrix4f(pbr_shader.id, MODEL, t.matrix().as_ptr());
+
+    // Bind Array Buffer
+    raw::bind_vao(ogl_mesh.vao);
+
+    // Draw according to EBO
+    match ogl_mesh.ebo {
+      None => raw::draw_arrays(0, ogl_mesh.draw_size),
+      Some(_) => raw::draw_elements(ogl_mesh.draw_size),
     }
   }
 }

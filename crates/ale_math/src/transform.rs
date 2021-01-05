@@ -48,7 +48,7 @@ impl Transform {
 
   pub fn from_scale(scale: Vector3<f32>) -> Transform {
     Transform {
-      position : Vector3::zero(),
+      position: Vector3::zero(),
       scale,
       lcl_rotation: Quaternion::one(),
       matrix: None,
@@ -77,9 +77,9 @@ impl Transform {
   pub fn matrix(&mut self) -> Matrix4<f32> {
     match self.matrix {
       None => {
-        let m = Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z)
-          * Matrix4::from(self.lcl_rotation)
-          * Matrix4::from_translation(self.position);
+        let m = Matrix4::from(self.lcl_rotation)
+          * Matrix4::from_translation(self.position)
+          * Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z);
         self.matrix = Some(m);
       }
       Some(_) => (),

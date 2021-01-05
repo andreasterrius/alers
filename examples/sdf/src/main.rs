@@ -12,7 +12,8 @@ use ale_mesh::sdf::{ale_mesh_sdf_new, MeshSDF};
 use ale_mesh::{ale_mesh_cube_new, Mesh};
 use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
 use ale_opengl::pbr::{
-  ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
+  ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_debug, ale_opengl_pbr_render_envmap,
+  OpenGLPBRContext,
 };
 use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_context_new, OpenGLWireContext};
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
@@ -36,8 +37,8 @@ struct SDFDemo;
 
 impl App<State> for SDFDemo {
   fn load(&mut self, context: &mut RenderContext, window: &Window) -> State {
-    //let mut sphere = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf"));
-    let mut sphere = vec![(Transform::new(), ale_mesh_cube_new())];
+    let mut sphere = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf"));
+    //let mut sphere = vec![(Transform::new(), ale_mesh_cube_new())];
 
     let fly_camera = FlyCamera::new(Camera::new(
       Vector3::from_value(0.0),
@@ -83,6 +84,35 @@ impl App<State> for SDFDemo {
       &camera_render_info,
       &vec![],
     );
+
+    let mut r = 1.0;
+    let mut g = 1.0;
+
+    for (from, to, dist) in &state.sphere_sdf.points {
+      //println!("p: {:?}", from);
+      if *dist < 0.0 {
+        r = 0.0;
+        g = 1.0;
+      } else {
+        r = 1.0;
+        g = 0.0;
+      }
+      ale_opengl_pbr_render_debug(
+        &state.opengl_pbr_context,
+        from.clone(),
+        0.01f32,
+        Vector3::new(1.0, 0.0, 0.0),
+        &camera_render_info,
+      );
+      ale_opengl_pbr_render_debug(
+        &state.opengl_pbr_context,
+        to.clone(),
+        0.01f32,
+        Vector3::new(0.0, 1.0, 0.0),
+        &camera_render_info,
+      );
+    }
+
     ale_opengl_wire_boundingbox_render(&mut state.opengl_wire_context, &mut state.sphere, &camera_render_info);
   }
 }

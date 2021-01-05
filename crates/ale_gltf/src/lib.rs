@@ -1,6 +1,6 @@
 use ale_math::transform::Transform;
-use ale_math::Decomposed;
 use ale_math::Matrix4;
+use ale_math::{Decomposed, One, Quaternion};
 use ale_mesh::buffer::{Buffer, SeparateBufferBuilder};
 use ale_mesh::{ale_mesh_new, Mesh};
 use gltf::mesh::util::{ReadIndices, ReadTexCoords};
@@ -24,7 +24,11 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
         rotation,
         scale,
       } => {
-        let transform = Transform::from_all(translation.into(), rotation.into(), scale.into());
+        let transform = Transform::from_all(
+          translation.into(),
+          Quaternion::new(rotation[3], rotation[2], rotation[1], rotation[0]),
+          scale.into(),
+        );
         nodes.insert(node.index(), transform);
       }
     }
@@ -38,6 +42,9 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
       let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
 
       let (positions, bb_min, bb_max) = intern_get_positions(&reader);
+
+      //println!("pos {:?}", positions);
+
       let normals = intern_get_normals(&reader);
       let tex_coords = intern_get_tex_coords(&reader);
       let indices = intern_get_indices(&reader);
