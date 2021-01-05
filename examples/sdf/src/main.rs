@@ -9,7 +9,7 @@ use ale_math::rect::Rect;
 use ale_math::transform::Transform;
 use ale_math::{Array, Vector3};
 use ale_mesh::sdf::{ale_mesh_sdf_new, MeshSDF};
-use ale_mesh::Mesh;
+use ale_mesh::{ale_mesh_cube_new, Mesh};
 use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
@@ -36,7 +36,9 @@ struct SDFDemo;
 
 impl App<State> for SDFDemo {
   fn load(&mut self, context: &mut RenderContext, window: &Window) -> State {
-    let mut sphere = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf"));
+    //let mut sphere = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf"));
+    let mut sphere = vec![(Transform::new(), ale_mesh_cube_new())];
+
     let fly_camera = FlyCamera::new(Camera::new(
       Vector3::from_value(0.0),
       window.get_display_info().dimension.clone(),

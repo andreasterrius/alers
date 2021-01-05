@@ -1,13 +1,13 @@
 use crate::buffer::{Buffer, BufferBuilder, SeparateBufferBuilder};
 use ale_autoid::*;
 use ale_math::transform::Transform;
-use ale_math::{Array, Matrix4, Vector2, Vector3, Zero};
+use ale_math::{Array, InnerSpace, Matrix4, Vector2, Vector3, Zero};
 
 pub mod buffer;
 pub mod iter;
 pub mod sdf;
 
-const VERTEX: &str = "vertex";
+const VERTEX: &str = "position";
 const NORMAL: &str = "normal";
 const UV: &str = "uv";
 const BARYCENTRIC: &str = "barycentric";
@@ -20,7 +20,7 @@ pub struct Mesh {
   pub bounding_box: (Vector3<f32>, Vector3<f32>),
 
   // Cache so this can be faster
-  pub vertex_offset: Option<usize>,
+  pub position_offset: Option<usize>,
   pub uv_offset: Option<usize>,
   pub normal_offset: Option<usize>,
 }
@@ -28,6 +28,7 @@ pub struct Mesh {
 pub struct Tri {
   position: [Vector3<f32>; 3],
   normal: [Vector3<f32>; 3],
+  tri_normal: Vector3<f32>,
   uv: [Vector2<f32>; 3],
 }
 
@@ -39,7 +40,7 @@ pub fn ale_mesh_new(
   indices: Option<Buffer<i32>>,
   bounding_box: (Vector3<f32>, Vector3<f32>),
 ) -> Mesh {
-  let vertex_offset = vertices.offset("vertex");
+  let position_offset = vertices.offset("position");
   let uv_offset = vertices.offset("uv");
   let normal_offset = vertices.offset("normal");
 
@@ -48,7 +49,7 @@ pub fn ale_mesh_new(
     vertices,
     indices,
     bounding_box,
-    vertex_offset,
+    position_offset,
     uv_offset,
     normal_offset,
   }
@@ -99,7 +100,7 @@ pub fn ale_mesh_cube_new() -> Mesh {
     -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, // top-left
     -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, // bottom-left
   ])
-  .info("vertex", 3)
+  .info("position", 3)
   .info("normal", 3)
   .info("uv", 2)
   .build()
@@ -112,7 +113,7 @@ pub fn ale_mesh_cube_new() -> Mesh {
 
 pub fn ale_mesh_plane_new() -> Mesh {
   let vertices = BufferBuilder::new(vec![0.0f32, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0])
-    .info("vertex", 2)
+    .info("position", 2)
     .build()
     .unwrap();
 
@@ -126,7 +127,7 @@ pub fn ale_mesh_ndc_plane_new() -> Mesh {
     -1.0f32, 1.0, 0.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, 1.0, 1.0, -1.0, 1.0, 0.0, 1.0,
     1.0, 1.0, 1.0,
   ])
-  .info("vertex", 2)
+  .info("position", 2)
   .info("texcoords", 2)
   .build()
   .unwrap();
@@ -183,7 +184,7 @@ pub fn ale_mesh_bounding_box_new() -> Mesh {
   ];
 
   let vertices = BufferBuilder::new(vec)
-    .info("vertex", 3)
+    .info("position", 3)
     .info("barycentric", 3)
     .build()
     .unwrap();
@@ -219,7 +220,7 @@ pub fn ale_mesh_tri_get(mesh: &Mesh, i: usize) -> Option<Tri> {
     return None;
   }
 
-  let vertex_offset = mesh.vertex_offset.expect("This mesh doesn't have positions");
+  let vertex_offset = mesh.position_offset.expect("This mesh doesn't have positions");
   let uv_offset = mesh.uv_offset.expect("This mesh doesn't have UVs");
   let normal_offset = mesh.normal_offset.expect("This mesh doesn't have normal");
 
@@ -258,8 +259,14 @@ pub fn ale_mesh_tri_get(mesh: &Mesh, i: usize) -> Option<Tri> {
     Vector3::new(vert[n1], vert[n1 + 1], vert[n1 + 2]),
     Vector3::new(vert[n2], vert[n2 + 1], vert[n2 + 2]),
   ];
+  let tri_normal = Vector3::normalize((position[1] - position[0]).cross(position[2] - position[0]));
 
-  Some(Tri { position, normal, uv })
+  Some(Tri {
+    position,
+    normal,
+    tri_normal,
+    uv,
+  })
 }
 
 #[test]
@@ -290,7 +297,7 @@ pub fn test_tri_get_no_ebo() {
   */
 
   let buffer: Buffer<f32> = BufferBuilder::new(data)
-    .info("vertex", 3)
+    .info("position", 3)
     .info("uv", 2)
     .info("normal", 3)
     .build()
@@ -354,7 +361,7 @@ pub fn test_tri_get_with_ebo() {
   */
 
   let buffer: Buffer<f32> = BufferBuilder::new(data)
-    .info("vertex", 3)
+    .info("position", 3)
     .info("uv", 2)
     .info("normal", 3)
     .build()
