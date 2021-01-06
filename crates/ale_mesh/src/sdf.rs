@@ -127,44 +127,31 @@ pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
 
         let mut min_dist = f32::MAX;
         let mut min_point = Vector3::zero();
-        let mut inside_tri = 0;
         let tri_len = ale_mesh_tri_len(mesh);
         for tri_idx in 0..tri_len {
           let tri = ale_mesh_tri_get(mesh, tri_idx).unwrap();
           let point = ale_mesh_point_triangle_closest_point(&tri, xyz.clone());
-          if dot(point - xyz.clone(), tri.tri_normal) > 0.0 {
-            inside_tri += 1;
-          }
-
-          // println!(
-          //   "{:?} {:?} {}",
-          //   xyz.clone(),
-          //   point.clone(),
-          //   dot(point - xyz.clone(), tri.tri_normal)
-          // );
 
           let dist = point.distance(xyz.clone());
           if min_dist > dist {
-            min_dist = dist;
+            min_dist = if dot((point - xyz.clone()).normalize(), tri.tri_normal) < 0.0 {
+              -dist
+            } else {
+              dist
+            };
             min_point = point.clone();
           }
         }
 
-        if inside_tri > tri_len / 2 {
-          min_dist = -min_dist;
-        }
-
         dist[i as usize][j as usize][k as usize] = min_dist;
-        if points.len() < 20 {
-          points.push((xyz.clone(), min_point.clone(), min_dist));
-        }
+        points.push((xyz.clone(), min_point.clone(), min_dist));
       }
     }
-    println!(
-      "{}: {} ms",
-      i,
-      Instant::now().duration_since(inner_start_time).as_millis()
-    );
+    // println!(
+    //   "{}: {} ms",
+    //   i,
+    //   Instant::now().duration_since(inner_start_time).as_millis()
+    // );
   }
 
   //points.push((min, min));

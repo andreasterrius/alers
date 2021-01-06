@@ -85,30 +85,18 @@ impl App<State> for SDFDemo {
       &vec![],
     );
 
-    let mut r = 1.0;
-    let mut g = 1.0;
-
+    // Render SDF points for given mesh
     for (from, to, dist) in &state.sphere_sdf.points {
-      //println!("p: {:?}", from);
-      if *dist < 0.0 {
-        r = 0.0;
-        g = 1.0;
+      let color = if *dist < 0.0 {
+        Vector3::new(1.0, 0.0, 0.0)
       } else {
-        r = 1.0;
-        g = 0.0;
-      }
+        Vector3::new(0.0, 1.0, 0.0)
+      };
       ale_opengl_pbr_render_debug(
         &state.opengl_pbr_context,
         from.clone(),
         0.01f32,
-        Vector3::new(1.0, 0.0, 0.0),
-        &camera_render_info,
-      );
-      ale_opengl_pbr_render_debug(
-        &state.opengl_pbr_context,
-        to.clone(),
-        0.01f32,
-        Vector3::new(0.0, 1.0, 0.0),
+        color,
         &camera_render_info,
       );
     }
