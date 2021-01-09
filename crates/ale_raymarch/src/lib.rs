@@ -20,4 +20,8 @@ pub fn ale_ray_new(origin: Vector3<f32>, direction: Vector3<f32>) -> Ray {
 
 pub fn ale_raymarch_sdf_single(camera: Camera, sdf: &MeshSDF) -> Texture {
   let aspect_ratio = camera.aspect_ratio();
+  let position = camera.position();
+
+  let initial = camera.position() + camera.forward_dir() - camera.right_dir();
+  let right_step = camera.right_dir();
 }

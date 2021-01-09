@@ -4,10 +4,10 @@ use ale_app::{ale_app_resource_path, ale_app_run, App};
 use ale_camera::flycamera::FlyCamera;
 use ale_camera::Camera;
 use ale_gltf::ale_gltf_load;
-use ale_input::Input;
+use ale_input::{Input, Key};
 use ale_math::rect::Rect;
 use ale_math::transform::Transform;
-use ale_math::{Array, Vector3};
+use ale_math::{Array, Vector3, Zero};
 use ale_mesh::sdf::{ale_mesh_sdf_new, MeshSDF};
 use ale_mesh::{ale_mesh_cube_new, Mesh};
 use ale_opengl::debug::line::{
@@ -74,6 +74,35 @@ impl App<State> for SDFDemo {
 
   fn input(&mut self, state: &mut State, inputs: Vec<Input>) {
     state.fly_camera.input(&inputs);
+
+    for input in &inputs {
+      match input {
+        Input::Key(Key::L, _, _, _) => {
+          let (f, r, u) = state.fly_camera.debug_camera_dirs();
+          let pos = state.fly_camera.camera().position();
+          println!("{:?}", pos);
+          ale_opengl_line_debug_queue(
+            &mut state.opengl_line_debug_context,
+            pos,
+            f,
+            Vector3::new(1.0, 0.0, 0.0),
+          );
+          ale_opengl_line_debug_queue(
+            &mut state.opengl_line_debug_context,
+            pos,
+            r,
+            Vector3::new(0.0, 1.0, 0.0),
+          );
+          ale_opengl_line_debug_queue(
+            &mut state.opengl_line_debug_context,
+            pos,
+            u,
+            Vector3::new(0.0, 0.0, 1.0),
+          );
+        }
+        _ => {}
+      }
+    }
   }
 
   fn tick(&mut self, state: &mut State, delta_time: f32) {
@@ -94,24 +123,25 @@ impl App<State> for SDFDemo {
     );
 
     // Render SDF points for given mesh
-    for (from, to, dist) in &state.sphere_sdf.points {
-      let color = if *dist < 0.0 {
-        Vector3::new(1.0, 0.0, 0.0)
-      } else {
-        Vector3::new(0.0, 1.0, 0.0)
-      };
-      ale_opengl_pbr_render_debug(
-        &state.opengl_pbr_context,
-        from.clone(),
-        0.01f32,
-        color,
-        &camera_render_info,
-      );
-      ale_opengl_line_debug_queue(&mut state.opengl_line_debug_context, from.clone(), to.clone(), color);
-    }
+    // for (from, to, dist) in &state.sphere_sdf.points {
+    //   let color = if *dist < 0.0 {
+    //     Vector3::new(1.0, 0.0, 0.0)
+    //   } else {
+    //     Vector3::new(0.0, 1.0, 0.0)
+    //   };
+    //   ale_opengl_pbr_render_debug(
+    //     &state.opengl_pbr_context,
+    //     from.clone(),
+    //     0.01f32,
+    //     color,
+    //     &camera_render_info,
+    //   );
+    //   ale_opengl_line_debug_queue(&mut state.opengl_line_debug_context, from.clone(), to.clone(), color);
+    // }
 
+    // Debug camera
     ale_opengl_line_debug_render(&state.opengl_line_debug_context, &camera_render_info);
-    ale_opengl_line_debug_clear(&mut state.opengl_line_debug_context);
+    //ale_opengl_line_debug_clear(&mut state.opengl_line_debug_context);
 
     //ale_opengl_wire_boundingbox_render(&mut state.opengl_wire_context, &mut state.sphere, &camera_render_info);
   }

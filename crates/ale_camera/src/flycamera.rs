@@ -61,6 +61,13 @@ impl FlyCamera {
     self.camera.translate(self.move_input * self.camera_speed * delta_time);
   }
 
+  pub fn debug_camera_dirs(&self) -> (Vector3<f32>, Vector3<f32>, Vector3<f32>) {
+    let f = self.camera.forward_dir() + self.camera.position();
+    let r = self.camera.right_dir() + self.camera.position();
+    let u = self.camera.up_dir() + self.camera.position();
+    return (f, r, u);
+  }
+
   fn camera_input(&mut self, input: &Input) {
     if self.disable_input {
       return;

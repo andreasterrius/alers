@@ -1,7 +1,7 @@
 use ale_math::prelude::*;
 use ale_math::rect::Rect;
 use ale_math::transform::Transform;
-use ale_math::{ortho, perspective, Deg, Matrix4, Quaternion, Vector3};
+use ale_math::{ortho, perspective, Deg, Matrix4, Point3, Quaternion, Vector3};
 use std::sync::Arc;
 
 pub mod flycamera;
@@ -32,6 +32,10 @@ impl Camera {
     }
   }
 
+  pub fn position(&self) -> Vector3<f32> {
+    self.transform.position
+  }
+
   pub fn translate(&mut self, translation: Vector3<f32>) {
     if translation.is_zero() {
       return;
@@ -55,11 +59,19 @@ impl Camera {
   }
 
   pub fn forward_dir(&self) -> Vector3<f32> {
-    self.transform.lcl_rotation.rotate_vector(Vector3::unit_z()).normalize()
+    self
+      .transform
+      .lcl_rotation
+      .rotate_vector(-Vector3::unit_z())
+      .normalize()
   }
 
   pub fn right_dir(&self) -> Vector3<f32> {
     return self.forward_dir().cross(Vector3::unit_y()).normalize();
+  }
+
+  pub fn up_dir(&self) -> Vector3<f32> {
+    return -self.forward_dir().cross(self.right_dir());
   }
 
   pub fn aspect_ratio(&self) -> f32 {
@@ -76,7 +88,7 @@ impl Camera {
     match self.view_mat {
       None => {
         self.view_mat = Some(
-          Matrix4::from(self.transform.lcl_rotation.invert()) * Matrix4::from_translation(self.transform.position),
+          Matrix4::from(self.transform.lcl_rotation.invert()) * Matrix4::from_translation(-self.transform.position),
         );
       }
       Some(_) => (),
