@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 ale_math = { path = "../ale_math" }
-gl = "0.6.2"
+gl = "0.14.0"
