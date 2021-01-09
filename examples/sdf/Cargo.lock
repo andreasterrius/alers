@@ -124,14 +124,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ale_opengl_debug"
-version = "0.1.0"
-dependencies = [
- "ale_math",
- "gl",
-]
-
-[[package]]
 name = "ale_shader"
 version = "0.1.0"
 dependencies = [
@@ -941,7 +933,6 @@ dependencies = [
  "ale_math",
  "ale_mesh",
  "ale_opengl",
- "ale_opengl_debug",
  "ale_texture",
 ]
 

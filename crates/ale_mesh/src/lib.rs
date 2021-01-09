@@ -334,6 +334,79 @@ pub fn test_tri_get_no_ebo() {
 }
 
 #[test]
+pub fn test_tri_cube_get_no_ebo() {
+  use approx::relative_eq;
+
+  let mesh = ale_mesh_cube_new();
+
+  assert_eq!(ale_mesh_tri_len(&mesh), 12);
+
+  let mut res: Vec<f32> = vec![];
+  for i in 0..ale_mesh_tri_len(&mesh) {
+    let tri = ale_mesh_tri_get(&mesh, i).unwrap();
+
+    res.extend_from_slice(&[tri.position[0][0], tri.position[0][1], tri.position[0][2]]);
+    res.extend_from_slice(&[tri.normal[0][0], tri.normal[0][1], tri.normal[0][2]]);
+    res.extend_from_slice(&[tri.uv[0][0], tri.uv[0][1]]);
+
+    res.extend_from_slice(&[tri.position[1][0], tri.position[1][1], tri.position[1][2]]);
+    res.extend_from_slice(&[tri.normal[1][0], tri.normal[1][1], tri.normal[1][2]]);
+    res.extend_from_slice(&[tri.uv[1][0], tri.uv[1][1]]);
+
+    res.extend_from_slice(&[tri.position[2][0], tri.position[2][1], tri.position[2][2]]);
+    res.extend_from_slice(&[tri.normal[2][0], tri.normal[2][1], tri.normal[2][2]]);
+    res.extend_from_slice(&[tri.uv[2][0], tri.uv[2][1]]);
+  }
+  assert_eq!(
+    res,
+    vec![
+      // back face
+      -1.0f32, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // bottom-left
+      1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0, // top-right
+      1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 0.0, // bottom-right
+      1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0, // top-right
+      -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // bottom-left
+      -1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 1.0, // top-left
+      // front face
+      -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // bottom-left
+      1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, // bottom-right
+      1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, // top-right
+      1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, // top-right
+      -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, // top-left
+      -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // bottom-left
+      // left face
+      -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0, // top-right
+      -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, 1.0, // top-left
+      -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, // bottom-left
+      -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, // bottom-left
+      -1.0, -1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, // bottom-right
+      -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0, // top-right
+      // right face
+      1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, // top-left
+      1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0, // bottom-right
+      1.0, 1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, // top-right
+      1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0, // bottom-right
+      1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, // top-left
+      1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, // bottom-left
+      // bottom face
+      -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0, // top-right
+      1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 1.0, 1.0, // top-left
+      1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, // bottom-left
+      1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, // bottom-left
+      -1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, // bottom-right
+      -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0, // top-right
+      // top face
+      -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, // top-left
+      1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom-right
+      1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 1.0, 1.0, // top-right
+      1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom-right
+      -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, // top-left
+      -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, // bottom-left
+    ]
+  );
+}
+
+#[test]
 pub fn test_tri_get_with_ebo() {
   use approx::relative_eq;
 

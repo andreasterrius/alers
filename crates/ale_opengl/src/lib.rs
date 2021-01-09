@@ -10,6 +10,7 @@ pub mod text;
 pub mod texture;
 pub mod wire;
 pub mod raymarch;
+pub mod debug;
 
 pub fn ale_opengl_clear_render() {
   // Clear the screen buffer

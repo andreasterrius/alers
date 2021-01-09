@@ -441,3 +441,12 @@ pub unsafe fn create_cubemap(w: u32, h: u32) -> u32 {
 
   return cubemap;
 }
+
+pub unsafe fn print_error(id: &str) {
+  let error = gl::GetError();
+  if error != gl::NO_ERROR {
+    println!("{}: {}", id, error);
+  } else {
+    println!("{}: ok", id);
+  }
+}

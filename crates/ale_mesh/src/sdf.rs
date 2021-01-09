@@ -33,76 +33,197 @@ fn cross(a: Vector3<f32>, b: Vector3<f32>) -> Vector3<f32> {
   a.cross(b)
 }
 
-// copied from https://www.gamedev.net/forums/topic/552906-closest-point-on-triangle/
-pub fn ale_mesh_point_triangle_closest_point(tri: &Tri, p: Vector3<f32>) -> Vector3<f32> {
-  let edge0 = tri.position[1] - tri.position[0];
-  let edge1 = tri.position[2] - tri.position[0];
-  let v0 = tri.position[0] - p;
+// copied from https://docs.ros.org/en/kinetic/api/geometric_tools_engine/html/GteDistPointTriangleExact_8h_source.html
+pub fn ale_mesh_point_triangle_closest_point(triangle: &Tri, point: Vector3<f32>) -> Vector3<f32> {
+  let diff = point - triangle.position[0];
+  let edge0 = triangle.position[1] - triangle.position[0];
+  let edge1 = triangle.position[2] - triangle.position[0];
+  let a00 = dot(edge0, edge0);
+  let a01 = dot(edge0, edge1);
+  let a11 = dot(edge1, edge1);
+  let b0 = -dot(diff, edge0);
+  let b1 = -dot(diff, edge1);
+  let mut det = a00 * a11 - a01 * a01;
+  let mut t0 = a01 * b1 - a11 * b0;
+  let mut t1 = a01 * b0 - a00 * b1;
 
-  let a = edge0.dot(edge0);
-  let b = edge0.dot(edge1);
-  let c = edge1.dot(edge1);
-  let d = edge0.dot(v0);
-  let e = edge1.dot(v0);
-
-  let det = a * c - b * b;
-  let mut s = b * e - c * d;
-  let mut t = b * d - a * e;
-
-  if s + t < det {
-    if s < 0.0 {
-      if t < 0.0 {
-        if d < 0.0 {
-          s = clamp(-d / a, 0.0, 1.0);
-          t = 0.0;
+  if t0 + t1 <= det {
+    if t0 < 0.0 {
+      if t1 < 0.0
+      // region 4
+      {
+        if b0 < 0.0 {
+          t1 = 0.0;
+          if -b0 >= a00
+          // V1
+          {
+            t0 = 1.0;
+          } else
+          // E01
+          {
+            t0 = -b0 / a00;
+          }
         } else {
-          s = 0.0;
-          t = clamp(-e / c, 0.0, 1.0);
+          t0 = 0.0;
+          if b1 >= 0.0
+          // V0
+          {
+            t1 = 0.0;
+          } else if -b1 >= a11
+          // V2
+          {
+            t1 = 1.0;
+          } else
+          // E20
+          {
+            t1 = -b1 / a11;
+          }
         }
-      } else {
-        s = 0.0;
-        t = clamp(-e / c, 0.0, 1.0);
+      } else
+      // region 3
+      {
+        t0 = 0.0;
+        if b1 >= 0.0
+        // V0
+        {
+          t1 = 0.0;
+        } else if -b1 >= a11
+        // V2
+        {
+          t1 = 1.0;
+        } else
+        // E20
+        {
+          t1 = -b1 / a11;
+        }
       }
-    } else if t < 0.0 {
-      s = clamp(-d / a, 0.0, 1.0);
-      t = 0.0;
-    } else {
+    } else if t1 < 0.0
+    // region 5
+    {
+      t1 = 0.0;
+      if b0 >= 0.0
+      // V0
+      {
+        t0 = 0.0;
+      } else if -b0 >= a00
+      // V1
+      {
+        t0 = 1.0;
+      } else
+      // E01
+      {
+        t0 = -b0 / a00;
+      }
+    } else
+    // region 0, interior
+    {
       let inv_det = 1.0 / det;
-      s *= inv_det;
-      t *= inv_det;
+      t0 *= inv_det;
+      t1 *= inv_det;
     }
   } else {
-    if s < 0.0 {
-      let tmp0 = b + d;
-      let tmp1 = c + e;
+    let mut tmp0;
+    let mut tmp1;
+    let mut numer;
+    let mut denom;
+
+    if t0 < 0.0
+    // region 2
+    {
+      tmp0 = a01 + b0;
+      tmp1 = a11 + b1;
       if tmp1 > tmp0 {
-        let numer = tmp1 - tmp0;
-        let denom = a - 2.0 * b + c;
-        s = clamp(numer / denom, 0.0, 1.0);
-        t = 1.0 - s;
+        numer = tmp1 - tmp0;
+        denom = a00 - 2.0 * a01 + a11;
+        if numer >= denom
+        // V1
+        {
+          t0 = 1.0;
+          t1 = 0.0;
+        } else
+        // E12
+        {
+          t0 = numer / denom;
+          t1 = 1.0 - t0;
+        }
       } else {
-        t = clamp(-e / c, 0.0, 1.0);
-        s = 0.0;
+        t0 = 0.0;
+        if tmp1 <= 0.0
+        // V2
+        {
+          t1 = 1.0;
+        } else if b1 >= 0.0
+        // V0
+        {
+          t1 = 0.0;
+        } else
+        // E20
+        {
+          t1 = -b1 / a11;
+        }
       }
-    } else if t < 0.0 {
-      if a + d > b + e {
-        let numer = c + e - b - d;
-        let denom = a - 2.0 * b + c;
-        s = clamp(numer / denom, 0.0, 1.0);
-        t = 1.0 - s;
+    } else if t1 < 0.0
+    // region 6
+    {
+      tmp0 = a01 + b1;
+      tmp1 = a00 + b0;
+      if tmp1 > tmp0 {
+        numer = tmp1 - tmp0;
+        denom = a00 - 2.0 * a01 + a11;
+        if numer >= denom
+        // V2
+        {
+          t1 = 1.0;
+          t0 = 0.0;
+        } else
+        // E12
+        {
+          t1 = numer / denom;
+          t0 = 1.0 - t1;
+        }
       } else {
-        s = clamp(-e / c, 0.0, 1.0);
-        t = 0.0;
+        t1 = 0.0;
+        if tmp1 <= 0.0
+        // V1
+        {
+          t0 = 1.0;
+        } else if b0 >= 0.0
+        // V0
+        {
+          t0 = 0.0;
+        } else
+        // E01
+        {
+          t0 = -b0 / a00;
+        }
       }
-    } else {
-      let numer = c + e - b - d;
-      let denom = a - 2.0 * b + c;
-      s = clamp(numer / denom, 0.0, 1.0);
-      t = 1.0 - s;
+    } else
+    // region 1
+    {
+      numer = a11 + b1 - a01 - b0;
+      if numer <= 0.0
+      // V2
+      {
+        t0 = 0.0;
+        t1 = 1.0;
+      } else {
+        denom = a00 - 2.0 * a01 + a11;
+        if numer >= denom
+        // V1
+        {
+          t0 = 1.0;
+          t1 = 0.0;
+        } else
+        // 12
+        {
+          t0 = numer / denom;
+          t1 = 1.0 - t0;
+        }
+      }
     }
   }
 
-  return tri.position[0] + s * edge0 + t * edge1;
+  return triangle.position[0] + t0 * edge0 + t1 * edge1;
 }
 
 pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
@@ -126,6 +247,7 @@ pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
         let xyz = Vector3::new(x, y, z);
 
         let mut min_dist = f32::MAX;
+        let mut should_flip = false;
         let mut min_point = Vector3::zero();
         let tri_len = ale_mesh_tri_len(mesh);
         for tri_idx in 0..tri_len {
@@ -134,13 +256,18 @@ pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
 
           let dist = point.distance(xyz.clone());
           if min_dist > dist {
-            min_dist = if dot((point - xyz.clone()).normalize(), tri.tri_normal) < 0.0 {
-              -dist
+            min_dist = dist;
+            should_flip = if dot((point - xyz.clone()).normalize(), tri.tri_normal) < 0.0 {
+              true
             } else {
-              dist
+              false
             };
             min_point = point.clone();
           }
+        }
+
+        if should_flip {
+          min_dist = -min_dist;
         }
 
         dist[i as usize][j as usize][k as usize] = min_dist;

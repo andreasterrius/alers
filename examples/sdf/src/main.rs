@@ -10,6 +10,10 @@ use ale_math::transform::Transform;
 use ale_math::{Array, Vector3};
 use ale_mesh::sdf::{ale_mesh_sdf_new, MeshSDF};
 use ale_mesh::{ale_mesh_cube_new, Mesh};
+use ale_opengl::debug::line::{
+  ale_opengl_line_debug_clear, ale_opengl_line_debug_context_new, ale_opengl_line_debug_queue,
+  ale_opengl_line_debug_render, OpenGLLineDebugContext,
+};
 use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_debug, ale_opengl_pbr_render_envmap,
@@ -17,7 +21,6 @@ use ale_opengl::pbr::{
 };
 use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_context_new, OpenGLWireContext};
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
-use ale_opengl_debug::{ale_opengl_line_debug_context_new, OpenGLLineDebugContext};
 use ale_texture::ale_texture_load;
 
 fn main() {
@@ -104,8 +107,12 @@ impl App<State> for SDFDemo {
         color,
         &camera_render_info,
       );
+      ale_opengl_line_debug_queue(&mut state.opengl_line_debug_context, from.clone(), to.clone(), color);
     }
 
-    ale_opengl_wire_boundingbox_render(&mut state.opengl_wire_context, &mut state.sphere, &camera_render_info);
+    ale_opengl_line_debug_render(&state.opengl_line_debug_context, &camera_render_info);
+    ale_opengl_line_debug_clear(&mut state.opengl_line_debug_context);
+
+    //ale_opengl_wire_boundingbox_render(&mut state.opengl_wire_context, &mut state.sphere, &camera_render_info);
   }
 }
