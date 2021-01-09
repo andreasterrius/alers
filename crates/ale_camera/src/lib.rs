@@ -62,6 +62,10 @@ impl Camera {
     return self.forward_dir().cross(Vector3::unit_y()).normalize();
   }
 
+  pub fn aspect_ratio(&self) -> f32 {
+    self.aspect_ratio
+  }
+
   fn recalculate_matrices(&mut self) {
     self.orthographic_mat = None;
     self.projection_mat = None;

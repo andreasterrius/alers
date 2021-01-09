@@ -17,4 +17,5 @@ ale_camera = { path = "../ale_camera" }
 ale_console = { path = "../ale_console" }
 ale_variable = { path = "../ale_variable" }
 ale_input = { path = "../ale_input" }
+ale_buffer = { path = "../ale_buffer" }
 gl = "0.6.2"

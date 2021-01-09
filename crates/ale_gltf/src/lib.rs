@@ -1,7 +1,7 @@
+use ale_buffer::{Buffer, SeparateBufferBuilder};
 use ale_math::transform::Transform;
 use ale_math::Matrix4;
 use ale_math::{Decomposed, One, Quaternion};
-use ale_mesh::buffer::{Buffer, SeparateBufferBuilder};
 use ale_mesh::{ale_mesh_new, Mesh};
 use gltf::mesh::util::{ReadIndices, ReadTexCoords};
 use gltf::mesh::Reader;

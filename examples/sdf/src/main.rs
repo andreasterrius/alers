@@ -17,6 +17,7 @@ use ale_opengl::pbr::{
 };
 use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_context_new, OpenGLWireContext};
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
+use ale_opengl_debug::{ale_opengl_line_debug_context_new, OpenGLLineDebugContext};
 use ale_texture::ale_texture_load;
 
 fn main() {
@@ -31,6 +32,7 @@ struct State {
 
   opengl_wire_context: OpenGLWireContext,
   opengl_pbr_context: OpenGLPBRContext,
+  opengl_line_debug_context: OpenGLLineDebugContext,
 }
 
 struct SDFDemo;
@@ -52,6 +54,8 @@ impl App<State> for SDFDemo {
     let opengl_pbr_context =
       ale_opengl_pbr_context_new(&hdr_texture, &window.get_display_info().dimension, &mut sphere);
 
+    let opengl_line_debug_context = ale_opengl_line_debug_context_new();
+
     ale_opengl_blend_enable();
     ale_opengl_depth_test_enable();
 
@@ -61,6 +65,7 @@ impl App<State> for SDFDemo {
       sphere_sdf,
       opengl_wire_context,
       opengl_pbr_context,
+      opengl_line_debug_context,
     }
   }
 

@@ -7,7 +7,7 @@ use std::ptr::null;
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
 
 use crate::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureId};
-use ale_mesh::buffer::Buffer;
+use ale_buffer::Buffer;
 use ale_texture::{ale_texture_new, Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 
 pub unsafe fn clear_buffer() {

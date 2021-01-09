@@ -38,6 +38,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ale_buffer"
+version = "0.1.0"
+dependencies = [
+ "ale_math",
+]
+
+[[package]]
 name = "ale_camera"
 version = "0.1.0"
 dependencies = [
@@ -67,6 +74,7 @@ dependencies = [
 name = "ale_gltf"
 version = "0.1.0"
 dependencies = [
+ "ale_buffer",
  "ale_math",
  "ale_mesh",
  "gltf",
@@ -91,6 +99,7 @@ name = "ale_mesh"
 version = "0.1.0"
 dependencies = [
  "ale_autoid",
+ "ale_buffer",
  "ale_math",
  "approx 0.3.2",
  "rayon",
@@ -101,6 +110,7 @@ name = "ale_opengl"
 version = "0.1.0"
 dependencies = [
  "ale_autoid",
+ "ale_buffer",
  "ale_camera",
  "ale_console",
  "ale_font",

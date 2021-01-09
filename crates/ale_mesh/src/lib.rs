@@ -1,9 +1,8 @@
-use crate::buffer::{Buffer, BufferBuilder, SeparateBufferBuilder};
 use ale_autoid::*;
+use ale_buffer::{Buffer, BufferBuilder};
 use ale_math::transform::Transform;
 use ale_math::{Array, InnerSpace, Matrix4, Vector2, Vector3, Zero};
 
-pub mod buffer;
 pub mod iter;
 pub mod sdf;
 
