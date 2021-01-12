@@ -291,6 +291,10 @@ pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
   MeshSDF { dist, points }
 }
 
+pub fn ale_mesh_sdf_distance(mesh: &MeshSDF) -> f32 {
+  0.0
+}
+
 // #[test]
 // fn test_ale_mesh_point_triangle_closest_point(){
 //   let Tri = Tri {

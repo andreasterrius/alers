@@ -9,7 +9,7 @@ pub struct OpenGLRaymarchContext {
   plane_mesh: OpenGLMesh,
 }
 
-pub fn ale_opengl_raymarch_new() -> OpenGLRaymarchContext {
+pub fn ale_opengl_raymarch_context_new() -> OpenGLRaymarchContext {
   let raymarch_shader = ale_opengl_shader_new(&ale_shader_new(
     include_str!("../../../resources/shaders/raymarch.vert").to_owned(),
     include_str!("../../../resources/shaders/raymarch.frag").to_owned(),

@@ -64,6 +64,7 @@ name = "ale_raymarch"
 version = "0.1.0"
 dependencies = [
  "ale_camera",
+ "ale_math",
  "ale_mesh",
  "ale_texture",
 ]

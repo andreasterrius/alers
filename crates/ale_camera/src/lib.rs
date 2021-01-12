@@ -1,7 +1,7 @@
 use ale_math::prelude::*;
 use ale_math::rect::Rect;
 use ale_math::transform::Transform;
-use ale_math::{ortho, perspective, Deg, Matrix4, Point3, Quaternion, Vector3};
+use ale_math::{ortho, perspective, Deg, Matrix4, Point3, Quaternion, Vector3, ale_quaternion_look_at};
 use std::sync::Arc;
 
 pub mod flycamera;
@@ -58,6 +58,11 @@ impl Camera {
     self.view_mat = None;
   }
 
+  pub fn look_at(&mut self, point: Vector3<f32>) {
+    let quat = ale_quaternion_look_at(self.position(), point, -Vector3::unit_z(), Vector3::unit_y());
+    self.set_rotation(quat);
+  }
+
   pub fn forward_dir(&self) -> Vector3<f32> {
     self
       .transform
@@ -76,6 +81,10 @@ impl Camera {
 
   pub fn aspect_ratio(&self) -> f32 {
     self.aspect_ratio
+  }
+
+  pub fn viewport_size(&self) -> (u32, u32) {
+    (self.display_rect.get_height(), self.display_rect.get_width())
   }
 
   fn recalculate_matrices(&mut self) {

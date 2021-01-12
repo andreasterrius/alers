@@ -1,5 +1,5 @@
 [package]
-name = "sdf"
+name = "pong"
 version = "0.1.0"
 authors = ["Andreas Terrius <andreas.terrius@gmail.com>"]
 edition = "2018"
@@ -8,11 +8,9 @@ edition = "2018"
 
 [dependencies]
 ale_app = { path = "../../crates/ale_app" }
-ale_math = { path = "../../crates/ale_math" }
 ale_mesh = { path = "../../crates/ale_mesh" }
 ale_opengl = { path = "../../crates/ale_opengl" }
-ale_input = { path = "../../crates/ale_input" }
-ale_gltf = { path = "../../crates/ale_gltf" }
-ale_camera = { path = "../../crates/ale_camera" }
-ale_texture = { path = "../../crates/ale_texture" }
-ale_raymarch = { path = "../../crates/ale_raymarch" }
+ale_math = { path = "../../crates/ale_math" }
+ale_physics = { path = "../../crates/ale_physics" }
+ale_camera = { path= "../../crates/ale_camera" }
+ale_input = { path= "../../crates/ale_input" }

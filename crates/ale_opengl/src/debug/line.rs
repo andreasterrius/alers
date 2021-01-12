@@ -11,7 +11,7 @@ use std::mem::size_of;
 use std::os::raw::c_void;
 use std::ptr::null;
 
-const BUFFER_SIZE: usize = 50000;
+const BUFFER_SIZE: usize = 200000;
 
 pub struct OpenGLLineDebugContext {
   // shader
@@ -68,20 +68,18 @@ pub fn ale_opengl_line_debug_render(opengl_line_debug_context: &OpenGLLineDebugC
     raw::matrix4f(shader.id, VIEW, camera.view.as_ptr());
     raw::matrix4f(shader.id, PROJECTION, camera.projection.as_ptr());
 
-    let chunk = &opengl_line_debug_context.lines;
-    //for chunk in opengl_line_debug_context.lines.chunks(BUFFER_SIZE) {
+    for chunk in opengl_line_debug_context.lines.chunks(BUFFER_SIZE) {
+      gl::BindBuffer(gl::ARRAY_BUFFER, opengl_line_debug_context.vbo);
+      gl::BufferSubData(
+        gl::ARRAY_BUFFER,
+        0,
+        (size_of::<f32>() * 6 * chunk.len()) as isize,
+        chunk.as_ptr() as *const c_void,
+      );
 
-    gl::BindBuffer(gl::ARRAY_BUFFER, opengl_line_debug_context.vbo);
-    gl::BufferSubData(
-      gl::ARRAY_BUFFER,
-      0,
-      (size_of::<f32>() * 6 * chunk.len()) as isize,
-      chunk.as_ptr() as *const c_void,
-    );
-
-    gl::BindVertexArray(opengl_line_debug_context.vao);
-    gl::DrawArrays(gl::LINES, 0, chunk.len() as i32);
-    //}
+      gl::BindVertexArray(opengl_line_debug_context.vao);
+      gl::DrawArrays(gl::LINES, 0, chunk.len() as i32);
+    }
 
     gl::BindBuffer(gl::ARRAY_BUFFER, 0);
   }

@@ -19,8 +19,10 @@ use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_debug, ale_opengl_pbr_render_envmap,
   OpenGLPBRContext,
 };
+use ale_opengl::raymarch::{ale_opengl_raymarch_context_new, ale_opengl_raymarch_render, OpenGLRaymarchContext};
 use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_context_new, OpenGLWireContext};
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
+use ale_raymarch::ale_raymarch_sdf_single;
 use ale_texture::ale_texture_load;
 
 fn main() {
@@ -99,6 +101,17 @@ impl App<State> for SDFDemo {
             u,
             Vector3::new(0.0, 0.0, 1.0),
           );
+        }
+        Input::Key(Key::K, _, _, _) => {
+          let points = ale_raymarch_sdf_single(state.fly_camera.camera(), &state.sphere_sdf);
+          for (start, end) in points {
+            ale_opengl_line_debug_queue(
+              &mut state.opengl_line_debug_context,
+              start,
+              end,
+              Vector3::new(1.0, 1.0, 1.0),
+            )
+          }
         }
         _ => {}
       }
