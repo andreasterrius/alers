@@ -23,7 +23,7 @@ pub fn ale_ray_new(origin: Vector3<f32>, direction: Vector3<f32>) -> Ray {
 pub fn ale_raymarch_sdf_single(camera: &Camera, sdf: &MeshSDF) -> Vec<(Vector3<f32>, Vector3<f32>)> {
   let aspect_ratio = camera.aspect_ratio();
   let (x, y) = camera.viewport_size();
-  let (x, y) = (5, 5);
+  //let (x, y) = (5, 5);
   let position = camera.position();
 
   let initial =

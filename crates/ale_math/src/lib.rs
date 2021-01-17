@@ -1,7 +1,16 @@
 pub mod color;
 pub mod rect;
 pub mod transform;
+use cgmath::num_traits::clamp;
 pub use cgmath::*;
+
+pub fn clamp_vec3(p: Vector3<f32>, min: Vector3<f32>, max: Vector3<f32>) -> Vector3<f32> {
+  Vector3::new(
+    clamp(p.x, min.x, max.x),
+    clamp(p.y, min.y, max.y),
+    clamp(p.z, min.z, max.z),
+  )
+}
 
 pub fn ale_quaternion_look_at(
   source: Vector3<f32>,
@@ -28,4 +37,24 @@ pub fn ale_quaternion_look_at(
 pub fn ale_bounding_box_size(bounding_box: (Vector3<f32>, Vector3<f32>)) -> Vector3<f32> {
   let (min, max) = bounding_box;
   max - min
+}
+
+// return None if point is inside the box
+pub fn ale_closest_point_to_box(
+  point: Vector3<f32>,
+  bounding_box: (Vector3<f32>, Vector3<f32>),
+) -> Option<Vector3<f32>> {
+  let (min, max) = bounding_box;
+
+  return if point.x >= min.x
+    && point.x <= max.x
+    && point.y >= min.y
+    && point.y <= max.y
+    && point.z >= min.z
+    && point.z <= max.z
+  {
+    None
+  } else {
+    Some(clamp_vec3(point, min, max))
+  };
 }

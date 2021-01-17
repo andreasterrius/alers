@@ -7,7 +7,7 @@ use ale_gltf::ale_gltf_load;
 use ale_input::{Input, Key};
 use ale_math::rect::Rect;
 use ale_math::transform::Transform;
-use ale_math::{Array, Vector3, Zero};
+use ale_math::{ale_closest_point_to_box, Array, Vector3, Zero};
 use ale_mesh::sdf::{ale_mesh_sdf_new, MeshSDF};
 use ale_mesh::{ale_mesh_cube_new, Mesh};
 use ale_opengl::debug::line::{
@@ -79,29 +79,6 @@ impl App<State> for SDFDemo {
 
     for input in &inputs {
       match input {
-        Input::Key(Key::L, _, _, _) => {
-          let (f, r, u) = state.fly_camera.debug_camera_dirs();
-          let pos = state.fly_camera.camera().position();
-          println!("{:?}", pos);
-          ale_opengl_line_debug_queue(
-            &mut state.opengl_line_debug_context,
-            pos,
-            f,
-            Vector3::new(1.0, 0.0, 0.0),
-          );
-          ale_opengl_line_debug_queue(
-            &mut state.opengl_line_debug_context,
-            pos,
-            r,
-            Vector3::new(0.0, 1.0, 0.0),
-          );
-          ale_opengl_line_debug_queue(
-            &mut state.opengl_line_debug_context,
-            pos,
-            u,
-            Vector3::new(0.0, 0.0, 1.0),
-          );
-        }
         Input::Key(Key::K, _, _, _) => {
           let points = ale_raymarch_sdf_single(state.fly_camera.camera(), &state.sphere_sdf);
           for (start, end) in points {
@@ -111,6 +88,23 @@ impl App<State> for SDFDemo {
               end,
               Vector3::new(1.0, 1.0, 1.0),
             )
+          }
+        }
+        Input::Key(Key::R, _, _, _) => {
+          let point = state.fly_camera.camera().position();
+          let closest = ale_closest_point_to_box(point, state.sphere[0].1.bounding_box);
+          match closest {
+            None => {
+              println!("Point is inside box");
+            }
+            Some(close) => {
+              ale_opengl_line_debug_queue(
+                &mut state.opengl_line_debug_context,
+                point,
+                close,
+                Vector3::new(1.0, 1.0, 1.0),
+              );
+            }
           }
         }
         _ => {}
@@ -156,6 +150,6 @@ impl App<State> for SDFDemo {
     ale_opengl_line_debug_render(&state.opengl_line_debug_context, &camera_render_info);
     //ale_opengl_line_debug_clear(&mut state.opengl_line_debug_context);
 
-    //ale_opengl_wire_boundingbox_render(&mut state.opengl_wire_context, &mut state.sphere, &camera_render_info);
+    ale_opengl_wire_boundingbox_render(&mut state.opengl_wire_context, &mut state.sphere, &camera_render_info);
   }
 }
