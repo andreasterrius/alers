@@ -1,7 +1,7 @@
 use crate::iter::ale_mesh_triangle_iter_new;
 use crate::{ale_mesh_tri_get, ale_mesh_tri_len, Mesh, Tri};
 use ale_math::num_traits::clamp;
-use ale_math::{dot, InnerSpace, MetricSpace, Zero};
+use ale_math::{ale_bounding_box_closest_point, ale_bounding_box_size, dot, InnerSpace, MetricSpace, Zero};
 use ale_math::{vec1, Vector3};
 use rayon::prelude::{ParallelBridge, ParallelIterator};
 use std::cmp::Ordering;
@@ -9,6 +9,10 @@ use std::time::Instant;
 
 pub struct MeshSDF {
   dist: Vec<Vec<Vec<f32>>>,
+
+  mesh_bounding_box: (Vector3<f32>, Vector3<f32>),
+  initial: Vector3<f32>,
+  step: Vector3<f32>,
 
   // for debug purposes
   pub points: Vec<(Vector3<f32>, Vector3<f32>, f32)>, // from, to, distance (minus on inside)
@@ -288,19 +292,31 @@ pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
     Instant::now().duration_since(start_time).as_millis()
   );
 
-  MeshSDF { dist, points }
+  MeshSDF {
+    dist,
+    mesh_bounding_box : mesh.bounding_box.clone(),
+    initial,
+    step,
+    points,
+  }
 }
 
-pub fn ale_mesh_sdf_distance(mesh: &MeshSDF) -> f32 {
-  0.0
+pub fn ale_mesh_sdf_distance(sdf: &MeshSDF, point: Vector3<f32>) -> f32 {
+  let point_in_sdf = ale_bounding_box_closest_point(point.clone(), sdf.mesh_bounding_box);
+  let (i, j, k) = ale_mesh_sdf_find_quadrant(sdf, point_in_sdf);
+  //println!("{} {} {}", i, j, k);
+  let dori = point.distance(point_in_sdf);
+  let dsdf = -sdf.dist[i][j][k];
+
+  println!("{} {}", dori, dsdf);
+
+  dori + dsdf
 }
 
-// #[test]
-// fn test_ale_mesh_point_triangle_closest_point(){
-//   let Tri = Tri {
-//     position: [Vector3::new(1.0, )],
-//     normal: [],
-//     tri_normal: Vector3 {},
-//     uv: []
-//   }
-// }
+pub fn ale_mesh_sdf_find_quadrant(sdf: &MeshSDF, point: Vector3<f32>) -> (usize, usize, usize) {
+  let find_point = point - sdf.initial;
+  let i = find_point.x / sdf.step.x;
+  let j = find_point.y / sdf.step.y;
+  let k = find_point.z / sdf.step.z;
+  return (i as usize, j as usize, k as usize);
+}

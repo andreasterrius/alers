@@ -4,6 +4,10 @@ pub mod transform;
 use cgmath::num_traits::clamp;
 pub use cgmath::*;
 
+pub const RED: Vector3<f32> = Vector3::new(1.0, 0.0, 0.0);
+pub const GREEN: Vector3<f32> = Vector3::new(0.0, 1.0, 0.0);
+pub const BLUE: Vector3<f32> = Vector3::new(0.0, 0.0, 1.0);
+
 pub fn clamp_vec3(p: Vector3<f32>, min: Vector3<f32>, max: Vector3<f32>) -> Vector3<f32> {
   Vector3::new(
     clamp(p.x, min.x, max.x),
@@ -39,11 +43,8 @@ pub fn ale_bounding_box_size(bounding_box: (Vector3<f32>, Vector3<f32>)) -> Vect
   max - min
 }
 
-// return None if point is inside the box
-pub fn ale_closest_point_to_box(
-  point: Vector3<f32>,
-  bounding_box: (Vector3<f32>, Vector3<f32>),
-) -> Option<Vector3<f32>> {
+// return original point if the point is already inside the box
+pub fn ale_bounding_box_closest_point(point: Vector3<f32>, bounding_box: (Vector3<f32>, Vector3<f32>)) -> Vector3<f32> {
   let (min, max) = bounding_box;
 
   return if point.x >= min.x
@@ -53,8 +54,8 @@ pub fn ale_closest_point_to_box(
     && point.z >= min.z
     && point.z <= max.z
   {
-    None
+    point
   } else {
-    Some(clamp_vec3(point, min, max))
+    clamp_vec3(point, min, max)
   };
 }

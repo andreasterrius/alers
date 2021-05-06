@@ -7,13 +7,10 @@ use ale_gltf::ale_gltf_load;
 use ale_input::{Input, Key};
 use ale_math::rect::Rect;
 use ale_math::transform::Transform;
-use ale_math::{ale_closest_point_to_box, Array, Vector3, Zero};
-use ale_mesh::sdf::{ale_mesh_sdf_new, MeshSDF};
+use ale_math::{ale_bounding_box_closest_point, Array, Vector3, Zero};
+use ale_mesh::sdf::{ale_mesh_sdf_new, MeshSDF, ale_mesh_sdf_find_quadrant, ale_mesh_sdf_distance};
 use ale_mesh::{ale_mesh_cube_new, Mesh};
-use ale_opengl::debug::line::{
-  ale_opengl_line_debug_clear, ale_opengl_line_debug_context_new, ale_opengl_line_debug_queue,
-  ale_opengl_line_debug_render, OpenGLLineDebugContext,
-};
+use ale_opengl::debug::line::{ale_opengl_debug_context_new, ale_opengl_debug_line_queue, ale_opengl_debug_render, OpenGLDebugContext, ale_opengl_debug_point_queue};
 use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_debug, ale_opengl_pbr_render_envmap,
@@ -22,7 +19,7 @@ use ale_opengl::pbr::{
 use ale_opengl::raymarch::{ale_opengl_raymarch_context_new, ale_opengl_raymarch_render, OpenGLRaymarchContext};
 use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_context_new, OpenGLWireContext};
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
-use ale_raymarch::ale_raymarch_sdf_single;
+use ale_raymarch::{ale_raymarch_sdf_single, ale_ray_new, ale_ray_position_get};
 use ale_texture::ale_texture_load;
 
 fn main() {
@@ -37,7 +34,7 @@ struct State {
 
   opengl_wire_context: OpenGLWireContext,
   opengl_pbr_context: OpenGLPBRContext,
-  opengl_line_debug_context: OpenGLLineDebugContext,
+  opengl_line_debug_context: OpenGLDebugContext,
 }
 
 struct SDFDemo;
@@ -52,14 +49,14 @@ impl App<State> for SDFDemo {
       window.get_display_info().dimension.clone(),
       90.0,
     ));
-    let sphere_sdf = ale_mesh_sdf_new(&sphere[0].1, 10);
+    let sphere_sdf = ale_mesh_sdf_new(&sphere[0].1, 20);
     let opengl_wire_context = ale_opengl_wire_context_new();
 
     let hdr_texture = ale_texture_load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();
     let opengl_pbr_context =
       ale_opengl_pbr_context_new(&hdr_texture, &window.get_display_info().dimension, &mut sphere);
 
-    let opengl_line_debug_context = ale_opengl_line_debug_context_new();
+    let opengl_line_debug_context = ale_opengl_debug_context_new();
 
     ale_opengl_blend_enable();
     ale_opengl_depth_test_enable();
@@ -80,32 +77,32 @@ impl App<State> for SDFDemo {
     for input in &inputs {
       match input {
         Input::Key(Key::K, _, _, _) => {
-          let points = ale_raymarch_sdf_single(state.fly_camera.camera(), &state.sphere_sdf);
-          for (start, end) in points {
-            ale_opengl_line_debug_queue(
-              &mut state.opengl_line_debug_context,
-              start,
-              end,
-              Vector3::new(1.0, 1.0, 1.0),
-            )
-          }
+          let points = ale_raymarch_sdf_single(state.fly_camera.camera(), vec![&state.sphere_sdf]);
+          // for (start, end, color) in points {
+          //   ale_opengl_debug_line_queue(
+          //     &mut state.opengl_line_debug_context,
+          //     start,
+          //     end,
+          //     color,
+          //   )
+          // }
         }
         Input::Key(Key::R, _, _, _) => {
-          let point = state.fly_camera.camera().position();
-          let closest = ale_closest_point_to_box(point, state.sphere[0].1.bounding_box);
-          match closest {
-            None => {
-              println!("Point is inside box");
-            }
-            Some(close) => {
-              ale_opengl_line_debug_queue(
-                &mut state.opengl_line_debug_context,
-                point,
-                close,
-                Vector3::new(1.0, 1.0, 1.0),
-              );
-            }
+          let ray = ale_ray_new(state.fly_camera.camera().position(), state.fly_camera.camera().forward_dir());
+          let closest = ale_bounding_box_closest_point(ray.origin, state.sphere[0].1.bounding_box);
+          let mut curr_point = ray.origin;
+          let mut curr_dist = 0.0;
+          for iter in 0..5 {
+            let dist = ale_mesh_sdf_distance(&state.sphere_sdf, curr_point);
+            curr_dist += dist;
+            ale_opengl_debug_point_queue(
+              &mut state.opengl_line_debug_context,
+              curr_point,
+              Vector3::new(0.2*iter as f32, 0.0, 0.0),
+            );
+            curr_point = ale_ray_position_get(&ray, curr_dist);
           }
+          println!();
         }
         _ => {}
       }
@@ -147,7 +144,7 @@ impl App<State> for SDFDemo {
     // }
 
     // Debug camera
-    ale_opengl_line_debug_render(&state.opengl_line_debug_context, &camera_render_info);
+    ale_opengl_debug_render(&state.opengl_line_debug_context, &camera_render_info);
     //ale_opengl_line_debug_clear(&mut state.opengl_line_debug_context);
 
     ale_opengl_wire_boundingbox_render(&mut state.opengl_wire_context, &mut state.sphere, &camera_render_info);
