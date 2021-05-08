@@ -15,7 +15,7 @@ pub mod window;
 pub trait App<S> {
   fn load(&mut self, context: &mut RenderContext, window: &Window) -> S;
 
-  fn input(&mut self, state: &mut S, inputs: Vec<Input>);
+  fn input(&mut self, s: &mut S, inputs: Vec<Input>);
 
   fn tick(&mut self, s: &mut S, delta_time: f32);
 

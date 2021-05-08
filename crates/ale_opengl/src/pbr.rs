@@ -35,7 +35,7 @@ pub struct OpenGLPBRContext {
 pub fn ale_opengl_pbr_context_new(
   hdr_texture: &Texture,
   viewport_size: &Rect,
-  meshes: &mut Vec<(Transform, Mesh)>,
+  meshes: Vec<&mut (Transform, Mesh)>,
 ) -> OpenGLPBRContext {
   let cube_mesh = ale_opengl_mesh_new(&ale_mesh_cube_new()).unwrap();
   let pbr_shader = ale_opengl_shader_new(&ale_shader_new(
@@ -110,7 +110,7 @@ pub fn ale_opengl_pbr_context_new(
 
 pub fn ale_opengl_pbr_render(
   opengl_pbr_context: &OpenGLPBRContext,
-  mesh: &mut Vec<(Transform, Mesh)>,
+  mesh: Vec<&mut (Transform, Mesh)>,
   camera_render_info: &CameraRenderInfo,
   textures: &Vec<OpenGLTexture>,
 ) {
