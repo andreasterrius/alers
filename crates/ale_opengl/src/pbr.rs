@@ -33,9 +33,9 @@ pub struct OpenGLPBRContext {
 }
 
 pub fn ale_opengl_pbr_context_new(
-    hdr_texture: &Texture,
-    viewport_size: &Rect,
-    meshes: Vec<(&mut AleTransform, &mut Mesh)>,
+  hdr_texture: &Texture,
+  viewport_size: &Rect,
+  meshes: Vec<&mut Mesh>,
 ) -> OpenGLPBRContext {
   let cube_mesh = ale_opengl_mesh_new(&ale_mesh_cube_new()).unwrap();
   let pbr_shader = ale_opengl_shader_new(&ale_shader_new(
@@ -91,7 +91,7 @@ pub fn ale_opengl_pbr_context_new(
   );
 
   let mut ogl_mesh = HashMap::new();
-  for (transform, mesh) in meshes {
+  for mesh in meshes {
     ogl_mesh.insert(mesh.uid(), ale_opengl_mesh_new(mesh).unwrap());
   }
 
@@ -109,10 +109,10 @@ pub fn ale_opengl_pbr_context_new(
 }
 
 pub fn ale_opengl_pbr_render(
-    opengl_pbr_context: &OpenGLPBRContext,
-    mesh: Vec<(&mut AleTransform, &mut Mesh)>,
-    camera_render_info: &CameraRenderInfo,
-    textures: &Vec<OpenGLTexture>,
+  opengl_pbr_context: &OpenGLPBRContext,
+  mesh: Vec<(&mut AleTransform, &mut Mesh, &Vector3<f32>)>,
+  camera_render_info: &CameraRenderInfo,
+  textures: &Vec<OpenGLTexture>,
 ) {
   unsafe {
     let pbr_shader = &opengl_pbr_context.pbr_shader;
@@ -151,7 +151,9 @@ pub fn ale_opengl_pbr_render(
     raw::matrix4f(pbr_shader.id, VIEW, camera_render_info.view.as_ptr());
     raw::matrix4f(pbr_shader.id, PROJECTION, camera_render_info.projection.as_ptr());
 
-    for (t, m) in mesh {
+    for (t, m, color) in mesh {
+      ale_opengl_shader_activate(pbr_shader, &vec![Variable::F32_3("albedo".to_owned(), *color)]);
+
       let ogl_mesh = opengl_pbr_context
         .mesh
         .get(&m.uid())

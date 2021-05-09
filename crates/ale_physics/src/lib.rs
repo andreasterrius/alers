@@ -1,5 +1,5 @@
 use crate::rapier3d::dynamics::CCDSolver;
-use rapier3d::dynamics::{IntegrationParameters, JointSet, RigidBodyBuilder, RigidBodyHandle, RigidBodySet};
+use rapier3d::dynamics::{IntegrationParameters, JointSet, RigidBodyBuilder, RigidBodyHandle, RigidBodySet, BodyStatus};
 use rapier3d::geometry::{BroadPhase, ColliderSet, NarrowPhase};
 use rapier3d::geometry::{ColliderBuilder, ColliderHandle, SharedShape};
 use rapier3d::na::{Quaternion, UnitQuaternion, Vector3};
@@ -8,6 +8,12 @@ use rapier3d::pipeline::PhysicsPipeline;
 use ale_math::{Euler, InnerSpace};
 pub use rapier3d;
 use rapier3d::math::{AngVector, Isometry};
+
+pub enum RigidBodyType {
+  Kinematic,
+  Dynamic,
+  Static
+}
 
 pub struct PhysicsContext {
   pub pipeline: PhysicsPipeline,
@@ -38,6 +44,7 @@ pub fn ale_physics_context_cuboid_new(
   position: ale_math::Vector3<f32>,
   rotation: ale_math::Quaternion<f32>,
   box_extent: ale_math::Vector3<f32>,
+  rigidbody_type : RigidBodyType,
   gravity_enable: bool,
 ) -> (RigidBodyHandle, ColliderHandle) {
   let r = UnitQuaternion::from_quaternion(Quaternion::new(rotation.s, rotation.v.x, rotation.v.y, rotation.v.z));
@@ -45,7 +52,11 @@ pub fn ale_physics_context_cuboid_new(
   let mut rigidbody_isometry = Isometry::new(Vector3::new(position.x, position.y, position.z), AngVector::default());
   rigidbody_isometry.rotation = r;
 
-  let mut rigidbody_builder = RigidBodyBuilder::new_dynamic().position(rigidbody_isometry);
+  let mut rigidbody_builder = RigidBodyBuilder::new(match rigidbody_type {
+    RigidBodyType::Kinematic => BodyStatus::Kinematic,
+    RigidBodyType::Dynamic => BodyStatus::Dynamic,
+    RigidBodyType::Static => BodyStatus::Static,
+  }).position(rigidbody_isometry);
   if !gravity_enable {
     rigidbody_builder = rigidbody_builder.gravity_scale(0.0);
   }

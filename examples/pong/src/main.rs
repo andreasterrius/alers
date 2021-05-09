@@ -7,7 +7,10 @@ use ale_gltf::ale_gltf_load;
 use ale_input::Input;
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
-use ale_math::{ale_bounding_box_size, Array, Deg, Euler, Matrix4, Quaternion, Rotation3, Transform, Vector3, Zero};
+use ale_math::{
+  ale_bounding_box_size, ale_quaternion_look_at, Array, Deg, Euler, Matrix4, Quaternion, Rotation3, Transform, Vector3,
+  Zero,
+};
 use ale_mesh::{ale_mesh_cube_new, Mesh};
 use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
 use ale_opengl::pbr::{
@@ -15,11 +18,9 @@ use ale_opengl::pbr::{
 };
 use ale_opengl::{ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_physics::rapier3d::dynamics::{RigidBodyBuilder, RigidBodyHandle};
-use ale_physics::rapier3d::na::Isometry3;
-use ale_physics::rapier3d::na::Vector;
 use ale_physics::{
   ale_physics_context_cuboid_new, ale_physics_context_new, ale_physics_context_tick, ale_physics_context_update,
-  PhysicsContext,
+  PhysicsContext, RigidBodyType,
 };
 use ale_texture::ale_texture_load;
 
@@ -33,13 +34,41 @@ struct Object {
   transform: AleTransform,
   rigidbody_handle: RigidBodyHandle,
   mesh: Mesh,
+  color: Vector3<f32>,
+}
+
+fn ale_create_pong_object(
+  physics_context: &mut PhysicsContext,
+  mut transform: AleTransform,
+  mesh: Mesh,
+  rigidbody_type: RigidBodyType,
+  color: Vector3<f32>,
+) -> Object {
+  let mut bb = transform
+    .scale_matrix()
+    .transform_vector(ale_bounding_box_size(mesh.bounding_box));
+  let (rigidbody_handle, _) = ale_physics_context_cuboid_new(
+    physics_context,
+    transform.position,
+    transform.lcl_rotation,
+    bb / 2.0,
+    rigidbody_type,
+    false,
+  );
+  Object {
+    transform,
+    rigidbody_handle,
+    mesh,
+    color,
+  }
 }
 
 struct State {
   physics_context: PhysicsContext,
   opengl_pbr_context: OpenGLPBRContext,
 
-  paddle: Object,
+  paddle_left: Object,
+  paddle_right: Object,
   floor: Object,
   fly_camera: FlyCamera,
 }
@@ -49,7 +78,8 @@ impl App<State> for Pong {
     /*
      * Create the mesh
      */
-    let paddle_mesh = ale_mesh_cube_new();
+    let paddle_left_mesh = ale_mesh_cube_new();
+    let paddle_right_mesh = ale_mesh_cube_new();
     let (_, ball_mesh) = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
     let floor_mesh = ale_mesh_cube_new();
 
@@ -61,46 +91,29 @@ impl App<State> for Pong {
     /*
      * Create Objects
      */
-    let mut paddle_transform =
-      AleTransform::from_position_scale(Vector3::new(0.0, 10.0, 0.0), Vector3::new(0.2, 0.2, 1.0));
-    let mut paddle_bb = paddle_transform
-      .scale_matrix()
-      .transform_vector(ale_bounding_box_size(paddle_mesh.bounding_box));
-    let (paddle_rigidbody_handle, _) = ale_physics_context_cuboid_new(
+    let mut paddle_left = ale_create_pong_object(
       &mut physics_context,
-      paddle_transform.position,
-      paddle_transform.lcl_rotation,
-      paddle_bb / 2.0,
-      true,
+      AleTransform::from_position_scale(Vector3::new(10.0, 0.0, 0.0), Vector3::new(0.2, 0.2, 1.0)),
+      paddle_left_mesh,
+      RigidBodyType::Kinematic,
+      Vector3::new(0.0, 1.0, 0.0),
     );
-    let mut paddle = Object {
-      transform: paddle_transform,
-      rigidbody_handle: paddle_rigidbody_handle,
-      mesh: paddle_mesh,
-    };
 
-    // let mut floor_transform =
-    //   AleTransform::from_position_scale(Vector3::new(0.0, -10.0, 0.0), Vector3::new(10.0, 2.0, 10.0));
-    let mut floor_transform = AleTransform::from_all(
-      Vector3::new(0.0, -10.0, 0.0),
-      Quaternion::from_axis_angle(Vector3::unit_z(), Deg(30.0)),
-      Vector3::new(10.0, 2.0, 10.0),
-    );
-    let mut floor_bb = floor_transform
-      .scale_matrix()
-      .transform_vector(ale_bounding_box_size(floor_mesh.bounding_box));
-    let (floor_rigidbody_handle, _) = ale_physics_context_cuboid_new(
+    let mut paddle_right = ale_create_pong_object(
       &mut physics_context,
-      floor_transform.position,
-      floor_transform.lcl_rotation,
-      floor_bb / 2.0, // extent is half
-      false,
+      AleTransform::from_position_scale(Vector3::new(-10.0, 0.0, 0.0), Vector3::new(0.2, 0.2, 1.0)),
+      paddle_right_mesh,
+      RigidBodyType::Kinematic,
+      Vector3::new(1.0, 0.0, 0.0),
     );
-    let mut floor = Object {
-      transform: floor_transform,
-      rigidbody_handle: floor_rigidbody_handle,
-      mesh: floor_mesh,
-    };
+
+    let mut floor = ale_create_pong_object(
+      &mut physics_context,
+      AleTransform::from_position_scale(Vector3::new(0.0, -3.0, 0.0), Vector3::new(10.02, 1.0, 10.0)),
+      floor_mesh,
+      RigidBodyType::Kinematic,
+      Vector3::new(1.0, 1.0, 1.0),
+    );
 
     /*
      * Camera Creation
@@ -118,10 +131,7 @@ impl App<State> for Pong {
     let opengl_pbr_context = ale_opengl_pbr_context_new(
       &hdr_texture,
       &window.get_display_info().dimension,
-      vec![
-        (&mut paddle.transform, &mut paddle.mesh),
-        (&mut floor.transform, &mut floor.mesh),
-      ],
+      vec![&mut paddle_left.mesh, &mut paddle_right.mesh, &mut floor.mesh],
     );
 
     ale_opengl_depth_test_enable();
@@ -130,7 +140,8 @@ impl App<State> for Pong {
       opengl_pbr_context,
       physics_context,
       fly_camera,
-      paddle,
+      paddle_left,
+      paddle_right,
       floor,
     }
   }
@@ -146,7 +157,7 @@ impl App<State> for Pong {
     ale_physics_context_update(
       &mut s.physics_context,
       vec![
-        (&mut s.paddle.transform, &s.paddle.rigidbody_handle),
+        (&mut s.paddle_left.transform, &s.paddle_left.rigidbody_handle),
         (&mut s.floor.transform, &s.floor.rigidbody_handle),
       ],
     );
@@ -161,8 +172,17 @@ impl App<State> for Pong {
     ale_opengl_pbr_render(
       &s.opengl_pbr_context,
       vec![
-        (&mut s.paddle.transform, &mut s.paddle.mesh),
-        (&mut s.floor.transform, &mut s.floor.mesh),
+        (
+          &mut s.paddle_left.transform,
+          &mut s.paddle_left.mesh,
+          &s.paddle_left.color,
+        ),
+        (
+          &mut s.paddle_right.transform,
+          &mut s.paddle_right.mesh,
+          &s.paddle_right.color,
+        ),
+        (&mut s.floor.transform, &mut s.floor.mesh, &s.floor.color),
       ],
       &camera_render_info,
       &vec![],
