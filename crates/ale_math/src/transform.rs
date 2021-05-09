@@ -69,7 +69,7 @@ impl AleTransform {
     self.matrix = None; // Destroy matrix cache
   }
 
-  pub fn set_position(&mut self, unit: Vector3<f32>){
+  pub fn set_position(&mut self, unit: Vector3<f32>) {
     self.position = unit;
     self.matrix = None;
   }
@@ -82,13 +82,17 @@ impl AleTransform {
   pub fn matrix(&mut self) -> Matrix4<f32> {
     match self.matrix {
       None => {
-        let m = Matrix4::from(self.lcl_rotation)
-          * Matrix4::from_translation(self.position)
+        let m = Matrix4::from_translation(self.position)
+          * Matrix4::from(self.lcl_rotation)
           * Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z);
         self.matrix = Some(m);
       }
       Some(_) => (),
     }
     self.matrix.unwrap()
+  }
+
+  pub fn scale_matrix(&mut self) -> Matrix4<f32> {
+    Matrix4::from_nonuniform_scale(self.scale.x, self.scale.y, self.scale.z)
   }
 }

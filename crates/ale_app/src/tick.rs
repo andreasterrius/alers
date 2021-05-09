@@ -58,7 +58,7 @@ impl FixedStep {
 
   pub fn tick(&mut self) {
     if self.accumulator < self.frame_step {
-      self.delta_time = self.frame_step;
+      self.delta_time = self.accumulator;
       self.accumulator = 0.0;
     } else {
       self.delta_time = self.frame_step;
