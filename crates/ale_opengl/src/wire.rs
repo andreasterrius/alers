@@ -3,7 +3,7 @@ use crate::raw;
 use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader};
 use ale_camera::CameraRenderInfo;
 use ale_console::{ale_console_variable_event_handle, ale_console_variable_register, Console};
-use ale_math::transform::Transform;
+use ale_math::transform::AleTransform;
 use ale_math::{Array, Matrix, Vector3};
 use ale_mesh::{ale_mesh_bounding_box_matrix, ale_mesh_bounding_box_new, Mesh};
 use ale_shader::ale_shader_new;
@@ -46,9 +46,9 @@ pub fn ale_opengl_wire_console_variable_refresh(opengl_wire_context: &mut OpenGL
 }
 
 pub fn ale_opengl_wire_boundingbox_render(
-  opengl_wire_context: &mut OpenGLWireContext,
-  meshes: &mut Vec<(Transform, Mesh)>,
-  camera_render_info: &CameraRenderInfo,
+    opengl_wire_context: &mut OpenGLWireContext,
+    meshes: &mut Vec<(AleTransform, Mesh)>,
+    camera_render_info: &CameraRenderInfo,
 ) {
   if !opengl_wire_context.wire_render_enable {
     return;

@@ -1,5 +1,5 @@
 use ale_buffer::{Buffer, SeparateBufferBuilder};
-use ale_math::transform::Transform;
+use ale_math::transform::AleTransform;
 use ale_math::Matrix4;
 use ale_math::{Decomposed, One, Quaternion};
 use ale_mesh::{ale_mesh_new, Mesh};
@@ -8,7 +8,7 @@ use gltf::mesh::Reader;
 use gltf::Gltf;
 use std::collections::HashMap;
 
-pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
+pub fn ale_gltf_load(path: &str) -> Vec<(AleTransform, Mesh)> {
   let (gltf, buffers, _) = gltf::import(path).unwrap();
 
   let mut nodes = HashMap::new();
@@ -24,7 +24,7 @@ pub fn ale_gltf_load(path: &str) -> Vec<(Transform, Mesh)> {
         rotation,
         scale,
       } => {
-        let transform = Transform::from_all(
+        let transform = AleTransform::from_all(
           translation.into(),
           Quaternion::new(rotation[3], rotation[2], rotation[1], rotation[0]),
           scale.into(),

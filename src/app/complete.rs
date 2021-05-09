@@ -19,7 +19,7 @@ use ale_app::window::Window;
 use ale_console::{
   ale_console_input, ale_console_new, ale_console_variable_has_event, ale_console_variable_register, Console,
 };
-use ale_math::transform::Transform;
+use ale_math::transform::AleTransform;
 use ale_math::{Vector2, Vector3};
 use ale_opengl::console::ale_opengl_console_render;
 use ale_opengl::old::cubemap::Cubemap;
@@ -60,7 +60,7 @@ pub struct State {
   opengl_fxaa_context: OpenGLFXAAContext,
   opengl_wire_context: OpenGLWireContext,
 
-  meshes: Vec<(Transform, Mesh)>,
+  meshes: Vec<(AleTransform, Mesh)>,
 }
 
 struct CompleteExample;

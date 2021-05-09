@@ -6,7 +6,7 @@ use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLSha
 use crate::texture::{ale_opengl_texture_new, OpenGLTexture};
 use ale_camera::CameraRenderInfo;
 use ale_math::rect::Rect;
-use ale_math::transform::Transform;
+use ale_math::transform::AleTransform;
 use ale_math::{perspective, Array, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector3};
 use ale_mesh::{ale_mesh_cube_new, Mesh, MeshId};
 use ale_shader::{ale_shader_new, Shader};
@@ -33,9 +33,9 @@ pub struct OpenGLPBRContext {
 }
 
 pub fn ale_opengl_pbr_context_new(
-  hdr_texture: &Texture,
-  viewport_size: &Rect,
-  meshes: Vec<&mut (Transform, Mesh)>,
+    hdr_texture: &Texture,
+    viewport_size: &Rect,
+    meshes: Vec<(&mut AleTransform, &mut Mesh)>,
 ) -> OpenGLPBRContext {
   let cube_mesh = ale_opengl_mesh_new(&ale_mesh_cube_new()).unwrap();
   let pbr_shader = ale_opengl_shader_new(&ale_shader_new(
@@ -109,10 +109,10 @@ pub fn ale_opengl_pbr_context_new(
 }
 
 pub fn ale_opengl_pbr_render(
-  opengl_pbr_context: &OpenGLPBRContext,
-  mesh: Vec<&mut (Transform, Mesh)>,
-  camera_render_info: &CameraRenderInfo,
-  textures: &Vec<OpenGLTexture>,
+    opengl_pbr_context: &OpenGLPBRContext,
+    mesh: Vec<(&mut AleTransform, &mut Mesh)>,
+    camera_render_info: &CameraRenderInfo,
+    textures: &Vec<OpenGLTexture>,
 ) {
   unsafe {
     let pbr_shader = &opengl_pbr_context.pbr_shader;
@@ -232,7 +232,7 @@ pub fn ale_opengl_pbr_render_debug(
     raw::matrix4f(pbr_shader.id, VIEW, camera_render_info.view.as_ptr());
     raw::matrix4f(pbr_shader.id, PROJECTION, camera_render_info.projection.as_ptr());
 
-    let mut t = Transform::from_position_scale(point, Vector3::from_value(size));
+    let mut t = AleTransform::from_position_scale(point, Vector3::from_value(size));
     let ogl_mesh = &opengl_pbr_context.cube_mesh;
 
     // Pass uniforms

@@ -6,7 +6,7 @@ use ale_camera::Camera;
 use ale_gltf::ale_gltf_load;
 use ale_input::{Input, Key};
 use ale_math::rect::Rect;
-use ale_math::transform::Transform;
+use ale_math::transform::AleTransform;
 use ale_math::{ale_bounding_box_closest_point, Array, Vector3, Zero};
 use ale_mesh::sdf::{ale_mesh_sdf_new, MeshSDF, ale_mesh_sdf_find_quadrant, ale_mesh_sdf_distance};
 use ale_mesh::{ale_mesh_cube_new, Mesh};
@@ -21,6 +21,7 @@ use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_conte
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_raymarch::{ale_raymarch_sdf_single, ale_ray_new, ale_ray_position_get};
 use ale_texture::ale_texture_load;
+use std::borrow::Borrow;
 
 fn main() {
   ale_app_run(SDFDemo, DisplayInfo::new(Rect::new(1024, 800)));
@@ -29,7 +30,7 @@ fn main() {
 struct State {
   fly_camera: FlyCamera,
 
-  sphere: Vec<(Transform, Mesh)>,
+  sphere: Vec<(AleTransform, Mesh)>,
   sphere_sdf: MeshSDF,
 
   opengl_wire_context: OpenGLWireContext,
@@ -41,7 +42,7 @@ struct SDFDemo;
 
 impl App<State> for SDFDemo {
   fn load(&mut self, context: &mut RenderContext, window: &Window) -> State {
-    let mut sphere = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf"));
+    let mut spheres = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf"));
     //let mut sphere = vec![(Transform::new(), ale_mesh_cube_new())];
 
     let fly_camera = FlyCamera::new(Camera::new(
@@ -49,12 +50,12 @@ impl App<State> for SDFDemo {
       window.get_display_info().dimension.clone(),
       90.0,
     ));
-    let sphere_sdf = ale_mesh_sdf_new(&sphere[0].1, 20);
+    let sphere_sdf = ale_mesh_sdf_new(&spheres[0].1, 20);
     let opengl_wire_context = ale_opengl_wire_context_new();
 
     let hdr_texture = ale_texture_load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();
     let opengl_pbr_context =
-      ale_opengl_pbr_context_new(&hdr_texture, &window.get_display_info().dimension, &mut sphere);
+      ale_opengl_pbr_context_new(&hdr_texture, &window.get_display_info().dimension, spheres.iter().collect());
 
     let opengl_line_debug_context = ale_opengl_debug_context_new();
 
@@ -63,7 +64,7 @@ impl App<State> for SDFDemo {
 
     State {
       fly_camera,
-      sphere,
+      sphere: spheres,
       sphere_sdf,
       opengl_wire_context,
       opengl_pbr_context,
@@ -121,7 +122,7 @@ impl App<State> for SDFDemo {
     ale_opengl_pbr_render_envmap(&state.opengl_pbr_context, &camera_render_info);
     ale_opengl_pbr_render(
       &state.opengl_pbr_context,
-      &mut state.sphere,
+      state.sphere.iter().collect(),
       &camera_render_info,
       &vec![],
     );

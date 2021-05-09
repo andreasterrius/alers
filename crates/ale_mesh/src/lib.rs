@@ -1,6 +1,6 @@
 use ale_autoid::*;
 use ale_buffer::{Buffer, BufferBuilder};
-use ale_math::transform::Transform;
+use ale_math::transform::AleTransform;
 use ale_math::{Array, InnerSpace, Matrix4, Vector2, Vector3, Zero};
 
 pub mod iter;

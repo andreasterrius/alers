@@ -1,13 +1,13 @@
 use ale_math::prelude::*;
 use ale_math::rect::Rect;
-use ale_math::transform::Transform;
+use ale_math::transform::AleTransform;
 use ale_math::{ortho, perspective, Deg, Matrix4, Point3, Quaternion, Vector3, ale_quaternion_look_at};
 use std::sync::Arc;
 
 pub mod flycamera;
 
 pub struct Camera {
-  transform: Transform,
+  transform: AleTransform,
   fov: f32,
   aspect_ratio: f32,
   display_rect: Rect,
@@ -22,7 +22,7 @@ impl Camera {
     let aspect_ratio = display_rect.get_width() as f32 / display_rect.get_height() as f32;
 
     Camera {
-      transform: Transform::from_position_rotation(position, Quaternion::one()),
+      transform: AleTransform::from_position_rotation(position, Quaternion::one()),
       fov,
       aspect_ratio,
       display_rect,
