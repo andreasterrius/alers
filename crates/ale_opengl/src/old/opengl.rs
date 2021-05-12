@@ -368,7 +368,7 @@ impl RenderTasks for SimpleRenderTasks {
             for i in 0..6 {
               raw::matrix4f(equirect_shader, VIEW, views[i].as_ptr());
               raw::framebuffer_texture2d_cubemap(i as u32, cubemap_draw_info.cubemap, 0);
-              raw::clear_buffer();
+              raw::clear_buffer(0.2f32, 0.3f32, 0.3f32);
 
               raw::bind_vao(cube_mesh_draw_info.vao);
               raw::draw_arrays(0, cube_mesh_draw_info.draw_size);

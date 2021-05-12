@@ -24,6 +24,4 @@ pub fn ale_opengl_raymarch_context_new() -> OpenGLRaymarchContext {
   }
 }
 
-pub fn ale_opengl_raymarch_render(opengl_raymarch_context : &OpenGLRaymarchContext) {
-
-}
+pub fn ale_opengl_raymarch_render(opengl_raymarch_context: &OpenGLRaymarchContext) {}

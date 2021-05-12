@@ -46,9 +46,9 @@ pub fn ale_opengl_wire_console_variable_refresh(opengl_wire_context: &mut OpenGL
 }
 
 pub fn ale_opengl_wire_boundingbox_render(
-    opengl_wire_context: &mut OpenGLWireContext,
-    meshes: &mut Vec<(AleTransform, Mesh)>,
-    camera_render_info: &CameraRenderInfo,
+  opengl_wire_context: &mut OpenGLWireContext,
+  meshes: &mut Vec<(AleTransform, Mesh)>,
+  camera_render_info: &CameraRenderInfo,
 ) {
   if !opengl_wire_context.wire_render_enable {
     return;

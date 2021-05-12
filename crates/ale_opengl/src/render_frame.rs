@@ -47,7 +47,7 @@ pub fn ale_opengl_render_frame_render(
   opengl_shader_variables: &Vec<Variable>,
 ) {
   unsafe {
-    raw::clear_buffer();
+    raw::clear_buffer(0.2f32, 0.3f32, 0.3f32);
 
     let opengl_shader_framebuffer = &opengl_shader;
     let opengl_ndc_mesh_plane = &opengl_render_frame_context.plane_mesh;

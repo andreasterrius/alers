@@ -22,8 +22,8 @@ pub struct OpenGLDebugContext {
   line_vbo: u32,
   line_draw_size: u32,
 
-  point_vao : u32,
-  point_vbo : u32,
+  point_vao: u32,
+  point_vbo: u32,
   point_draw_size: u32,
 
   // Lines to render
@@ -37,7 +37,7 @@ pub struct OpenGLDebugContext {
 
 pub fn ale_opengl_debug_context_new() -> OpenGLDebugContext {
   let (line_vao, line_vbo, line_draw_size) = unsafe { create_line_buffer() };
-  let (point_vao, point_vbo, point_draw_size) = unsafe{ create_point_buffer() };
+  let (point_vao, point_vbo, point_draw_size) = unsafe { create_point_buffer() };
 
   let shader = ale_opengl_shader_new(&ale_shader_new(
     include_str!("../../../../resources/shaders/debug/line.vert").to_owned(),

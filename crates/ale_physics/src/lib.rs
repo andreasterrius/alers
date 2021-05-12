@@ -1,5 +1,7 @@
 use crate::rapier3d::dynamics::CCDSolver;
-use rapier3d::dynamics::{IntegrationParameters, JointSet, RigidBodyBuilder, RigidBodyHandle, RigidBodySet, BodyStatus};
+use rapier3d::dynamics::{
+  BodyStatus, IntegrationParameters, JointSet, RigidBodyBuilder, RigidBodyHandle, RigidBodySet,
+};
 use rapier3d::geometry::{BroadPhase, ColliderSet, NarrowPhase};
 use rapier3d::geometry::{ColliderBuilder, ColliderHandle, SharedShape};
 use rapier3d::na::{Quaternion, UnitQuaternion, Vector3};
@@ -12,7 +14,13 @@ use rapier3d::math::{AngVector, Isometry};
 pub enum RigidBodyType {
   Kinematic,
   Dynamic,
-  Static
+  Static,
+}
+
+// Single collider only
+pub enum RigidBodyShape {
+  Cube(ale_math::Vector3<f32>), //extent
+  Sphere(f32),                  // radius
 }
 
 pub struct PhysicsContext {
@@ -39,12 +47,12 @@ pub fn ale_physics_context_new() -> PhysicsContext {
   }
 }
 
-pub fn ale_physics_context_cuboid_new(
+pub fn ale_physics_object_new(
   physics_context: &mut PhysicsContext,
   position: ale_math::Vector3<f32>,
   rotation: ale_math::Quaternion<f32>,
-  box_extent: ale_math::Vector3<f32>,
-  rigidbody_type : RigidBodyType,
+  rigidbody_shape: RigidBodyShape,
+  rigidbody_type: RigidBodyType,
   gravity_enable: bool,
 ) -> (RigidBodyHandle, ColliderHandle) {
   let r = UnitQuaternion::from_quaternion(Quaternion::new(rotation.s, rotation.v.x, rotation.v.y, rotation.v.z));
@@ -56,7 +64,8 @@ pub fn ale_physics_context_cuboid_new(
     RigidBodyType::Kinematic => BodyStatus::Kinematic,
     RigidBodyType::Dynamic => BodyStatus::Dynamic,
     RigidBodyType::Static => BodyStatus::Static,
-  }).position(rigidbody_isometry);
+  })
+  .position(rigidbody_isometry);
   if !gravity_enable {
     rigidbody_builder = rigidbody_builder.gravity_scale(0.0);
   }
@@ -66,9 +75,10 @@ pub fn ale_physics_context_cuboid_new(
   let mut collider_isometry = Isometry::new(Vector3::default(), AngVector::default());
   collider_isometry.rotation = r;
 
-  let collider = ColliderBuilder::cuboid(box_extent.x, box_extent.y, box_extent.z)
-    //  .position_wrt_parent(collider_isometry)
-    .build();
+  let collider = match rigidbody_shape {
+    RigidBodyShape::Cube(box_extent) => ColliderBuilder::cuboid(box_extent.x, box_extent.y, box_extent.z).build(),
+    RigidBodyShape::Sphere(radius) => ColliderBuilder::ball(radius).build(),
+  };
 
   let collider_handle = physics_context
     .colliders

@@ -10,8 +10,8 @@ use crate::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureId};
 use ale_buffer::Buffer;
 use ale_texture::{ale_texture_new, Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 
-pub unsafe fn clear_buffer() {
-  gl::ClearColor(0.2f32, 0.3f32, 0.3f32, 1.0f32);
+pub unsafe fn clear_buffer(r: f32, g: f32, b: f32) {
+  gl::ClearColor(r, g, b, 1.0f32);
   gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 }
 

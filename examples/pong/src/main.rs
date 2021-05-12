@@ -1,3 +1,4 @@
+use crate::Shape::{Cube, Sphere};
 use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
 use ale_app::{ale_app_resource_path, ale_app_run, App};
@@ -16,11 +17,11 @@ use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
 };
-use ale_opengl::{ale_opengl_clear_render, ale_opengl_depth_test_enable};
+use ale_opengl::{ale_opengl_clear_render, ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
 use ale_physics::rapier3d::dynamics::{RigidBodyBuilder, RigidBodyHandle};
 use ale_physics::{
-  ale_physics_context_cuboid_new, ale_physics_context_new, ale_physics_context_tick, ale_physics_context_update,
-  PhysicsContext, RigidBodyType,
+  ale_physics_context_new, ale_physics_context_tick, ale_physics_context_update, ale_physics_object_new,
+  PhysicsContext, RigidBodyShape, RigidBodyType,
 };
 use ale_texture::ale_texture_load;
 
@@ -29,6 +30,11 @@ fn main() {
 }
 
 struct Pong;
+
+pub enum Shape {
+  Cube,
+  Sphere,
+}
 
 struct Object {
   transform: AleTransform,
@@ -41,19 +47,27 @@ fn ale_create_pong_object(
   physics_context: &mut PhysicsContext,
   mut transform: AleTransform,
   mesh: Mesh,
+  shape: Shape,
   rigidbody_type: RigidBodyType,
   color: Vector3<f32>,
+  gravity_enable: bool,
 ) -> Object {
   let mut bb = transform
     .scale_matrix()
     .transform_vector(ale_bounding_box_size(mesh.bounding_box));
-  let (rigidbody_handle, _) = ale_physics_context_cuboid_new(
+
+  let rigidbody_shape = match shape {
+    Shape::Cube => RigidBodyShape::Cube(bb / 2.0),
+    Shape::Sphere => RigidBodyShape::Sphere(bb.x / 2.0), // radius
+  };
+
+  let (rigidbody_handle, _) = ale_physics_object_new(
     physics_context,
     transform.position,
     transform.lcl_rotation,
-    bb / 2.0,
+    rigidbody_shape,
     rigidbody_type,
-    false,
+    gravity_enable,
   );
   Object {
     transform,
@@ -67,9 +81,11 @@ struct State {
   physics_context: PhysicsContext,
   opengl_pbr_context: OpenGLPBRContext,
 
+  ball: Object,
   paddle_left: Object,
   paddle_right: Object,
   floor: Object,
+
   fly_camera: FlyCamera,
 }
 
@@ -95,24 +111,40 @@ impl App<State> for Pong {
       &mut physics_context,
       AleTransform::from_position_scale(Vector3::new(10.0, 0.0, 0.0), Vector3::new(0.2, 0.2, 1.0)),
       paddle_left_mesh,
+      Cube,
       RigidBodyType::Kinematic,
       Vector3::new(0.0, 1.0, 0.0),
+      false,
     );
 
     let mut paddle_right = ale_create_pong_object(
       &mut physics_context,
       AleTransform::from_position_scale(Vector3::new(-10.0, 0.0, 0.0), Vector3::new(0.2, 0.2, 1.0)),
       paddle_right_mesh,
+      Cube,
       RigidBodyType::Kinematic,
       Vector3::new(1.0, 0.0, 0.0),
+      false,
     );
 
     let mut floor = ale_create_pong_object(
       &mut physics_context,
-      AleTransform::from_position_scale(Vector3::new(0.0, -3.0, 0.0), Vector3::new(10.02, 1.0, 10.0)),
+      AleTransform::from_position_scale(Vector3::new(0.0, -1.1, 0.0), Vector3::new(10.02, 1.0, 10.0)),
       floor_mesh,
-      RigidBodyType::Kinematic,
+      Cube,
+      RigidBodyType::Static,
       Vector3::new(1.0, 1.0, 1.0),
+      false,
+    );
+
+    let mut ball = ale_create_pong_object(
+      &mut physics_context,
+      AleTransform::from_position(Vector3::new(0.0, 0.0, 0.0)),
+      ball_mesh,
+      Sphere,
+      RigidBodyType::Dynamic,
+      Vector3::new(1.0, 1.0, 1.0),
+      true,
     );
 
     /*
@@ -131,7 +163,12 @@ impl App<State> for Pong {
     let opengl_pbr_context = ale_opengl_pbr_context_new(
       &hdr_texture,
       &window.get_display_info().dimension,
-      vec![&mut paddle_left.mesh, &mut paddle_right.mesh, &mut floor.mesh],
+      vec![
+        &mut paddle_left.mesh,
+        &mut paddle_right.mesh,
+        &mut floor.mesh,
+        &mut ball.mesh,
+      ],
     );
 
     ale_opengl_depth_test_enable();
@@ -140,6 +177,7 @@ impl App<State> for Pong {
       opengl_pbr_context,
       physics_context,
       fly_camera,
+      ball,
       paddle_left,
       paddle_right,
       floor,
@@ -158,13 +196,15 @@ impl App<State> for Pong {
       &mut s.physics_context,
       vec![
         (&mut s.paddle_left.transform, &s.paddle_left.rigidbody_handle),
+        (&mut s.paddle_right.transform, &s.paddle_right.rigidbody_handle),
         (&mut s.floor.transform, &s.floor.rigidbody_handle),
+        (&mut s.ball.transform, &s.ball.rigidbody_handle),
       ],
     );
   }
 
   fn render(&mut self, s: &mut State, render_tasks: SimpleRenderTasks, render_context: &mut RenderContext) {
-    ale_opengl_clear_render();
+    ale_opengl_clear_render_color(Vector3::new(0.123f32, 0.54, 0.514));
 
     let camera_render_info = s.fly_camera.get_camera_render_info();
 
@@ -183,6 +223,7 @@ impl App<State> for Pong {
           &s.paddle_right.color,
         ),
         (&mut s.floor.transform, &mut s.floor.mesh, &s.floor.color),
+        (&mut s.ball.transform, &mut s.ball.mesh, &s.ball.color),
       ],
       &camera_render_info,
       &vec![],
