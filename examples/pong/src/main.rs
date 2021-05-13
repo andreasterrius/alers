@@ -86,7 +86,8 @@ struct State {
   paddle_right: Object,
   floor: Object,
 
-  fly_camera: FlyCamera,
+  //fly_camera: FlyCamera,
+  camera: Camera,
 }
 
 impl App<State> for Pong {
@@ -150,11 +151,19 @@ impl App<State> for Pong {
     /*
      * Camera Creation
      */
-    let fly_camera = FlyCamera::new(Camera::new(
-      Vector3::new(0.0, 0.0, 10.0),
+    // let mut fly_camera = FlyCamera::new(Camera::new(
+    //   Vector3::new(0.0, 10.0, 0.0),
+    //   window.get_display_info().dimension.clone(),
+    //   90.0,
+    // ));
+    // fly_camera.camera_mut().look_at(Vector3::new(0.0, 0.0, 0.0));
+
+    let mut camera = Camera::new(
+      Vector3::new(0.0, 10.0, 0.0),
       window.get_display_info().dimension.clone(),
       90.0,
-    ));
+    );
+    camera.look_at(Vector3::zero());
 
     /*
      * Renderer
@@ -176,7 +185,8 @@ impl App<State> for Pong {
     State {
       opengl_pbr_context,
       physics_context,
-      fly_camera,
+      //fly_camera,
+      camera,
       ball,
       paddle_left,
       paddle_right,
@@ -185,11 +195,11 @@ impl App<State> for Pong {
   }
 
   fn input(&mut self, s: &mut State, inputs: Vec<Input>) {
-    s.fly_camera.input(&inputs);
+    //s.fly_camera.input(&inputs);
   }
 
   fn tick(&mut self, s: &mut State, delta_time: f32) {
-    s.fly_camera.tick(delta_time);
+    //s.fly_camera.tick(delta_time);
 
     ale_physics_context_tick(&mut s.physics_context, delta_time);
     ale_physics_context_update(
@@ -206,9 +216,9 @@ impl App<State> for Pong {
   fn render(&mut self, s: &mut State, render_tasks: SimpleRenderTasks, render_context: &mut RenderContext) {
     ale_opengl_clear_render_color(Vector3::new(0.123f32, 0.54, 0.514));
 
-    let camera_render_info = s.fly_camera.get_camera_render_info();
+    let camera_render_info = s.camera.camera_render_info();
 
-    //ale_opengl_pbr_render_envmap(&s.opengl_pbr_context, &camera_render_info);
+    ale_opengl_pbr_render_envmap(&s.opengl_pbr_context, &camera_render_info);
     ale_opengl_pbr_render(
       &s.opengl_pbr_context,
       vec![

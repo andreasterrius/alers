@@ -1,7 +1,7 @@
 use ale_math::prelude::*;
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
-use ale_math::{ortho, perspective, Deg, Matrix4, Point3, Quaternion, Vector3, ale_quaternion_look_at};
+use ale_math::{ale_quaternion_look_at, ortho, perspective, Deg, Matrix4, Point3, Quaternion, Vector3};
 use std::sync::Arc;
 
 pub mod flycamera;
@@ -59,7 +59,8 @@ impl Camera {
   }
 
   pub fn look_at(&mut self, point: Vector3<f32>) {
-    let quat = ale_quaternion_look_at(self.position(), point, -Vector3::unit_z(), Vector3::unit_y());
+    let front = self.forward_dir();
+    let quat = ale_quaternion_look_at(self.position(), point, front, Vector3::unit_y());
     self.set_rotation(quat);
   }
 
