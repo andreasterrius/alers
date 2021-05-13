@@ -5,25 +5,28 @@ use ale_app::{ale_app_resource_path, ale_app_run, App};
 use ale_camera::flycamera::FlyCamera;
 use ale_camera::Camera;
 use ale_gltf::ale_gltf_load;
-use ale_input::Input;
+use ale_input::{Action, Input, Key};
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
 use ale_math::{
-  ale_bounding_box_size, ale_quaternion_look_at, Array, Deg, Euler, Matrix4, Quaternion, Rotation3, Transform, Vector3,
-  Zero,
+  ale_bounding_box_size, ale_quaternion_look_at, Array, Deg, ElementWise, Euler, Matrix4, Quaternion, Rotation3,
+  Transform, Vector3, Zero,
 };
-use ale_mesh::{ale_mesh_cube_new, Mesh};
+use ale_mesh::{ale_mesh_cube_new, Mesh, MeshId};
 use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
 };
 use ale_opengl::{ale_opengl_clear_render, ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
 use ale_physics::rapier3d::dynamics::{RigidBodyBuilder, RigidBodyHandle};
+use ale_physics::rapier3d::geometry::ColliderHandle;
 use ale_physics::{
-  ale_physics_context_new, ale_physics_context_tick, ale_physics_context_update, ale_physics_object_new,
-  PhysicsContext, RigidBodyShape, RigidBodyType,
+  ale_physics_context_new, ale_physics_context_tick, ale_physics_context_update,
+  ale_physics_object_linear_velocity_get, ale_physics_object_linear_velocity_set, ale_physics_object_new,
+  ale_physics_object_position_set, PhysicsContext, RigidBodyShape, RigidBodyType,
 };
 use ale_texture::ale_texture_load;
+use rand::{random, Rng};
 
 fn main() {
   ale_app_run(Pong, DisplayInfo::new(Rect::new(1024, 768)));
@@ -39,18 +42,20 @@ pub enum Shape {
 struct Object {
   transform: AleTransform,
   rigidbody_handle: RigidBodyHandle,
-  mesh: Mesh,
+  collider_handle: ColliderHandle,
+  mesh_id: MeshId,
   color: Vector3<f32>,
 }
 
 fn ale_create_pong_object(
   physics_context: &mut PhysicsContext,
   mut transform: AleTransform,
-  mesh: Mesh,
+  mesh: &Mesh,
   shape: Shape,
   rigidbody_type: RigidBodyType,
   color: Vector3<f32>,
   gravity_enable: bool,
+  is_sensor: bool,
 ) -> Object {
   let mut bb = transform
     .scale_matrix()
@@ -61,18 +66,21 @@ fn ale_create_pong_object(
     Shape::Sphere => RigidBodyShape::Sphere(bb.x / 2.0), // radius
   };
 
-  let (rigidbody_handle, _) = ale_physics_object_new(
+  let (rigidbody_handle, collider_handle) = ale_physics_object_new(
     physics_context,
     transform.position,
     transform.lcl_rotation,
     rigidbody_shape,
     rigidbody_type,
     gravity_enable,
+    is_sensor,
   );
+
   Object {
     transform,
     rigidbody_handle,
-    mesh,
+    collider_handle,
+    mesh_id: mesh.uid(),
     color,
   }
 }
@@ -84,10 +92,18 @@ struct State {
   ball: Object,
   paddle_left: Object,
   paddle_right: Object,
-  floor: Object,
+  arena: Vec<Object>,
 
   //fly_camera: FlyCamera,
   camera: Camera,
+
+  paddle_left_velocity: Vector3<f32>,
+  paddle_right_velocity: Vector3<f32>,
+
+  // Game state
+  should_init: bool,
+  score_left: i32,
+  score_right: i32,
 }
 
 impl App<State> for Pong {
@@ -95,10 +111,8 @@ impl App<State> for Pong {
     /*
      * Create the mesh
      */
-    let paddle_left_mesh = ale_mesh_cube_new();
-    let paddle_right_mesh = ale_mesh_cube_new();
+    let cube_mesh = ale_mesh_cube_new();
     let (_, ball_mesh) = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
-    let floor_mesh = ale_mesh_cube_new();
 
     /*
      * Physics setup
@@ -110,42 +124,49 @@ impl App<State> for Pong {
      */
     let mut paddle_left = ale_create_pong_object(
       &mut physics_context,
-      AleTransform::from_position_scale(Vector3::new(10.0, 0.0, 0.0), Vector3::new(0.2, 0.2, 1.0)),
-      paddle_left_mesh,
+      AleTransform::from_position_scale(Vector3::new(-10.0, 0.0, 0.0), Vector3::new(0.2, 0.2, 1.0)),
+      &cube_mesh,
       Cube,
       RigidBodyType::Kinematic,
       Vector3::new(0.0, 1.0, 0.0),
       false,
+      true,
     );
 
     let mut paddle_right = ale_create_pong_object(
       &mut physics_context,
-      AleTransform::from_position_scale(Vector3::new(-10.0, 0.0, 0.0), Vector3::new(0.2, 0.2, 1.0)),
-      paddle_right_mesh,
+      AleTransform::from_position_scale(Vector3::new(10.0, 0.0, 0.0), Vector3::new(0.2, 0.2, 1.0)),
+      &cube_mesh,
       Cube,
       RigidBodyType::Kinematic,
       Vector3::new(1.0, 0.0, 0.0),
-      false,
+      true,
+      true,
     );
 
-    let mut floor = ale_create_pong_object(
-      &mut physics_context,
-      AleTransform::from_position_scale(Vector3::new(0.0, -1.1, 0.0), Vector3::new(10.02, 1.0, 10.0)),
-      floor_mesh,
-      Cube,
-      RigidBodyType::Static,
-      Vector3::new(1.0, 1.0, 1.0),
-      false,
-    );
+    let mut arena = vec![
+      // floor
+      ale_create_pong_object(
+        &mut physics_context,
+        AleTransform::from_position_scale(Vector3::new(0.0, -1.1, 0.0), Vector3::new(20.00, 1.0, 20.0)),
+        &cube_mesh,
+        Cube,
+        RigidBodyType::Static,
+        Vector3::new(0.0, 0.0, 0.0),
+        false,
+        false,
+      ),
+    ];
 
     let mut ball = ale_create_pong_object(
       &mut physics_context,
-      AleTransform::from_position(Vector3::new(0.0, 0.0, 0.0)),
-      ball_mesh,
+      AleTransform::from_position_scale(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.4, 0.4, 0.4)),
+      &ball_mesh,
       Sphere,
       RigidBodyType::Dynamic,
       Vector3::new(1.0, 1.0, 1.0),
       true,
+      false,
     );
 
     /*
@@ -172,12 +193,7 @@ impl App<State> for Pong {
     let opengl_pbr_context = ale_opengl_pbr_context_new(
       &hdr_texture,
       &window.get_display_info().dimension,
-      vec![
-        &mut paddle_left.mesh,
-        &mut paddle_right.mesh,
-        &mut floor.mesh,
-        &mut ball.mesh,
-      ],
+      vec![&cube_mesh, &ball_mesh],
     );
 
     ale_opengl_depth_test_enable();
@@ -190,27 +206,208 @@ impl App<State> for Pong {
       ball,
       paddle_left,
       paddle_right,
-      floor,
+      arena,
+      should_init: true,
+      score_left: 0,
+      score_right: 0,
+      paddle_left_velocity: Vector3::zero(),
+      paddle_right_velocity: Vector3::zero(),
     }
   }
 
   fn input(&mut self, s: &mut State, inputs: Vec<Input>) {
-    //s.fly_camera.input(&inputs);
+    for input in &inputs {
+      match input {
+        // Handle movement
+        Input::Key(Key::W, _, Action::Press, _) => {
+          s.paddle_left_velocity += Vector3::new(0.0, 0.0, -1.0);
+        }
+        Input::Key(Key::S, _, Action::Press, _) => {
+          s.paddle_left_velocity += Vector3::new(0.0, 0.0, 1.0);
+        }
+        Input::Key(Key::W, _, Action::Release, _) => {
+          s.paddle_left_velocity -= Vector3::new(0.0, 0.0, -1.0);
+        }
+        Input::Key(Key::S, _, Action::Release, _) => {
+          s.paddle_left_velocity -= Vector3::new(0.0, 0.0, 1.0);
+        }
+        _ => {}
+      }
+    }
+
+    // AI Input
+    if s.paddle_right.transform.position.z < s.ball.transform.position.z {
+      s.paddle_right_velocity = Vector3::new(0.0, 0.0, 1.0);
+    } else {
+      s.paddle_right_velocity = Vector3::new(0.0, 0.0, -1.0);
+    }
   }
 
-  fn tick(&mut self, s: &mut State, delta_time: f32) {
-    //s.fly_camera.tick(delta_time);
+  fn fixed_tick(&mut self, s: &mut State, delta_time: f32) {
+    // Move paddles
+    let paddle_speed = 12.0f32;
+    ale_physics_object_position_set(
+      &mut s.physics_context,
+      s.paddle_left.rigidbody_handle,
+      s.paddle_left.transform.position + (s.paddle_left_velocity * paddle_speed * delta_time),
+    );
+
+    ale_physics_object_position_set(
+      &mut s.physics_context,
+      s.paddle_right.rigidbody_handle,
+      s.paddle_right.transform.position + (s.paddle_right_velocity * paddle_speed * delta_time),
+    );
+
+    let mut objects = vec![
+      (&mut s.paddle_left.transform, &s.paddle_left.rigidbody_handle),
+      (&mut s.paddle_right.transform, &s.paddle_right.rigidbody_handle),
+      (&mut s.ball.transform, &s.ball.rigidbody_handle),
+    ];
+
+    // Put arena objects here
+    for object in &mut s.arena {
+      objects.push((&mut object.transform, &mut object.rigidbody_handle));
+    }
 
     ale_physics_context_tick(&mut s.physics_context, delta_time);
-    ale_physics_context_update(
-      &mut s.physics_context,
-      vec![
-        (&mut s.paddle_left.transform, &s.paddle_left.rigidbody_handle),
-        (&mut s.paddle_right.transform, &s.paddle_right.rigidbody_handle),
-        (&mut s.floor.transform, &s.floor.rigidbody_handle),
-        (&mut s.ball.transform, &s.ball.rigidbody_handle),
-      ],
-    );
+    ale_physics_context_update(&mut s.physics_context, objects);
+
+    //resolve isect
+    while let Ok(isect) = s.physics_context.isect_recv.try_recv() {
+      if !isect.intersecting {
+        continue;
+      }
+
+      let mut ball_collider = None;
+      let mut paddle_collider = None;
+      if isect.collider1 == s.ball.collider_handle {
+        ball_collider = Some(isect.collider1);
+        paddle_collider = Some(isect.collider2);
+      } else if isect.collider2 == s.ball.collider_handle {
+        ball_collider = Some(isect.collider2);
+        paddle_collider = Some(isect.collider1);
+      }
+
+      // Now we determine which paddle collider this is
+      // Create rudimentary bounce, nothing fancy at all
+      match paddle_collider {
+        None => {}
+        Some(pc) => {
+          if pc == s.paddle_left.collider_handle {
+            let linvel = ale_physics_object_linear_velocity_get(&mut s.physics_context, s.ball.rigidbody_handle);
+            ale_physics_object_linear_velocity_set(
+              &mut s.physics_context,
+              s.ball.rigidbody_handle,
+              Vector3::new(f32::abs(linvel.x * 1.3f32), linvel.y, linvel.z),
+            );
+          } else if pc == s.paddle_right.collider_handle {
+            let linvel = ale_physics_object_linear_velocity_get(&mut s.physics_context, s.ball.rigidbody_handle);
+            ale_physics_object_linear_velocity_set(
+              &mut s.physics_context,
+              s.ball.rigidbody_handle,
+              Vector3::new(-f32::abs(linvel.x * 1.3f32), linvel.y, linvel.z),
+            );
+          }
+        }
+      }
+    }
+  }
+
+  fn tick(&mut self, s: &mut State) {
+    // Pull back pong paddle if it goes too far
+    if s.paddle_left.transform.position.z < -10.0f32 {
+      s.paddle_left.transform.position.z = -10.0f32;
+      ale_physics_object_position_set(
+        &mut s.physics_context,
+        s.paddle_left.rigidbody_handle,
+        s.paddle_left.transform.position,
+      );
+    }
+
+    if s.paddle_left.transform.position.z > 10.0f32 {
+      s.paddle_left.transform.position.z = 10.0f32;
+      ale_physics_object_position_set(
+        &mut s.physics_context,
+        s.paddle_left.rigidbody_handle,
+        s.paddle_left.transform.position,
+      );
+    }
+
+    // Check if ball passes through left goal or right goal
+    let linvel = ale_physics_object_linear_velocity_get(&mut s.physics_context, s.ball.rigidbody_handle);
+
+    // bounce bottom
+    if s.ball.transform.position.z < -10.0f32 {
+      ale_physics_object_linear_velocity_set(
+        &mut s.physics_context,
+        s.ball.rigidbody_handle,
+        Vector3::new(linvel.x * 1.4f32, linvel.y, f32::abs(linvel.z)),
+      );
+    }
+    // bounce top
+    if s.ball.transform.position.z > 10.0f32 {
+      ale_physics_object_linear_velocity_set(
+        &mut s.physics_context,
+        s.ball.rigidbody_handle,
+        Vector3::new(linvel.x * 1.4f32, linvel.y, -f32::abs(linvel.z)),
+      );
+    }
+    // left bound check
+    if s.ball.transform.position.x < -10.0f32 {
+      s.should_init = true;
+      s.score_left += 1;
+    }
+    // right bound check
+    if s.ball.transform.position.x > 10.0f32 {
+      s.should_init = true;
+      s.score_right += 1;
+    }
+
+    if s.should_init {
+      // Since the transform will take from rigidbody,
+      // just set the rigibody position
+      ale_physics_object_position_set(
+        &mut s.physics_context,
+        s.paddle_left.rigidbody_handle,
+        Vector3::new(-10.0, 0.0, 0.0),
+      );
+      ale_physics_object_position_set(
+        &mut s.physics_context,
+        s.paddle_right.rigidbody_handle,
+        Vector3::new(10.0, 0.0, 0.0),
+      );
+      ale_physics_object_position_set(
+        &mut s.physics_context,
+        s.ball.rigidbody_handle,
+        Vector3::new(0.0, 0.0, 0.0),
+      );
+
+      // calculate the initial velocity for the ball
+      let speed = 20.0f32;
+      let initial_velocity = Vector3::new(0.4f32, 0.0, 0.4);
+      let random_velocity_base = Vector3::new(0.1f32, 0.0, 0.1);
+      let random_mult: Vector3<f32> = Vector3::new(random(), 0.0, random());
+      let mut velocity = initial_velocity
+        + Vector3::new(
+          random_mult.x * random_velocity_base.x,
+          random_mult.y * random_velocity_base.y,
+          random_mult.z * random_velocity_base.z,
+        );
+
+      let go_top: bool = random();
+      let go_left: bool = random();
+      if go_left {
+        velocity.x = velocity.x * -1.0f32;
+      }
+      if go_top {
+        velocity.z = velocity.z * -1.0f32;
+      }
+      velocity *= speed;
+
+      ale_physics_object_linear_velocity_set(&mut s.physics_context, s.ball.rigidbody_handle, velocity);
+
+      s.should_init = false;
+    }
   }
 
   fn render(&mut self, s: &mut State, render_tasks: SimpleRenderTasks, render_context: &mut RenderContext) {
@@ -219,24 +416,25 @@ impl App<State> for Pong {
     let camera_render_info = s.camera.camera_render_info();
 
     ale_opengl_pbr_render_envmap(&s.opengl_pbr_context, &camera_render_info);
-    ale_opengl_pbr_render(
-      &s.opengl_pbr_context,
-      vec![
-        (
-          &mut s.paddle_left.transform,
-          &mut s.paddle_left.mesh,
-          &s.paddle_left.color,
-        ),
-        (
-          &mut s.paddle_right.transform,
-          &mut s.paddle_right.mesh,
-          &s.paddle_right.color,
-        ),
-        (&mut s.floor.transform, &mut s.floor.mesh, &s.floor.color),
-        (&mut s.ball.transform, &mut s.ball.mesh, &s.ball.color),
-      ],
-      &camera_render_info,
-      &vec![],
-    );
+
+    let mut renderables = vec![
+      (
+        &mut s.paddle_left.transform,
+        &mut s.paddle_left.mesh_id,
+        &s.paddle_left.color,
+      ),
+      (
+        &mut s.paddle_right.transform,
+        &mut s.paddle_right.mesh_id,
+        &s.paddle_right.color,
+      ),
+      (&mut s.ball.transform, &mut s.ball.mesh_id, &s.ball.color),
+    ];
+
+    for object in &mut s.arena {
+      renderables.push((&mut object.transform, &mut object.mesh_id, &object.color));
+    }
+
+    ale_opengl_pbr_render(&s.opengl_pbr_context, renderables, &camera_render_info, &vec![]);
   }
 }

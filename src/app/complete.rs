@@ -228,9 +228,11 @@ impl App<State> for CompleteExample {
     }
   }
 
-  fn tick(&mut self, s: &mut State, delta_time: f32) {
+  fn fixed_tick(&mut self, s: &mut State, delta_time: f32) {
     s.world.tick(delta_time);
   }
+
+  fn tick(&mut self, s: &mut State) {}
 
   fn render(&mut self, s: &mut State, mut render_tasks: SimpleRenderTasks, context: &mut RenderContext) {
     let world = &mut s.world;

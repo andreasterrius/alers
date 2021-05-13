@@ -16,3 +16,4 @@ ale_gltf = { path = "../../crates/ale_gltf" }
 ale_camera = { path= "../../crates/ale_camera" }
 ale_input = { path= "../../crates/ale_input" }
 ale_texture = { path = "../../crates/ale_texture" }
+rand = "0.8.3"

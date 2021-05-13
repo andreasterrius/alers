@@ -32,11 +32,7 @@ pub struct OpenGLPBRContext {
   pub mesh: HashMap<MeshId, OpenGLMesh>,
 }
 
-pub fn ale_opengl_pbr_context_new(
-  hdr_texture: &Texture,
-  viewport_size: &Rect,
-  meshes: Vec<&mut Mesh>,
-) -> OpenGLPBRContext {
+pub fn ale_opengl_pbr_context_new(hdr_texture: &Texture, viewport_size: &Rect, meshes: Vec<&Mesh>) -> OpenGLPBRContext {
   let cube_mesh = ale_opengl_mesh_new(&ale_mesh_cube_new()).unwrap();
   let pbr_shader = ale_opengl_shader_new(&ale_shader_new(
     include_str!("../../../resources/shaders/pbr.vert").to_owned(),
@@ -110,7 +106,7 @@ pub fn ale_opengl_pbr_context_new(
 
 pub fn ale_opengl_pbr_render(
   opengl_pbr_context: &OpenGLPBRContext,
-  mesh: Vec<(&mut AleTransform, &mut Mesh, &Vector3<f32>)>,
+  mesh: Vec<(&mut AleTransform, &mut MeshId, &Vector3<f32>)>,
   camera_render_info: &CameraRenderInfo,
   textures: &Vec<OpenGLTexture>,
 ) {
@@ -156,8 +152,8 @@ pub fn ale_opengl_pbr_render(
 
       let ogl_mesh = opengl_pbr_context
         .mesh
-        .get(&m.uid())
-        .expect(&format!("{:?} is not a pbr registered mesh", m.uid()));
+        .get(&m)
+        .expect(&format!("{:?} is not a pbr registered mesh", m));
 
       // Pass uniforms
       //let mut t = Transform::new();

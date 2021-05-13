@@ -17,7 +17,9 @@ pub trait App<S> {
 
   fn input(&mut self, s: &mut S, inputs: Vec<Input>);
 
-  fn tick(&mut self, s: &mut S, delta_time: f32);
+  fn fixed_tick(&mut self, s: &mut S, delta_time: f32);
+
+  fn tick(&mut self, s: &mut S);
 
   fn render(&mut self, s: &mut S, render_tasks: SimpleRenderTasks, render_context: &mut RenderContext);
 }
@@ -43,8 +45,10 @@ pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
     tick.prepare_tick();
     while tick.should_tick() {
       tick.tick();
-      app.tick(&mut state, tick.delta_time());
+      app.fixed_tick(&mut state, tick.delta_time());
     }
+
+    app.tick(&mut state);
 
     // Initialize render queue & assign render tasks
     let mut render_tasks = SimpleRenderTasks::new();

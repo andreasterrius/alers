@@ -1,14 +1,17 @@
 use crate::rapier3d::dynamics::CCDSolver;
 use rapier3d::dynamics::{
-  BodyStatus, IntegrationParameters, JointSet, RigidBodyBuilder, RigidBodyHandle, RigidBodySet,
+  BodyStatus, IntegrationParameters, JointSet, RigidBody, RigidBodyBuilder, RigidBodyHandle, RigidBodySet,
 };
 use rapier3d::geometry::{BroadPhase, ColliderSet, NarrowPhase};
 use rapier3d::geometry::{ColliderBuilder, ColliderHandle, SharedShape};
 use rapier3d::na::{Quaternion, UnitQuaternion, Vector3};
-use rapier3d::pipeline::PhysicsPipeline;
+use rapier3d::pipeline::{ChannelEventCollector, PhysicsPipeline};
 
 use ale_math::{Euler, InnerSpace};
 pub use rapier3d;
+use rapier3d::crossbeam::channel::Receiver;
+use rapier3d::geometry::ContactEvent;
+use rapier3d::geometry::IntersectionEvent;
 use rapier3d::math::{AngVector, Isometry};
 
 pub enum RigidBodyType {
@@ -32,9 +35,18 @@ pub struct PhysicsContext {
   pub colliders: ColliderSet,
   pub ccd_solver: CCDSolver,
   pub joints: JointSet,
+
+  // Collision detector
+  pub event_handler: ChannelEventCollector,
+  pub contact_recv: Receiver<ContactEvent>,
+  pub isect_recv: Receiver<IntersectionEvent>,
 }
 
 pub fn ale_physics_context_new() -> PhysicsContext {
+  let (contact_send, contact_recv) = rapier3d::crossbeam::channel::unbounded();
+  let (isect_send, isect_recv) = rapier3d::crossbeam::channel::unbounded();
+  let event_handler = ChannelEventCollector::new(isect_send, contact_send);
+
   PhysicsContext {
     pipeline: PhysicsPipeline::new(),
     gravity: Vector3::new(0.0, -9.81, 0.0),
@@ -44,6 +56,9 @@ pub fn ale_physics_context_new() -> PhysicsContext {
     colliders: ColliderSet::new(),
     ccd_solver: CCDSolver::new(),
     joints: JointSet::new(),
+    event_handler,
+    contact_recv,
+    isect_recv,
   }
 }
 
@@ -54,6 +69,7 @@ pub fn ale_physics_object_new(
   rigidbody_shape: RigidBodyShape,
   rigidbody_type: RigidBodyType,
   gravity_enable: bool,
+  is_sensor: bool,
 ) -> (RigidBodyHandle, ColliderHandle) {
   let r = UnitQuaternion::from_quaternion(Quaternion::new(rotation.s, rotation.v.x, rotation.v.y, rotation.v.z));
 
@@ -65,7 +81,10 @@ pub fn ale_physics_object_new(
     RigidBodyType::Dynamic => BodyStatus::Dynamic,
     RigidBodyType::Static => BodyStatus::Static,
   })
+  .linear_damping(0.0f32)
+  .angular_damping(0.0f32)
   .position(rigidbody_isometry);
+
   if !gravity_enable {
     rigidbody_builder = rigidbody_builder.gravity_scale(0.0);
   }
@@ -76,8 +95,11 @@ pub fn ale_physics_object_new(
   collider_isometry.rotation = r;
 
   let collider = match rigidbody_shape {
-    RigidBodyShape::Cube(box_extent) => ColliderBuilder::cuboid(box_extent.x, box_extent.y, box_extent.z).build(),
-    RigidBodyShape::Sphere(radius) => ColliderBuilder::ball(radius).build(),
+    RigidBodyShape::Cube(box_extent) => ColliderBuilder::cuboid(box_extent.x, box_extent.y, box_extent.z)
+      .restitution(1.0)
+      .sensor(is_sensor)
+      .build(),
+    RigidBodyShape::Sphere(radius) => ColliderBuilder::ball(radius).friction(0.0f32).sensor(is_sensor).build(),
   };
 
   let collider_handle = physics_context
@@ -87,9 +109,48 @@ pub fn ale_physics_object_new(
   (rigidbody_handle, collider_handle)
 }
 
+pub fn ale_physics_object_position_set(
+  physics_context: &mut PhysicsContext,
+  rigidbody_handle: RigidBodyHandle,
+  position: ale_math::Vector3<f32>,
+) {
+  match physics_context.bodies.get_mut(rigidbody_handle) {
+    None => {}
+    Some(rigidbody) => {
+      rigidbody.set_position(
+        Isometry::new(Vector3::new(position.x, position.y, position.z), AngVector::default()),
+        false,
+      );
+    }
+  }
+}
+
+pub fn ale_physics_object_linear_velocity_set(
+  physics_context: &mut PhysicsContext,
+  rigidbody_handle: RigidBodyHandle,
+  velocity: ale_math::Vector3<f32>,
+) {
+  match physics_context.bodies.get_mut(rigidbody_handle) {
+    None => {}
+    Some(rigidbody) => rigidbody.set_linvel(Vector3::new(velocity.x, velocity.y, velocity.z), true),
+  };
+}
+
+pub fn ale_physics_object_linear_velocity_get(
+  physics_context: &mut PhysicsContext,
+  rigidbody_handle: RigidBodyHandle,
+) -> ale_math::Vector3<f32> {
+  match physics_context.bodies.get_mut(rigidbody_handle) {
+    None => ale_math::Vector3::new(0.0, 0.0, 0.0),
+    Some(rigidbody) => {
+      let linvel = rigidbody.linvel();
+      ale_math::Vector3::new(linvel.x, linvel.y, linvel.z)
+    }
+  }
+}
+
 pub fn ale_physics_context_tick(physics_context: &mut PhysicsContext, delta_time: f32) {
   let physics_hooks = ();
-  let event_handler = ();
 
   let integration_parameter = IntegrationParameters {
     dt: delta_time,
@@ -106,7 +167,7 @@ pub fn ale_physics_context_tick(physics_context: &mut PhysicsContext, delta_time
     &mut physics_context.joints,
     &mut physics_context.ccd_solver,
     &physics_hooks,
-    &event_handler,
+    &physics_context.event_handler,
   )
 }
 
