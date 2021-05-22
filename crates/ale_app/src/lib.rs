@@ -13,7 +13,7 @@ pub mod tick;
 pub mod window;
 
 pub trait App<S> {
-  fn load(&mut self, context: &mut RenderContext, window: &Window) -> S;
+  fn load(&mut self, window: &Window) -> S;
 
   fn input(&mut self, s: &mut S, inputs: Vec<Input>);
 
@@ -21,7 +21,7 @@ pub trait App<S> {
 
   fn tick(&mut self, s: &mut S);
 
-  fn render(&mut self, s: &mut S, render_tasks: SimpleRenderTasks, render_context: &mut RenderContext);
+  fn render(&mut self, s: &mut S);
 }
 
 pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
@@ -52,7 +52,7 @@ pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
 
     // Initialize render queue & assign render tasks
     let mut render_tasks = SimpleRenderTasks::new();
-    app.render(&mut state, render_tasks, &mut context);
+    app.render(&mut state);
 
     window.swap_buffers();
   }

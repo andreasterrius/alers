@@ -44,7 +44,7 @@ struct State {
 struct SDFDemo;
 
 impl App<State> for SDFDemo {
-  fn load(&mut self, context: &mut RenderContext, window: &Window) -> State {
+  fn load(&mut self, window: &Window) -> State {
     let (_, mut sphere_mesh) = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
     //let mut sphere = vec![(Transform::new(), ale_mesh_cube_new())];
     let transform = AleTransform::from_position_scale(Vector3::from_value(-2.0), Vector3::from_value(2.0));
@@ -112,7 +112,7 @@ impl App<State> for SDFDemo {
               Vector3::new(0.2 * iter as f32, 0.0, 0.0),
             );
             curr_point = ale_ray_position_get(&ray, curr_dist);
-          }z
+          }
           println!();
         }
         _ => {}
@@ -128,7 +128,7 @@ impl App<State> for SDFDemo {
     // Do nothing
   }
 
-  fn render(&mut self, state: &mut State, render_tasks: SimpleRenderTasks, render_context: &mut RenderContext) {
+  fn render(&mut self, state: &mut State) {
     ale_opengl_clear_render();
 
     let camera_render_info = state.fly_camera.get_camera_render_info();

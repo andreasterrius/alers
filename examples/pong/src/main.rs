@@ -107,7 +107,7 @@ struct State {
 }
 
 impl App<State> for Pong {
-  fn load(&mut self, context: &mut RenderContext, window: &Window) -> State {
+  fn load(&mut self, window: &Window) -> State {
     /*
      * Create the mesh
      */
@@ -410,7 +410,7 @@ impl App<State> for Pong {
     }
   }
 
-  fn render(&mut self, s: &mut State, render_tasks: SimpleRenderTasks, render_context: &mut RenderContext) {
+  fn render(&mut self, s : &mut State) {
     ale_opengl_clear_render_color(Vector3::new(0.123f32, 0.54, 0.514));
 
     let camera_render_info = s.camera.camera_render_info();
