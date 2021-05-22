@@ -157,7 +157,7 @@ pub fn ale_opengl_pbr_render(
 
       // Pass uniforms
       //let mut t = Transform::new();
-      raw::matrix4f(pbr_shader.id, MODEL, t.matrix().as_ptr());
+      raw::matrix4f(pbr_shader.id, MODEL, t.matrix_cache().as_ptr());
 
       // Bind Array Buffer
       raw::bind_vao(ogl_mesh.vao);
@@ -234,7 +234,7 @@ pub fn ale_opengl_pbr_render_debug(
     let ogl_mesh = &opengl_pbr_context.cube_mesh;
 
     // Pass uniforms
-    raw::matrix4f(pbr_shader.id, MODEL, t.matrix().as_ptr());
+    raw::matrix4f(pbr_shader.id, MODEL, t.matrix_cache().as_ptr());
 
     // Bind Array Buffer
     raw::bind_vao(ogl_mesh.vao);

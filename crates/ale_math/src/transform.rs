@@ -79,7 +79,7 @@ impl AleTransform {
     self.matrix = None; // Destroy matrix cache
   }
 
-  pub fn matrix(&mut self) -> Matrix4<f32> {
+  pub fn matrix_cache(&mut self) -> Matrix4<f32> {
     match self.matrix {
       None => {
         let m = Matrix4::from_translation(self.position)

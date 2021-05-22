@@ -69,11 +69,11 @@ impl World {
 
     for p in &mut self.pawns {
       render_tasks.queue_static_mesh(
-        p.shader_id,
-        p.static_mesh_id,
-        p.textures.clone(),
-        p.transform.matrix(),
-        p.shader_variables.clone(),
+          p.shader_id,
+          p.static_mesh_id,
+          p.textures.clone(),
+          p.transform.matrix_cache(),
+          p.shader_variables.clone(),
       );
     }
 

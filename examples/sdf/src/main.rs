@@ -33,7 +33,7 @@ fn main() {
 struct State {
   fly_camera: FlyCamera,
 
-  sphere: Vec<(AleTransform, Mesh)>,
+  sphere: (AleTransform, Mesh),
   sphere_sdf: MeshSDF,
 
   opengl_wire_context: OpenGLWireContext,
@@ -45,23 +45,21 @@ struct SDFDemo;
 
 impl App<State> for SDFDemo {
   fn load(&mut self, context: &mut RenderContext, window: &Window) -> State {
-    let mut spheres = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf"));
+    let (_, mut sphere_mesh) = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
     //let mut sphere = vec![(Transform::new(), ale_mesh_cube_new())];
+    let transform = AleTransform::from_position_scale(Vector3::from_value(-2.0), Vector3::from_value(2.0));
 
     let fly_camera = FlyCamera::new(Camera::new(
       Vector3::from_value(0.0),
       window.get_display_info().dimension.clone(),
       90.0,
     ));
-    let sphere_sdf = ale_mesh_sdf_new(&spheres[0].1, 20);
+    let sphere_sdf = ale_mesh_sdf_new(&sphere_mesh, 10);
     let opengl_wire_context = ale_opengl_wire_context_new();
 
     let hdr_texture = ale_texture_load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();
-    let opengl_pbr_context = ale_opengl_pbr_context_new(
-      &hdr_texture,
-      &window.get_display_info().dimension,
-      spheres.iter().collect(),
-    );
+    let opengl_pbr_context =
+      ale_opengl_pbr_context_new(&hdr_texture, &window.get_display_info().dimension, vec![&sphere_mesh]);
 
     let opengl_line_debug_context = ale_opengl_debug_context_new();
 
@@ -70,7 +68,7 @@ impl App<State> for SDFDemo {
 
     State {
       fly_camera,
-      sphere: spheres,
+      sphere: (transform, sphere_mesh),
       sphere_sdf,
       opengl_wire_context,
       opengl_pbr_context,
@@ -84,7 +82,10 @@ impl App<State> for SDFDemo {
     for input in &inputs {
       match input {
         Input::Key(Key::K, _, _, _) => {
-          let points = ale_raymarch_sdf_single(state.fly_camera.camera(), vec![&state.sphere_sdf]);
+          let points = ale_raymarch_sdf_single(
+            state.fly_camera.camera(),
+            vec![(&mut state.sphere.0, &state.sphere_sdf)],
+          );
           // for (start, end, color) in points {
           //   ale_opengl_debug_line_queue(
           //     &mut state.opengl_line_debug_context,
@@ -99,11 +100,11 @@ impl App<State> for SDFDemo {
             state.fly_camera.camera().position(),
             state.fly_camera.camera().forward_dir(),
           );
-          let closest = ale_bounding_box_closest_point(ray.origin, state.sphere[0].1.bounding_box);
+          let closest = ale_bounding_box_closest_point(ray.origin, state.sphere.1.bounding_box);
           let mut curr_point = ray.origin;
           let mut curr_dist = 0.0;
           for iter in 0..5 {
-            let dist = ale_mesh_sdf_distance(&state.sphere_sdf, curr_point);
+            let dist = ale_mesh_sdf_distance(&state.sphere_sdf, curr_point, &mut state.sphere.0);
             curr_dist += dist;
             ale_opengl_debug_point_queue(
               &mut state.opengl_line_debug_context,
@@ -111,7 +112,7 @@ impl App<State> for SDFDemo {
               Vector3::new(0.2 * iter as f32, 0.0, 0.0),
             );
             curr_point = ale_ray_position_get(&ray, curr_dist);
-          }
+          }z
           println!();
         }
         _ => {}
@@ -123,6 +124,10 @@ impl App<State> for SDFDemo {
     state.fly_camera.tick(delta_time);
   }
 
+  fn tick(&mut self, s: &mut State) {
+    // Do nothing
+  }
+
   fn render(&mut self, state: &mut State, render_tasks: SimpleRenderTasks, render_context: &mut RenderContext) {
     ale_opengl_clear_render();
 
@@ -131,7 +136,11 @@ impl App<State> for SDFDemo {
     ale_opengl_pbr_render_envmap(&state.opengl_pbr_context, &camera_render_info);
     ale_opengl_pbr_render(
       &state.opengl_pbr_context,
-      state.sphere.iter().collect(),
+      vec![(
+        &mut state.sphere.0,
+        &mut state.sphere.1.id,
+        &Vector3::from_value(1.0f32),
+      )],
       &camera_render_info,
       &vec![],
     );
@@ -157,6 +166,10 @@ impl App<State> for SDFDemo {
     ale_opengl_debug_render(&state.opengl_line_debug_context, &camera_render_info);
     //ale_opengl_line_debug_clear(&mut state.opengl_line_debug_context);
 
-    ale_opengl_wire_boundingbox_render(&mut state.opengl_wire_context, &mut state.sphere, &camera_render_info);
+    ale_opengl_wire_boundingbox_render(
+      &mut state.opengl_wire_context,
+      vec![(&mut state.sphere.0, &mut state.sphere.1)],
+      &camera_render_info,
+    );
   }
 }

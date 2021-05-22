@@ -1,7 +1,8 @@
 use crate::iter::ale_mesh_triangle_iter_new;
 use crate::{ale_mesh_tri_get, ale_mesh_tri_len, Mesh, Tri};
 use ale_math::num_traits::clamp;
-use ale_math::{ale_bounding_box_closest_point, ale_bounding_box_size, dot, InnerSpace, MetricSpace, Zero};
+use ale_math::transform::AleTransform;
+use ale_math::{ale_bounding_box_closest_point, ale_bounding_box_size, dot, InnerSpace, MetricSpace, Transform, Zero};
 use ale_math::{vec1, Vector3};
 use rayon::prelude::{ParallelBridge, ParallelIterator};
 use std::cmp::Ordering;
@@ -294,18 +295,21 @@ pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
 
   MeshSDF {
     dist,
-    mesh_bounding_box : mesh.bounding_box.clone(),
+    mesh_bounding_box: mesh.bounding_box.clone(),
     initial,
     step,
     points,
   }
 }
 
-pub fn ale_mesh_sdf_distance(sdf: &MeshSDF, point: Vector3<f32>) -> f32 {
+pub fn ale_mesh_sdf_distance(sdf: &MeshSDF, point: Vector3<f32>, transform: &mut AleTransform) -> f32 {
   let point_in_sdf = ale_bounding_box_closest_point(point.clone(), sdf.mesh_bounding_box);
   let (i, j, k) = ale_mesh_sdf_find_quadrant(sdf, point_in_sdf);
   //println!("{} {} {}", i, j, k);
-  let dori = point.distance(point_in_sdf);
+
+  let transformed_point = transform.matrix_cache().transform_vector(point_in_sdf);
+
+  let dori = point.distance(transformed_point);
   let dsdf = -sdf.dist[i][j][k];
 
   println!("{} {}", dori, dsdf);

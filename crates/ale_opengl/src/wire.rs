@@ -4,7 +4,7 @@ use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLSha
 use ale_camera::CameraRenderInfo;
 use ale_console::{ale_console_variable_event_handle, ale_console_variable_register, Console};
 use ale_math::transform::AleTransform;
-use ale_math::{Array, Matrix, Vector3};
+use ale_math::{Array, Matrix, Transform, Vector3};
 use ale_mesh::{ale_mesh_bounding_box_matrix, ale_mesh_bounding_box_new, Mesh};
 use ale_shader::ale_shader_new;
 use ale_variable::{to_variable, ToVariable};
@@ -47,7 +47,7 @@ pub fn ale_opengl_wire_console_variable_refresh(opengl_wire_context: &mut OpenGL
 
 pub fn ale_opengl_wire_boundingbox_render(
   opengl_wire_context: &mut OpenGLWireContext,
-  meshes: &mut Vec<(AleTransform, Mesh)>,
+  meshes: Vec<(&mut AleTransform, &Mesh)>,
   camera_render_info: &CameraRenderInfo,
 ) {
   if !opengl_wire_context.wire_render_enable {
@@ -60,8 +60,9 @@ pub fn ale_opengl_wire_boundingbox_render(
     raw::matrix4f(shader.id, "view", camera_render_info.view.as_ptr());
     raw::matrix4f(shader.id, "projection", camera_render_info.projection.as_ptr());
 
-    for (transform, mesh) in meshes {
+    for (mut transform, mesh) in meshes {
       let mut bb_transform = ale_mesh_bounding_box_matrix(mesh.bounding_box);
+      bb_transform = bb_transform.concat(&transform.matrix_cache());
 
       raw::matrix4f(shader.id, "model", bb_transform.as_ptr());
       raw::bind_vao(opengl_wire_context.bounding_box_mesh.vao);
