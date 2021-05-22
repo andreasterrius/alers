@@ -1,4 +1,4 @@
-My rendering engine to tinker around with!
+My rendering/game engine to tinker around with!
 
 Feature | Implemented
 :---| :---:
@@ -11,3 +11,4 @@ Feature | Implemented
  
 
 ![Showcase](showcase/fxaa.png)
+![Showcase](showcase/pong.png)
