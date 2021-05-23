@@ -1,10 +1,12 @@
+use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
 use ale_app::{ale_app_run, App};
 use ale_input::Input;
+use ale_math::rect::Rect;
 use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
 
 fn main() {
-  ale_app_run()
+  ale_app_run(GPUSDFDemo, DisplayInfo::new(Rect::new(1024, 768)));
 }
 
 struct GPUSDFDemo;
@@ -12,7 +14,9 @@ struct GPUSDFDemo;
 struct State {}
 
 impl App<State> for GPUSDFDemo {
-  fn load(&mut self, window: &Window) -> State {}
+  fn load(&mut self, window: &Window) -> State {
+    State {}
+  }
 
   fn input(&mut self, s: &mut State, inputs: Vec<Input>) {}
 
