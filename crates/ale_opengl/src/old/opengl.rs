@@ -19,7 +19,7 @@ use ale_shader::{Shader, ShaderId};
 use ale_texture::{Texture, TextureId};
 use ale_variable::Variable;
 
-pub struct RenderContext {
+pub struct RenderResources {
   static_meshes: HashMap<MeshId, OpenGLMesh>,
   shaders: HashMap<ShaderId, OpenGLShader>,
   textures: HashMap<TextureId, OpenGLTexture>,
@@ -29,9 +29,9 @@ pub struct RenderContext {
   cubemap: HashMap<CubemapId, CubemapDrawInfo>,
 }
 
-impl RenderContext {
-  pub fn new() -> RenderContext {
-    RenderContext {
+impl RenderResources {
+  pub fn new() -> RenderResources {
+    RenderResources {
       static_meshes: HashMap::new(),
       shaders: HashMap::new(),
       textures: HashMap::new(),
@@ -153,7 +153,7 @@ pub trait RenderTasks {
 
   fn with_skybox(&mut self, cubemap_id: CubemapId);
 
-  fn render(&mut self, context: &RenderContext) -> Result<Vec<RenderResult>, RenderError>;
+  fn render(&mut self, context: &RenderResources) -> Result<Vec<RenderResult>, RenderError>;
 }
 
 pub struct SimpleRenderTasks {
@@ -244,7 +244,7 @@ impl RenderTasks for SimpleRenderTasks {
     self.skybox = Some(cubemap_id);
   }
 
-  fn render(&mut self, context: &RenderContext) -> Result<Vec<RenderResult>, RenderError> {
+  fn render(&mut self, context: &RenderResources) -> Result<Vec<RenderResult>, RenderError> {
     let result = vec![];
     for renderable in &self.renderables {
       match renderable {

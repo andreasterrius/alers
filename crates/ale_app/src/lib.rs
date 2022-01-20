@@ -2,7 +2,7 @@ use crate::display_info::DisplayInfo;
 use crate::tick::{FixedStep, WorldTick};
 use crate::window::Window;
 use ale_input::Input;
-use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
+use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
 use std::path::Path;
 
 pub mod display_info;
@@ -32,8 +32,7 @@ pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
   let mut engine = engine::Engine::new();
   let mut window = engine.windows().new(display_info);
 
-  let mut context = RenderContext::new();
-  let mut state = app.load(&mut context, &window);
+  let mut state = app.load(&window);
 
   let mut tick = WorldTick::FixedStep(FixedStep::new(0.01f32));
 

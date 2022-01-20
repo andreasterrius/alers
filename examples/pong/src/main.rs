@@ -13,7 +13,7 @@ use ale_math::{
   Transform, Vector3, Zero,
 };
 use ale_mesh::{ale_mesh_cube_new, Mesh, MeshId};
-use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
+use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
 };

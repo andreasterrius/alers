@@ -14,7 +14,7 @@ use ale_opengl::debug::line::{
   ale_opengl_debug_context_new, ale_opengl_debug_line_queue, ale_opengl_debug_point_queue, ale_opengl_debug_render,
   OpenGLDebugContext,
 };
-use ale_opengl::old::opengl::{RenderContext, SimpleRenderTasks};
+use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_debug, ale_opengl_pbr_render_envmap,
   OpenGLPBRContext,
