@@ -2,7 +2,6 @@ use ale_console::{
   ale_console_print_output, ale_console_variable_event_handle, ale_console_variable_register, Console, ConsoleEvent,
 };
 use ale_opengl::ale_opengl_clear_render;
-use ale_opengl::mesh::{ale_opengl_mesh_context_new, OpenGLMeshContext};
 use ale_opengl::render_frame::{ale_opengl_render_frame_render, OpenGLRenderFrameContext};
 use ale_opengl::shader::{ale_opengl_shader_context_new, ale_opengl_shader_new, OpenGLShader, OpenGLShaderContext};
 use ale_shader::ale_shader_new;

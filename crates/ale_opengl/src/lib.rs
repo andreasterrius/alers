@@ -1,3 +1,4 @@
+use ale_math::color::Color;
 use ale_math::Vector3;
 
 pub mod console;
@@ -13,6 +14,8 @@ pub mod shader;
 pub mod text;
 pub mod texture;
 pub mod wire;
+pub mod renderer;
+pub mod new;
 
 pub fn ale_opengl_clear_render() {
   // Clear the screen buffer
@@ -21,9 +24,10 @@ pub fn ale_opengl_clear_render() {
   }
 }
 
-pub fn ale_opengl_clear_render_color(color: Vector3<f32>) {
+pub fn ale_opengl_clear_render_color(color: Color) {
   unsafe {
-    raw::clear_buffer(color.x, color.y, color.z);
+    let (r, g, b) = color.get_rgb();
+    raw::clear_buffer(r, g, b);
   }
 }
 

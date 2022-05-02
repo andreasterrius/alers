@@ -1,0 +1,13 @@
+[package]
+name = "ui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ale_app = { path = "../../crates/ale_app" }
+ale_ui = { path = "../../crates/ale_ui" }
+ale_opengl = { path = "../../crates/ale_opengl" }
+ale_math = { path = "../../crates/ale_math" }
+ale_input = { path= "../../crates/ale_input" }

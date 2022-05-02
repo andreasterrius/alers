@@ -1,4 +1,4 @@
-use crate::mesh::{ale_opengl_mesh_new, OpenGLMesh};
+use crate::mesh::{OpenGLMesh};
 use crate::raw;
 use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader};
 use ale_camera::CameraRenderInfo;
@@ -26,7 +26,7 @@ pub fn ale_opengl_wire_context_new() -> OpenGLWireContext {
   );
 
   OpenGLWireContext {
-    bounding_box_mesh: ale_opengl_mesh_new(&ale_mesh_bounding_box_new()).unwrap(),
+    bounding_box_mesh: OpenGLMesh::new(&ale_mesh_bounding_box_new()).unwrap(),
     bounding_box_shader: ale_opengl_shader_new(&wire_shader).unwrap(),
     wire_render_enable: true,
     wire_thickness: 0.01,

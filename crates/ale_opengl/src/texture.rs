@@ -1,11 +1,10 @@
-use crate::mesh::{OpenGLMesh, OpenGLMeshContext};
+use crate::mesh::{OpenGLMesh};
 use crate::raw;
 use crate::raw::{create_texture, CreateTextureError};
-use crate::shader::{OpenGLShader, OpenGLShaderContext, OpenGLShaderId};
-use ale_camera::{Camera, CameraRenderInfo};
-use ale_font::{ale_font_layout, Font, FontTextureKey};
+use crate::shader::{OpenGLShader};
+use ale_camera::{CameraRenderInfo};
+use ale_font::{FontTextureKey};
 use ale_math::color::Color;
-use ale_math::rect::Rect;
 use ale_math::{Matrix, Vector2};
 use ale_texture::Texture;
 use std::collections::HashMap;

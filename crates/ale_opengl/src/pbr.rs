@@ -1,5 +1,5 @@
 use crate::constant::{CAMERA_POSITION, ENVIRONMENT_MAP, MODEL, PROJECTION, VIEW};
-use crate::mesh::{ale_opengl_mesh_new, OpenGLMesh};
+use crate::mesh::{OpenGLMesh};
 use crate::old::cubemap::Cubemap;
 use crate::raw;
 use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader};
@@ -33,7 +33,7 @@ pub struct OpenGLPBRContext {
 }
 
 pub fn ale_opengl_pbr_context_new(hdr_texture: &Texture, viewport_size: &Rect, meshes: Vec<&Mesh>) -> OpenGLPBRContext {
-  let cube_mesh = ale_opengl_mesh_new(&ale_mesh_cube_new()).unwrap();
+  let cube_mesh = OpenGLMesh::new(&ale_mesh_cube_new()).unwrap();
   let pbr_shader = ale_opengl_shader_new(&ale_shader_new(
     include_str!("../../../resources/shaders/pbr.vert").to_owned(),
     include_str!("../../../resources/shaders/pbr.frag").to_owned(),
@@ -88,7 +88,7 @@ pub fn ale_opengl_pbr_context_new(hdr_texture: &Texture, viewport_size: &Rect, m
 
   let mut ogl_mesh = HashMap::new();
   for mesh in meshes {
-    ogl_mesh.insert(mesh.uid(), ale_opengl_mesh_new(mesh).unwrap());
+    ogl_mesh.insert(mesh.uid(), OpenGLMesh::new(mesh).unwrap());
   }
 
   OpenGLPBRContext {

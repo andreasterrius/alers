@@ -18,4 +18,5 @@ ale_console = { path = "../ale_console" }
 ale_variable = { path = "../ale_variable" }
 ale_input = { path = "../ale_input" }
 ale_buffer = { path = "../ale_buffer" }
+ale_render = { path = "../ale_render" }
 gl = "0.14.0"

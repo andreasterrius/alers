@@ -1,7 +1,4 @@
-use crate::mesh::OpenGLMeshContext;
-use crate::shader::OpenGLShaderContext;
-use crate::text::{ale_opengl_text_render, ale_opengl_text_render_layout, OpenGLTextFontContext};
-use crate::texture::OpenGLTextureContext;
+use crate::text::{ale_opengl_text_render_layout, OpenGLTextFontContext};
 use ale_camera::CameraRenderInfo;
 use ale_console::Console;
 use ale_font::{ale_font_layout, Font};

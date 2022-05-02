@@ -1,4 +1,4 @@
-use crate::mesh::{ale_opengl_mesh_new, OpenGLMesh};
+use crate::mesh::{OpenGLMesh};
 use crate::shader::{ale_opengl_shader_new, OpenGLShader};
 use ale_mesh::{ale_mesh_plane_new, Mesh};
 use ale_shader::ale_shader_new;
@@ -16,7 +16,7 @@ pub fn ale_opengl_raymarch_context_new() -> OpenGLRaymarchContext {
   ))
   .unwrap();
 
-  let plane_mesh = ale_opengl_mesh_new(&ale_mesh_plane_new()).unwrap();
+  let plane_mesh = OpenGLMesh::new(&ale_mesh_plane_new()).unwrap();
 
   OpenGLRaymarchContext {
     raymarch_shader,

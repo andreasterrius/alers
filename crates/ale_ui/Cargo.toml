@@ -1,0 +1,10 @@
+[package]
+name = "ale_ui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ale_math = { path = "../../crates/ale_math" }
+ale_data = { path = "../../crates/ale_data" }

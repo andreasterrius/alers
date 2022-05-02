@@ -1,4 +1,4 @@
-use crate::mesh::{ale_opengl_mesh_new, OpenGLMesh, OpenGLMeshContext};
+use crate::mesh::{OpenGLMesh};
 use crate::shader::{ale_opengl_shader_new, OpenGLShader, OpenGLShaderContext};
 use crate::texture::{ale_opengl_texture_new, ale_opengl_texture_render, OpenGLTexture, OpenGLTextureContext};
 use ale_camera::CameraRenderInfo;
@@ -23,7 +23,7 @@ pub fn ale_opengl_text_font_context_new() -> OpenGLTextFontContext {
   ))
   .unwrap();
 
-  let plane_opengl_mesh = ale_opengl_mesh_new(&ale_mesh_plane_new()).unwrap();
+  let plane_opengl_mesh = OpenGLMesh::new(&ale_mesh_plane_new()).unwrap();
 
   OpenGLTextFontContext {
     text_2d_shader,

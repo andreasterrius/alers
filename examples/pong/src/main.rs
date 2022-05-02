@@ -27,6 +27,7 @@ use ale_physics::{
 };
 use ale_texture::ale_texture_load;
 use rand::{random, Rng};
+use ale_math::color::Color;
 
 fn main() {
   ale_app_run(Pong, DisplayInfo::new(Rect::new(1024, 768)));
@@ -411,7 +412,7 @@ impl App<State> for Pong {
   }
 
   fn render(&mut self, s : &mut State) {
-    ale_opengl_clear_render_color(Vector3::new(0.123f32, 0.54, 0.514));
+    ale_opengl_clear_render_color(Color::from_rgb(0.123f32, 0.54, 0.514));
 
     let camera_render_info = s.camera.camera_render_info();
 

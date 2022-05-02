@@ -1,4 +1,4 @@
-use crate::mesh::{ale_opengl_mesh_new, OpenGLMesh, OpenGLMeshContext};
+use crate::mesh::{OpenGLMesh};
 use crate::raw;
 use crate::raw::{bind_framebuffer, create_framebuffer_texcolor_rbodepth, create_texture, OpenGLFramebufferId};
 use crate::shader::{ale_opengl_shader_activate, OpenGLShader, OpenGLShaderContext};
@@ -21,7 +21,7 @@ pub struct OpenGLRenderFrameContext {
 pub fn ale_opengl_render_frame_new(screen_size: Vector2<u32>) -> OpenGLRenderFrameContext {
   unsafe {
     let (fbo, rbo, texture) = create_framebuffer_texcolor_rbodepth(screen_size.x, screen_size.y).unwrap();
-    let plane_mesh = ale_opengl_mesh_new(&ale_mesh_plane_new()).unwrap();
+    let plane_mesh = OpenGLMesh::new(&ale_mesh_plane_new()).unwrap();
 
     OpenGLRenderFrameContext {
       framebuffer: fbo,
