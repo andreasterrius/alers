@@ -7,21 +7,23 @@ pub struct Shader {
   pub geometry_shader: Option<String>,
 }
 
-pub fn ale_shader_new(vertex_shader: String, fragment_shader: String) -> Shader {
-  Shader {
-    id: ShaderId::new(),
-    vertex_shader,
-    fragment_shader,
-    geometry_shader: None,
+impl Shader {
+  pub fn new(vertex_shader: String, fragment_shader: String) -> Shader {
+    Shader {
+      id: ShaderId::new(),
+      vertex_shader,
+      fragment_shader,
+      geometry_shader: None,
+    }
   }
-}
 
-pub fn ale_shader_geom_new(vertex_shader: String, fragment_shader: String, geometry_shader: String) -> Shader {
-  Shader {
-    id: ShaderId::new(),
-    vertex_shader,
-    fragment_shader,
-    geometry_shader: Some(geometry_shader),
+  pub fn new_geom(vertex_shader: String, fragment_shader: String, geometry_shader: String) -> Shader {
+    Shader {
+      id: ShaderId::new(),
+      vertex_shader,
+      fragment_shader,
+      geometry_shader: Some(geometry_shader),
+    }
   }
 }
 

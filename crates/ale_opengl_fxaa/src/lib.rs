@@ -4,9 +4,9 @@ use ale_console::{
 use ale_opengl::ale_opengl_clear_render;
 use ale_opengl::render_frame::{ale_opengl_render_frame_render, OpenGLRenderFrameContext};
 use ale_opengl::shader::{OpenGLShader};
-use ale_shader::ale_shader_new;
 use ale_variable::{to_variable, ToVariable, Variable};
 use std::collections::hash_map::Entry;
+use ale_shader::Shader;
 
 pub struct OpenGLFXAAContext {
   // The main fxaa shader
@@ -20,7 +20,7 @@ pub struct OpenGLFXAAContext {
 }
 
 pub fn ale_opengl_fxaa_context_new() -> OpenGLFXAAContext {
-  let fxaa_shader = OpenGLShader::new(&ale_shader_new(
+  let fxaa_shader = OpenGLShader::new(&Shader::new(
     include_str!("../resources/fxaa.vert").to_owned(),
     include_str!("../resources/fxaa.frag").to_owned(),
   ))

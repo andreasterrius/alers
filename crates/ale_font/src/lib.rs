@@ -1,6 +1,6 @@
 use ale_math::rect::Rect;
 use ale_math::Vector2;
-use ale_texture::{ale_texture_new, Texture, TexturePixel};
+use ale_texture::{ale_texture_new, LoadTextureError, Texture, TexturePixel};
 use rusttype::{point, vector, Scale};
 use std::collections::HashMap;
 use std::fs::File;

@@ -3,7 +3,7 @@ use crate::raw;
 use crate::shader::{OpenGLShader};
 use ale_camera::CameraRenderInfo;
 use ale_math::{Matrix, Vector3, Zero};
-use ale_shader::{ale_shader_new, Shader};
+use ale_shader::{Shader};
 use ale_variable::Variable;
 use core::mem;
 use gl::types::{GLfloat, GLsizeiptr};
@@ -39,7 +39,7 @@ pub fn ale_opengl_debug_context_new() -> OpenGLDebugContext {
   let (line_vao, line_vbo, line_draw_size) = unsafe { create_line_buffer() };
   let (point_vao, point_vbo, point_draw_size) = unsafe { create_point_buffer() };
 
-  let shader = OpenGLShader::new(&ale_shader_new(
+  let shader = OpenGLShader::new(&Shader::new(
     include_str!("../../../../resources/shaders/debug/line.vert").to_owned(),
     include_str!("../../../../resources/shaders/debug/line.frag").to_owned(),
   ))

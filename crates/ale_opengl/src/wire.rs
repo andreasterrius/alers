@@ -6,7 +6,7 @@ use ale_console::{ale_console_variable_event_handle, ale_console_variable_regist
 use ale_math::transform::AleTransform;
 use ale_math::{Array, Matrix, Transform, Vector3};
 use ale_mesh::{ale_mesh_bounding_box_matrix, ale_mesh_bounding_box_new, Mesh};
-use ale_shader::ale_shader_new;
+use ale_shader::Shader;
 use ale_variable::{to_variable, ToVariable};
 
 pub struct OpenGLWireContext {
@@ -20,7 +20,7 @@ pub struct OpenGLWireContext {
 }
 
 pub fn ale_opengl_wire_context_new() -> OpenGLWireContext {
-  let wire_shader = ale_shader_new(
+  let wire_shader = Shader::new(
     include_str!("../../../resources/shaders/wire.vert").to_owned(),
     include_str!("../../../resources/shaders/wire.frag").to_owned(),
   );

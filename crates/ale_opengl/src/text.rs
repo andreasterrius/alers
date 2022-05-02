@@ -5,9 +5,9 @@ use ale_camera::CameraRenderInfo;
 use ale_font::{ale_font_layout, Font, FontLayout, FontTextureKey};
 use ale_math::color::Color;
 use ale_math::Vector2;
-use ale_shader::ale_shader_new;
 use std::collections::HashMap;
 use ale_mesh::Mesh;
+use ale_shader::Shader;
 
 pub struct OpenGLTextFontContext {
   text_2d_shader: OpenGLShader,
@@ -16,7 +16,7 @@ pub struct OpenGLTextFontContext {
 }
 
 pub fn ale_opengl_text_font_context_new() -> OpenGLTextFontContext {
-  let text_2d_shader = OpenGLShader::new(&ale_shader_new(
+  let text_2d_shader = OpenGLShader::new(&Shader::new(
     include_str!("../../../resources/shaders/text_2d.vert").to_owned(),
     include_str!("../../../resources/shaders/text_2d.frag").to_owned(),
   ))

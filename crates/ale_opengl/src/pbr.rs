@@ -9,7 +9,7 @@ use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
 use ale_math::{perspective, Array, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector3};
 use ale_mesh::{Mesh, MeshId};
-use ale_shader::{ale_shader_new, Shader};
+use ale_shader::{Shader};
 use ale_texture::{ale_texture_load, Texture};
 use ale_variable::Variable;
 use std::collections::HashMap;
@@ -34,22 +34,22 @@ pub struct OpenGLPBRContext {
 
 pub fn ale_opengl_pbr_context_new(hdr_texture: &Texture, viewport_size: &Rect, meshes: Vec<&Mesh>) -> OpenGLPBRContext {
   let cube_mesh = OpenGLMesh::new(&Mesh::new_cube()).unwrap();
-  let pbr_shader = OpenGLShader::new(&ale_shader_new(
+  let pbr_shader = OpenGLShader::new(&Shader::new(
     include_str!("../../../resources/shaders/pbr.vert").to_owned(),
     include_str!("../../../resources/shaders/pbr.frag").to_owned(),
   ))
   .unwrap();
-  let equirect_shader = OpenGLShader::new(&ale_shader_new(
+  let equirect_shader = OpenGLShader::new(&Shader::new(
     include_str!("../../../resources/shaders/cubemap.vert").to_owned(),
     include_str!("../../../resources/shaders/equirect.frag").to_owned(),
   ))
   .unwrap();
-  let irradiance_shader = OpenGLShader::new(&ale_shader_new(
+  let irradiance_shader = OpenGLShader::new(&Shader::new(
     include_str!("../../../resources/shaders/cubemap.vert").to_owned(),
     include_str!("../../../resources/shaders/irradiance.frag").to_owned(),
   ))
   .unwrap();
-  let skybox_shader = OpenGLShader::new(&ale_shader_new(
+  let skybox_shader = OpenGLShader::new(&Shader::new(
     include_str!("../../../resources/shaders/skybox.vert").to_owned(),
     include_str!("../../../resources/shaders/skybox.frag").to_owned(),
   ))
