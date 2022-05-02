@@ -8,7 +8,7 @@ use crate::old::opengl::RenderError::{
   NoCameraSet, UnregisteredCubemap, UnregisteredMesh, UnregisteredShader, UnregisteredTexture,
 };
 use crate::raw;
-use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader, OpenGLShaderError};
+use crate::shader::{OpenGLShader, OpenGLShaderError};
 use crate::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureError};
 use ale_camera::CameraRenderInfo;
 use ale_font::Font;
@@ -46,7 +46,7 @@ impl RenderResources {
   }
 
   pub fn shader(&mut self, shader: &Shader) -> Result<(), OpenGLShaderError> {
-    self.shaders.insert(shader.uid(), ale_opengl_shader_new(shader)?);
+    self.shaders.insert(shader.uid(), OpenGLShader::new(shader)?);
     Ok(())
   }
 
@@ -261,7 +261,7 @@ impl RenderTasks for SimpleRenderTasks {
 
           unsafe {
             // Bind shader
-            ale_opengl_shader_activate(shader_draw_info, shader_variables);
+            shader_draw_info.activate(shader_variables);
 
             if let Some(cubemap_id) = &self.skybox {
               let irradiance_cubemap_draw_info = context

@@ -1,6 +1,6 @@
 use crate::mesh::{OpenGLMesh};
 use crate::raw;
-use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader};
+use crate::shader::{OpenGLShader};
 use ale_camera::CameraRenderInfo;
 use ale_console::{ale_console_variable_event_handle, ale_console_variable_register, Console};
 use ale_math::transform::AleTransform;
@@ -27,7 +27,7 @@ pub fn ale_opengl_wire_context_new() -> OpenGLWireContext {
 
   OpenGLWireContext {
     bounding_box_mesh: OpenGLMesh::new(&ale_mesh_bounding_box_new()).unwrap(),
-    bounding_box_shader: ale_opengl_shader_new(&wire_shader).unwrap(),
+    bounding_box_shader: OpenGLShader::new(&wire_shader).unwrap(),
     wire_render_enable: true,
     wire_thickness: 0.01,
   }
@@ -55,7 +55,7 @@ pub fn ale_opengl_wire_boundingbox_render(
   }
 
   let shader = &opengl_wire_context.bounding_box_shader;
-  ale_opengl_shader_activate(shader, &vec![to_variable!(opengl_wire_context.wire_thickness)]);
+  shader.activate(&vec![to_variable!(opengl_wire_context.wire_thickness)]);
   unsafe {
     raw::matrix4f(shader.id, "view", camera_render_info.view.as_ptr());
     raw::matrix4f(shader.id, "projection", camera_render_info.projection.as_ptr());

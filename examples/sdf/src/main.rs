@@ -9,7 +9,7 @@ use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
 use ale_math::{ale_bounding_box_closest_point, Array, Vector3, Zero};
 use ale_mesh::sdf::{ale_mesh_sdf_distance, ale_mesh_sdf_find_quadrant, ale_mesh_sdf_new, MeshSDF};
-use ale_mesh::{ale_mesh_cube_new, Mesh};
+use ale_mesh::{ Mesh};
 use ale_opengl::debug::line::{
   ale_opengl_debug_context_new, ale_opengl_debug_line_queue, ale_opengl_debug_point_queue, ale_opengl_debug_render,
   OpenGLDebugContext,
@@ -46,7 +46,7 @@ struct SDFDemo;
 impl App<State> for SDFDemo {
   fn load(&mut self, window: &Window) -> State {
     let (_, mut sphere_mesh) = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
-    //let mut sphere = vec![(Transform::new(), ale_mesh_cube_new())];
+    //let mut sphere = vec![(Transform::new(), Mesh::new_cube())];
     let transform = AleTransform::from_position_scale(Vector3::from_value(-2.0), Vector3::from_value(2.0));
 
     let fly_camera = FlyCamera::new(Camera::new(

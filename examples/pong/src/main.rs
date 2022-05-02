@@ -12,7 +12,7 @@ use ale_math::{
   ale_bounding_box_size, ale_quaternion_look_at, Array, Deg, ElementWise, Euler, Matrix4, Quaternion, Rotation3,
   Transform, Vector3, Zero,
 };
-use ale_mesh::{ale_mesh_cube_new, Mesh, MeshId};
+use ale_mesh::{Mesh, MeshId};
 use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
@@ -112,7 +112,7 @@ impl App<State> for Pong {
     /*
      * Create the mesh
      */
-    let cube_mesh = ale_mesh_cube_new();
+    let cube_mesh = Mesh::new_cube();
     let (_, ball_mesh) = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
 
     /*

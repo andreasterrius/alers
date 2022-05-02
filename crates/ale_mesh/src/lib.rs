@@ -34,92 +34,98 @@ pub struct Tri {
 struct_id!(MeshId);
 struct_id_impl!(MeshId, Mesh, id);
 
-pub fn ale_mesh_new(
-  vertices: Buffer<f32>,
-  indices: Option<Buffer<i32>>,
-  bounding_box: (Vector3<f32>, Vector3<f32>),
-) -> Mesh {
-  let position_offset = vertices.offset("position");
-  let uv_offset = vertices.offset("uv");
-  let normal_offset = vertices.offset("normal");
+impl Mesh {
+  pub fn new(
+    vertices: Buffer<f32>,
+    indices: Option<Buffer<i32>>,
+    bounding_box: (Vector3<f32>, Vector3<f32>),
+  ) -> Mesh {
+    let position_offset = vertices.offset("position");
+    let uv_offset = vertices.offset("uv");
+    let normal_offset = vertices.offset("normal");
 
-  Mesh {
-    id: MeshId::new(),
-    vertices,
-    indices,
-    bounding_box,
-    position_offset,
-    uv_offset,
-    normal_offset,
+    Mesh {
+      id: MeshId::new(),
+      vertices,
+      indices,
+      bounding_box,
+      position_offset,
+      uv_offset,
+      normal_offset,
+    }
+  }
+
+  pub fn new_cube() -> Mesh {
+    let vertices = BufferBuilder::new(vec![
+      // back face
+      -1.0f32, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // bottom-left
+      1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0, // top-right
+      1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 0.0, // bottom-right
+      1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0, // top-right
+      -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // bottom-left
+      -1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 1.0, // top-left
+      // front face
+      -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // bottom-left
+      1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, // bottom-right
+      1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, // top-right
+      1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, // top-right
+      -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, // top-left
+      -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // bottom-left
+      // left face
+      -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0, // top-right
+      -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, 1.0, // top-left
+      -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, // bottom-left
+      -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, // bottom-left
+      -1.0, -1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, // bottom-right
+      -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0, // top-right
+      // right face
+      1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, // top-left
+      1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0, // bottom-right
+      1.0, 1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, // top-right
+      1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0, // bottom-right
+      1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, // top-left
+      1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, // bottom-left
+      // bottom face
+      -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0, // top-right
+      1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 1.0, 1.0, // top-left
+      1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, // bottom-left
+      1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, // bottom-left
+      -1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, // bottom-right
+      -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0, // top-right
+      // top face
+      -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, // top-left
+      1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom-right
+      1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 1.0, 1.0, // top-right
+      1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom-right
+      -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, // top-left
+      -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, // bottom-left
+    ])
+      .info("position", 3)
+      .info("normal", 3)
+      .info("uv", 2)
+      .build()
+      .unwrap();
+
+    let bounding_box = (Vector3::from_value(-1.0), Vector3::from_value(1.0));
+
+    Mesh::new(vertices, None, bounding_box)
+  }
+
+  pub fn new_plane() -> Mesh {
+    let vertices = BufferBuilder::new(vec![0.0f32, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0])
+      .info("position", 2)
+      .build()
+      .unwrap();
+
+    let bounding_box = (Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 0.0));
+
+    Mesh::new(vertices, None, bounding_box)
   }
 }
 
-pub fn ale_mesh_cube_new() -> Mesh {
-  let vertices = BufferBuilder::new(vec![
-    // back face
-    -1.0f32, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // bottom-left
-    1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0, // top-right
-    1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 0.0, // bottom-right
-    1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 1.0, 1.0, // top-right
-    -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // bottom-left
-    -1.0, 1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 1.0, // top-left
-    // front face
-    -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // bottom-left
-    1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, // bottom-right
-    1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, // top-right
-    1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, // top-right
-    -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, // top-left
-    -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // bottom-left
-    // left face
-    -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0, // top-right
-    -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, 1.0, // top-left
-    -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, // bottom-left
-    -1.0, -1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, // bottom-left
-    -1.0, -1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, // bottom-right
-    -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0, // top-right
-    // right face
-    1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, // top-left
-    1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0, // bottom-right
-    1.0, 1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, // top-right
-    1.0, -1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 1.0, // bottom-right
-    1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, // top-left
-    1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, // bottom-left
-    // bottom face
-    -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0, // top-right
-    1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 1.0, 1.0, // top-left
-    1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, // bottom-left
-    1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 0.0, // bottom-left
-    -1.0, -1.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, // bottom-right
-    -1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 0.0, 1.0, // top-right
-    // top face
-    -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, // top-left
-    1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom-right
-    1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 1.0, 1.0, // top-right
-    1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, // bottom-right
-    -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, // top-left
-    -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, // bottom-left
-  ])
-  .info("position", 3)
-  .info("normal", 3)
-  .info("uv", 2)
-  .build()
-  .unwrap();
 
-  let bounding_box = (Vector3::from_value(-1.0), Vector3::from_value(1.0));
 
-  ale_mesh_new(vertices, None, bounding_box)
-}
 
-pub fn ale_mesh_plane_new() -> Mesh {
-  let vertices = BufferBuilder::new(vec![0.0f32, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0])
-    .info("position", 2)
-    .build()
-    .unwrap();
-
-  let bounding_box = (Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 0.0));
-
-  ale_mesh_new(vertices, None, bounding_box)
-}
 
 pub fn ale_mesh_ndc_plane_new() -> Mesh {
   let vertices = BufferBuilder::new(vec![
@@ -133,7 +139,7 @@ pub fn ale_mesh_ndc_plane_new() -> Mesh {
 
   let bounding_box = (Vector3::new(-1.0, -1.0, 0.0), Vector3::new(1.0, 1.0, 0.0));
 
-  ale_mesh_new(vertices, None, bounding_box)
+  Mesh::new(vertices, None, bounding_box)
 }
 
 pub fn ale_mesh_bounding_box_new() -> Mesh {
@@ -190,7 +196,7 @@ pub fn ale_mesh_bounding_box_new() -> Mesh {
 
   let bounding_box = (Vector3::from_value(-1.0), Vector3::from_value(1.0));
 
-  ale_mesh_new(vertices, None, bounding_box)
+  Mesh::new(vertices, None, bounding_box)
 }
 
 pub fn ale_mesh_bounding_box_matrix(bounding_box: (Vector3<f32>, Vector3<f32>)) -> Matrix4<f32> {
@@ -302,7 +308,7 @@ pub fn test_tri_get_no_ebo() {
     .build()
     .unwrap();
 
-  let mesh = ale_mesh_new(buffer, None, (Vector3::zero(), Vector3::zero()));
+  let mesh = Mesh::new(buffer, None, (Vector3::zero(), Vector3::zero()));
 
   assert_eq!(ale_mesh_tri_len(&mesh), 3);
 
@@ -337,7 +343,7 @@ pub fn test_tri_get_no_ebo() {
 pub fn test_tri_cube_get_no_ebo() {
   use approx::relative_eq;
 
-  let mesh = ale_mesh_cube_new();
+  let mesh = Mesh::new_cube();
 
   assert_eq!(ale_mesh_tri_len(&mesh), 12);
 
@@ -442,7 +448,7 @@ pub fn test_tri_get_with_ebo() {
   let indices: Vec<i32> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 2, 5, 8, 4, 1, 7];
   let ibuffer = BufferBuilder::new(indices).info("index", 3).build().unwrap();
 
-  let mesh = ale_mesh_new(buffer, Some(ibuffer), (Vector3::zero(), Vector3::zero()));
+  let mesh = Mesh::new(buffer, Some(ibuffer), (Vector3::zero(), Vector3::zero()));
 
   assert_eq!(ale_mesh_tri_len(&mesh), 5);
 

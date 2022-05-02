@@ -1,6 +1,6 @@
+use ale_mesh::Mesh;
 use crate::mesh::{OpenGLMesh};
-use crate::shader::{ale_opengl_shader_new, OpenGLShader};
-use ale_mesh::{ale_mesh_plane_new, Mesh};
+use crate::shader::{OpenGLShader};
 use ale_shader::ale_shader_new;
 
 pub struct OpenGLRaymarchContext {
@@ -10,13 +10,13 @@ pub struct OpenGLRaymarchContext {
 }
 
 pub fn ale_opengl_raymarch_context_new() -> OpenGLRaymarchContext {
-  let raymarch_shader = ale_opengl_shader_new(&ale_shader_new(
+  let raymarch_shader = OpenGLShader::new(&ale_shader_new(
     include_str!("../../../resources/shaders/raymarch.vert").to_owned(),
     include_str!("../../../resources/shaders/raymarch.frag").to_owned(),
   ))
-  .unwrap();
+    .unwrap();
 
-  let plane_mesh = OpenGLMesh::new(&ale_mesh_plane_new()).unwrap();
+  let plane_mesh = OpenGLMesh::new(&Mesh::new_plane()).unwrap();
 
   OpenGLRaymarchContext {
     raymarch_shader,

@@ -1,14 +1,13 @@
 use crate::mesh::{OpenGLMesh};
-use crate::shader::{ale_opengl_shader_new, OpenGLShader, OpenGLShaderContext};
-use crate::texture::{ale_opengl_texture_new, ale_opengl_texture_render, OpenGLTexture, OpenGLTextureContext};
+use crate::shader::{OpenGLShader};
+use crate::texture::{ale_opengl_texture_new, ale_opengl_texture_render, OpenGLTexture};
 use ale_camera::CameraRenderInfo;
 use ale_font::{ale_font_layout, Font, FontLayout, FontTextureKey};
 use ale_math::color::Color;
-use ale_math::rect::Rect;
 use ale_math::Vector2;
-use ale_mesh::ale_mesh_plane_new;
 use ale_shader::ale_shader_new;
 use std::collections::HashMap;
+use ale_mesh::Mesh;
 
 pub struct OpenGLTextFontContext {
   text_2d_shader: OpenGLShader,
@@ -17,13 +16,13 @@ pub struct OpenGLTextFontContext {
 }
 
 pub fn ale_opengl_text_font_context_new() -> OpenGLTextFontContext {
-  let text_2d_shader = ale_opengl_shader_new(&ale_shader_new(
+  let text_2d_shader = OpenGLShader::new(&ale_shader_new(
     include_str!("../../../resources/shaders/text_2d.vert").to_owned(),
     include_str!("../../../resources/shaders/text_2d.frag").to_owned(),
   ))
   .unwrap();
 
-  let plane_opengl_mesh = OpenGLMesh::new(&ale_mesh_plane_new()).unwrap();
+  let plane_opengl_mesh = OpenGLMesh::new(&Mesh::new_plane()).unwrap();
 
   OpenGLTextFontContext {
     text_2d_shader,

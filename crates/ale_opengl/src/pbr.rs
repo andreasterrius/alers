@@ -2,13 +2,13 @@ use crate::constant::{CAMERA_POSITION, ENVIRONMENT_MAP, MODEL, PROJECTION, VIEW}
 use crate::mesh::{OpenGLMesh};
 use crate::old::cubemap::Cubemap;
 use crate::raw;
-use crate::shader::{ale_opengl_shader_activate, ale_opengl_shader_new, OpenGLShader};
+use crate::shader::{OpenGLShader};
 use crate::texture::{ale_opengl_texture_new, OpenGLTexture};
 use ale_camera::CameraRenderInfo;
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
 use ale_math::{perspective, Array, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector3};
-use ale_mesh::{ale_mesh_cube_new, Mesh, MeshId};
+use ale_mesh::{Mesh, MeshId};
 use ale_shader::{ale_shader_new, Shader};
 use ale_texture::{ale_texture_load, Texture};
 use ale_variable::Variable;
@@ -33,23 +33,23 @@ pub struct OpenGLPBRContext {
 }
 
 pub fn ale_opengl_pbr_context_new(hdr_texture: &Texture, viewport_size: &Rect, meshes: Vec<&Mesh>) -> OpenGLPBRContext {
-  let cube_mesh = OpenGLMesh::new(&ale_mesh_cube_new()).unwrap();
-  let pbr_shader = ale_opengl_shader_new(&ale_shader_new(
+  let cube_mesh = OpenGLMesh::new(&Mesh::new_cube()).unwrap();
+  let pbr_shader = OpenGLShader::new(&ale_shader_new(
     include_str!("../../../resources/shaders/pbr.vert").to_owned(),
     include_str!("../../../resources/shaders/pbr.frag").to_owned(),
   ))
   .unwrap();
-  let equirect_shader = ale_opengl_shader_new(&ale_shader_new(
+  let equirect_shader = OpenGLShader::new(&ale_shader_new(
     include_str!("../../../resources/shaders/cubemap.vert").to_owned(),
     include_str!("../../../resources/shaders/equirect.frag").to_owned(),
   ))
   .unwrap();
-  let irradiance_shader = ale_opengl_shader_new(&ale_shader_new(
+  let irradiance_shader = OpenGLShader::new(&ale_shader_new(
     include_str!("../../../resources/shaders/cubemap.vert").to_owned(),
     include_str!("../../../resources/shaders/irradiance.frag").to_owned(),
   ))
   .unwrap();
-  let skybox_shader = ale_opengl_shader_new(&ale_shader_new(
+  let skybox_shader = OpenGLShader::new(&ale_shader_new(
     include_str!("../../../resources/shaders/skybox.vert").to_owned(),
     include_str!("../../../resources/shaders/skybox.frag").to_owned(),
   ))
@@ -115,8 +115,7 @@ pub fn ale_opengl_pbr_render(
     let cubemap = opengl_pbr_context.convoluted_cubemap;
 
     // Bind shader
-    ale_opengl_shader_activate(
-      pbr_shader,
+    pbr_shader.activate(
       &vec![
         Variable::F32_3("albedo".to_owned(), Vector3::new(0.7f32, 0.7, 0.7)),
         Variable::F32_1("metallic".to_owned(), 0.0f32),
@@ -148,7 +147,7 @@ pub fn ale_opengl_pbr_render(
     raw::matrix4f(pbr_shader.id, PROJECTION, camera_render_info.projection.as_ptr());
 
     for (t, m, color) in mesh {
-      ale_opengl_shader_activate(pbr_shader, &vec![Variable::F32_3("albedo".to_owned(), *color)]);
+      pbr_shader.activate(&vec![Variable::F32_3("albedo".to_owned(), *color)]);
 
       let ogl_mesh = opengl_pbr_context
         .mesh
@@ -204,8 +203,7 @@ pub fn ale_opengl_pbr_render_debug(
     let cubemap = opengl_pbr_context.convoluted_cubemap;
 
     // Bind shader
-    ale_opengl_shader_activate(
-      pbr_shader,
+    pbr_shader.activate(
       &vec![
         Variable::F32_3("albedo".to_owned(), color),
         Variable::F32_1("metallic".to_owned(), 0.0f32),
