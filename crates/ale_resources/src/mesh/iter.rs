@@ -1,5 +1,5 @@
-use crate::Mesh;
 use ale_math::Vector3;
+use crate::mesh::Mesh;
 
 pub struct MeshTriangleIterator<'a> {
   mesh: &'a Mesh,

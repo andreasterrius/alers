@@ -10,4 +10,4 @@ edition = "2018"
 ale_console = { path = "../ale_console" }
 ale_variable = { path = "../ale_variable" }
 ale_opengl = { path = "../ale_opengl" }
-ale_shader = { path = "../ale_shader" }
+ale_resources = { path = "../ale_resources" }

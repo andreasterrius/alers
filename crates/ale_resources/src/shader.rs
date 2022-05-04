@@ -1,4 +1,4 @@
-use ale_autoid::*;
+use crate::{struct_id, struct_id_impl};
 
 pub struct Shader {
   pub id: ShaderId,

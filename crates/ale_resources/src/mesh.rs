@@ -1,7 +1,7 @@
-use ale_autoid::*;
-use ale_buffer::{Buffer, BufferBuilder};
-use ale_math::transform::AleTransform;
+
 use ale_math::{Array, InnerSpace, Matrix4, Vector2, Vector3, Zero};
+use crate::buffer::{Buffer, BufferBuilder};
+use crate::{struct_id, struct_id_impl};
 
 pub mod iter;
 pub mod sdf;
@@ -121,157 +121,153 @@ impl Mesh {
 
     Mesh::new(vertices, None, bounding_box)
   }
-}
 
+  pub fn new_ndc_plane() -> Mesh {
+    let vertices = BufferBuilder::new(vec![
+      -1.0f32, 1.0, 0.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, 1.0, 1.0, -1.0, 1.0, 0.0, 1.0,
+      1.0, 1.0, 1.0,
+    ])
+      .info("position", 2)
+      .info("texcoords", 2)
+      .build()
+      .unwrap();
 
+    let bounding_box = (Vector3::new(-1.0, -1.0, 0.0), Vector3::new(1.0, 1.0, 0.0));
 
-
-
-pub fn ale_mesh_ndc_plane_new() -> Mesh {
-  let vertices = BufferBuilder::new(vec![
-    -1.0f32, 1.0, 0.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, 1.0, 1.0, -1.0, 1.0, 0.0, 1.0,
-    1.0, 1.0, 1.0,
-  ])
-  .info("position", 2)
-  .info("texcoords", 2)
-  .build()
-  .unwrap();
-
-  let bounding_box = (Vector3::new(-1.0, -1.0, 0.0), Vector3::new(1.0, 1.0, 0.0));
-
-  Mesh::new(vertices, None, bounding_box)
-}
-
-pub fn ale_mesh_bounding_box_new() -> Mesh {
-  let vec = vec![
-    // back face
-    -1.0f32, -1.0, -1.0, 1.0, 0.0, 0.0, //
-    1.0, 1.0, -1.0, 0.0, 1.0, 0.0, //
-    1.0, -1.0, -1.0, 0.0, 0.0, 1.0, //
-    1.0, 1.0, -1.0, 1.0, 0.0, 0.0, //
-    -1.0, -1.0, -1.0, 0.0, 1.0, 0.0, //
-    -1.0, 1.0, -1.0, 0.0, 0.0, 1.0, //
-    // front face
-    -1.0, -1.0, 1.0, 1.0, 0.0, 0.0, //
-    1.0, -1.0, 1.0, 0.0, 1.0, 0.0, //
-    1.0, 1.0, 1.0, 0.0, 0.0, 1.0, //
-    1.0, 1.0, 1.0, 1.0, 0.0, 0.0, //
-    -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, //
-    -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, //
-    // left face
-    -1.0, 1.0, 1.0, 1.0, 0.0, 0.0, //
-    -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, //
-    -1.0, -1.0, -1.0, 0.0, 0.0, 1.0, //
-    -1.0, -1.0, -1.0, 1.0, 0.0, 0.0, //
-    -1.0, -1.0, 1.0, 0.0, 1.0, 0.0, //
-    -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, //
-    // right face
-    1.0, 1.0, 1.0, 1.0, 0.0, 0.0, //
-    1.0, -1.0, -1.0, 0.0, 1.0, 0.0, //
-    1.0, 1.0, -1.0, 0.0, 0.0, 1.0, //
-    1.0, -1.0, -1.0, 1.0, 0.0, 0.0, //
-    1.0, 1.0, 1.0, 0.0, 1.0, 0.0, //
-    1.0, -1.0, 1.0, 0.0, 0.0, 1.0, //
-    // bottom face
-    -1.0, -1.0, -1.0, 1.0, 0.0, 0.0, //
-    1.0, -1.0, -1.0, 0.0, 1.0, 0.0, //
-    1.0, -1.0, 1.0, 0.0, 0.0, 1.0, //
-    1.0, -1.0, 1.0, 1.0, 0.0, 0.0, //
-    -1.0, -1.0, 1.0, 0.0, 1.0, 0.0, //
-    -1.0, -1.0, -1.0, 0.0, 0.0, 1.0, //
-    // top face
-    -1.0, 1.0, -1.0, 1.0, 0.0, 0.0, //
-    1.0, 1.0, 1.0, 0.0, 1.0, 0.0, //
-    1.0, 1.0, -1.0, 0.0, 0.0, 1.0, //
-    1.0, 1.0, 1.0, 1.0, 0.0, 0.0, //
-    -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, //
-    -1.0, 1.0, 1.0, 0.0, 0.0, 1.0,
-  ];
-
-  let vertices = BufferBuilder::new(vec)
-    .info("position", 3)
-    .info("barycentric", 3)
-    .build()
-    .unwrap();
-
-  let bounding_box = (Vector3::from_value(-1.0), Vector3::from_value(1.0));
-
-  Mesh::new(vertices, None, bounding_box)
-}
-
-pub fn ale_mesh_bounding_box_matrix(bounding_box: (Vector3<f32>, Vector3<f32>)) -> Matrix4<f32> {
-  let (min, max) = bounding_box;
-  let size = (max - min) / 2.0;
-  let center = (max + min) / 2.0;
-
-  //println!("min: {:?}, max: {:?}, center: {:?}, size: {:?}", min, max, center, size);
-
-  // let transform = Transform::from_position_scale(center, size);
-  // transform
-
-  Matrix4::from_translation(center) * Matrix4::from_nonuniform_scale(size.x, size.y, size.z)
-}
-
-pub fn ale_mesh_tri_len(mesh: &Mesh) -> usize {
-  match &mesh.indices {
-    None => mesh.vertices.total_row_len() / 3,
-    Some(ind) => ind.len() / 3,
-  }
-}
-
-pub fn ale_mesh_tri_get(mesh: &Mesh, i: usize) -> Option<Tri> {
-  let column_len = mesh.vertices.total_column_len();
-  if i > ale_mesh_tri_len(mesh) {
-    return None;
+    Mesh::new(vertices, None, bounding_box)
   }
 
-  let vertex_offset = mesh.position_offset.expect("This mesh doesn't have positions");
-  let uv_offset = mesh.uv_offset.expect("This mesh doesn't have UVs");
-  let normal_offset = mesh.normal_offset.expect("This mesh doesn't have normal");
+  pub fn new_bounding_box() -> Mesh {
+    let vec = vec![
+      // back face
+      -1.0f32, -1.0, -1.0, 1.0, 0.0, 0.0, //
+      1.0, 1.0, -1.0, 0.0, 1.0, 0.0, //
+      1.0, -1.0, -1.0, 0.0, 0.0, 1.0, //
+      1.0, 1.0, -1.0, 1.0, 0.0, 0.0, //
+      -1.0, -1.0, -1.0, 0.0, 1.0, 0.0, //
+      -1.0, 1.0, -1.0, 0.0, 0.0, 1.0, //
+      // front face
+      -1.0, -1.0, 1.0, 1.0, 0.0, 0.0, //
+      1.0, -1.0, 1.0, 0.0, 1.0, 0.0, //
+      1.0, 1.0, 1.0, 0.0, 0.0, 1.0, //
+      1.0, 1.0, 1.0, 1.0, 0.0, 0.0, //
+      -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, //
+      -1.0, -1.0, 1.0, 0.0, 0.0, 1.0, //
+      // left face
+      -1.0, 1.0, 1.0, 1.0, 0.0, 0.0, //
+      -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, //
+      -1.0, -1.0, -1.0, 0.0, 0.0, 1.0, //
+      -1.0, -1.0, -1.0, 1.0, 0.0, 0.0, //
+      -1.0, -1.0, 1.0, 0.0, 1.0, 0.0, //
+      -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, //
+      // right face
+      1.0, 1.0, 1.0, 1.0, 0.0, 0.0, //
+      1.0, -1.0, -1.0, 0.0, 1.0, 0.0, //
+      1.0, 1.0, -1.0, 0.0, 0.0, 1.0, //
+      1.0, -1.0, -1.0, 1.0, 0.0, 0.0, //
+      1.0, 1.0, 1.0, 0.0, 1.0, 0.0, //
+      1.0, -1.0, 1.0, 0.0, 0.0, 1.0, //
+      // bottom face
+      -1.0, -1.0, -1.0, 1.0, 0.0, 0.0, //
+      1.0, -1.0, -1.0, 0.0, 1.0, 0.0, //
+      1.0, -1.0, 1.0, 0.0, 0.0, 1.0, //
+      1.0, -1.0, 1.0, 1.0, 0.0, 0.0, //
+      -1.0, -1.0, 1.0, 0.0, 1.0, 0.0, //
+      -1.0, -1.0, -1.0, 0.0, 0.0, 1.0, //
+      // top face
+      -1.0, 1.0, -1.0, 1.0, 0.0, 0.0, //
+      1.0, 1.0, 1.0, 0.0, 1.0, 0.0, //
+      1.0, 1.0, -1.0, 0.0, 0.0, 1.0, //
+      1.0, 1.0, 1.0, 1.0, 0.0, 0.0, //
+      -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, //
+      -1.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+    ];
 
-  let (s0, s1, s2) = match &mesh.indices {
-    None => {
-      let s0 = i * 3 * column_len;
-      let s1 = (i * 3 + 1) * column_len;
-      let s2 = (i * 3 + 2) * column_len;
-      (s0, s1, s2)
+    let vertices = BufferBuilder::new(vec)
+      .info("position", 3)
+      .info("barycentric", 3)
+      .build()
+      .unwrap();
+
+    let bounding_box = (Vector3::from_value(-1.0), Vector3::from_value(1.0));
+
+    Mesh::new(vertices, None, bounding_box)
+  }
+
+  pub fn bounding_box_matrix(&self) -> Matrix4<f32> {
+    let (min, max) = self.bounding_box;
+    let size = (max - min) / 2.0;
+    let center = (max + min) / 2.0;
+
+    //println!("min: {:?}, max: {:?}, center: {:?}, size: {:?}", min, max, center, size);
+
+    // let transform = Transform::from_position_scale(center, size);
+    // transform
+
+    Matrix4::from_translation(center) * Matrix4::from_nonuniform_scale(size.x, size.y, size.z)
+  }
+
+  pub fn tri_len(&self) -> usize {
+    match &self.indices {
+      None => self.vertices.total_row_len() / 3,
+      Some(ind) => ind.len() / 3,
     }
-    Some(ind) => {
-      let s0 = ind[i * 3] as usize * column_len;
-      let s1 = ind[i * 3 + 1] as usize * column_len;
-      let s2 = ind[i * 3 + 2] as usize * column_len;
-      (s0, s1, s2)
+  }
+
+  pub fn tri_get(&self, i : usize) -> Option<Tri> {
+    let column_len = self.vertices.total_column_len();
+    if i > self.tri_len() {
+      return None;
     }
-  };
 
-  let vert = &mesh.vertices;
-  let (p0, p1, p2) = (s0 + vertex_offset, s1 + vertex_offset, s2 + vertex_offset);
-  let position = [
-    Vector3::new(vert[p0], vert[p0 + 1], vert[p0 + 2]),
-    Vector3::new(vert[p1], vert[p1 + 1], vert[p1 + 2]),
-    Vector3::new(vert[p2], vert[p2 + 1], vert[p2 + 2]),
-  ];
-  let (u0, u1, u2) = (s0 + uv_offset, s1 + uv_offset, s2 + uv_offset);
-  let uv = [
-    Vector2::new(vert[u0], vert[u0 + 1]),
-    Vector2::new(vert[u1], vert[u1 + 1]),
-    Vector2::new(vert[u2], vert[u2 + 1]),
-  ];
+    let vertex_offset = self.position_offset.expect("This mesh doesn't have positions");
+    let uv_offset = self.uv_offset.expect("This mesh doesn't have UVs");
+    let normal_offset = self.normal_offset.expect("This mesh doesn't have normal");
 
-  let (n0, n1, n2) = (s0 + normal_offset, s1 + normal_offset, s2 + normal_offset);
-  let normal = [
-    Vector3::new(vert[n0], vert[n0 + 1], vert[n0 + 2]),
-    Vector3::new(vert[n1], vert[n1 + 1], vert[n1 + 2]),
-    Vector3::new(vert[n2], vert[n2 + 1], vert[n2 + 2]),
-  ];
-  let tri_normal = Vector3::normalize((position[1] - position[0]).cross(position[2] - position[0]));
+    let (s0, s1, s2) = match &self.indices {
+      None => {
+        let s0 = i * 3 * column_len;
+        let s1 = (i * 3 + 1) * column_len;
+        let s2 = (i * 3 + 2) * column_len;
+        (s0, s1, s2)
+      }
+      Some(ind) => {
+        let s0 = ind[i * 3] as usize * column_len;
+        let s1 = ind[i * 3 + 1] as usize * column_len;
+        let s2 = ind[i * 3 + 2] as usize * column_len;
+        (s0, s1, s2)
+      }
+    };
 
-  Some(Tri {
-    position,
-    normal,
-    tri_normal,
-    uv,
-  })
+    let vert = &self.vertices;
+    let (p0, p1, p2) = (s0 + vertex_offset, s1 + vertex_offset, s2 + vertex_offset);
+    let position = [
+      Vector3::new(vert[p0], vert[p0 + 1], vert[p0 + 2]),
+      Vector3::new(vert[p1], vert[p1 + 1], vert[p1 + 2]),
+      Vector3::new(vert[p2], vert[p2 + 1], vert[p2 + 2]),
+    ];
+    let (u0, u1, u2) = (s0 + uv_offset, s1 + uv_offset, s2 + uv_offset);
+    let uv = [
+      Vector2::new(vert[u0], vert[u0 + 1]),
+      Vector2::new(vert[u1], vert[u1 + 1]),
+      Vector2::new(vert[u2], vert[u2 + 1]),
+    ];
+
+    let (n0, n1, n2) = (s0 + normal_offset, s1 + normal_offset, s2 + normal_offset);
+    let normal = [
+      Vector3::new(vert[n0], vert[n0 + 1], vert[n0 + 2]),
+      Vector3::new(vert[n1], vert[n1 + 1], vert[n1 + 2]),
+      Vector3::new(vert[n2], vert[n2 + 1], vert[n2 + 2]),
+    ];
+    let tri_normal = Vector3::normalize((position[1] - position[0]).cross(position[2] - position[0]));
+
+    Some(Tri {
+      position,
+      normal,
+      tri_normal,
+      uv,
+    })
+  }
 }
 
 #[test]
@@ -310,9 +306,9 @@ pub fn test_tri_get_no_ebo() {
 
   let mesh = Mesh::new(buffer, None, (Vector3::zero(), Vector3::zero()));
 
-  assert_eq!(ale_mesh_tri_len(&mesh), 3);
+  assert_eq!(mesh.tri_len(), 3);
 
-  let tri = ale_mesh_tri_get(&mesh, 0).unwrap();
+  let tri = mesh.tri_get(0).unwrap();
   assert_eq!(tri.position[0], Vector3::new(1.0, 1.0, 1.0,));
   assert_eq!(tri.position[1], Vector3::new(2.0, 2.0, 2.0,));
   assert_eq!(tri.position[2], Vector3::new(3.0, 3.0, 3.0,));
@@ -325,7 +321,7 @@ pub fn test_tri_get_no_ebo() {
   assert_eq!(tri.normal[1], Vector3::new(-2.0, -2.0, -3.0));
   assert_eq!(tri.normal[2], Vector3::new(-2.0, -2.0, -3.0));
 
-  let tri = ale_mesh_tri_get(&mesh, 2).unwrap();
+  let tri = mesh.tri_get(2).unwrap();
   assert_eq!(tri.position[0], Vector3::new(10.0, 1.0, 1.0,));
   assert_eq!(tri.position[1], Vector3::new(12.0, 2.0, 2.0,));
   assert_eq!(tri.position[2], Vector3::new(13.0, 3.0, 3.0,));
@@ -345,11 +341,11 @@ pub fn test_tri_cube_get_no_ebo() {
 
   let mesh = Mesh::new_cube();
 
-  assert_eq!(ale_mesh_tri_len(&mesh), 12);
+  assert_eq!(mesh.tri_len(), 12);
 
   let mut res: Vec<f32> = vec![];
-  for i in 0..ale_mesh_tri_len(&mesh) {
-    let tri = ale_mesh_tri_get(&mesh, i).unwrap();
+  for i in 0..mesh.tri_len() {
+    let tri = mesh.tri_get(i).unwrap();
 
     res.extend_from_slice(&[tri.position[0][0], tri.position[0][1], tri.position[0][2]]);
     res.extend_from_slice(&[tri.normal[0][0], tri.normal[0][1], tri.normal[0][2]]);
@@ -450,9 +446,9 @@ pub fn test_tri_get_with_ebo() {
 
   let mesh = Mesh::new(buffer, Some(ibuffer), (Vector3::zero(), Vector3::zero()));
 
-  assert_eq!(ale_mesh_tri_len(&mesh), 5);
+  assert_eq!(mesh.tri_len(), 5);
 
-  let tri = ale_mesh_tri_get(&mesh, 0).unwrap();
+  let tri = mesh.tri_get( 0).unwrap();
   assert_eq!(tri.position[0], Vector3::new(1.0, 1.0, 1.0,));
   assert_eq!(tri.position[1], Vector3::new(2.0, 2.0, 2.0,));
   assert_eq!(tri.position[2], Vector3::new(3.0, 3.0, 3.0,));
@@ -465,7 +461,7 @@ pub fn test_tri_get_with_ebo() {
   assert_eq!(tri.normal[1], Vector3::new(-2.0, -2.0, -3.0));
   assert_eq!(tri.normal[2], Vector3::new(-2.0, -2.0, -3.0));
 
-  let tri = ale_mesh_tri_get(&mesh, 2).unwrap();
+  let tri = mesh.tri_get(2).unwrap();
   assert_eq!(tri.position[0], Vector3::new(10.0, 1.0, 1.0,));
   assert_eq!(tri.position[1], Vector3::new(12.0, 2.0, 2.0,));
   assert_eq!(tri.position[2], Vector3::new(13.0, 3.0, 3.0,));
@@ -482,7 +478,7 @@ pub fn test_tri_get_with_ebo() {
   // 2.0, 2.0, 2.0, 20.0, 20.0, -2.0, -2.0, -3.0,
   // 12.0, 2.0, 2.0, 17.0, 20.0,-3.0, -5.0, -3.0,
 
-  let tri = ale_mesh_tri_get(&mesh, 4).unwrap();
+  let tri = mesh.tri_get(4).unwrap();
   assert_eq!(tri.position[0], Vector3::new(5.0, 2.0, 2.0,));
   assert_eq!(tri.position[1], Vector3::new(2.0, 2.0, 2.0,));
   assert_eq!(tri.position[2], Vector3::new(12.0, 2.0, 2.0,));

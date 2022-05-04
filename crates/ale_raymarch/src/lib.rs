@@ -3,8 +3,7 @@ use ale_math::num_traits::clamp;
 use ale_math::transform::AleTransform;
 use ale_math::{clamp_vec3, InnerSpace};
 use ale_math::{Vector3, GREEN, RED};
-use ale_mesh::sdf::{ale_mesh_sdf_distance, MeshSDF};
-use ale_texture::Texture;
+use ale_resources::mesh::sdf::{ale_mesh_sdf_distance, MeshSDF};
 
 pub struct Ray {
   pub origin: Vector3<f32>,

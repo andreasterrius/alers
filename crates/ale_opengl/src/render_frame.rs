@@ -4,7 +4,6 @@ use crate::raw::{bind_framebuffer, create_framebuffer_texcolor_rbodepth, OpenGLF
 use crate::shader::{OpenGLShader};
 use crate::texture::OpenGLTextureId;
 use ale_math::Vector2;
-use ale_mesh::Mesh;
 use ale_variable::Variable;
 
 pub struct OpenGLRenderFrameContext {

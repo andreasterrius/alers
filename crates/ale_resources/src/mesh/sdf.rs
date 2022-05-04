@@ -1,12 +1,9 @@
-use crate::iter::ale_mesh_triangle_iter_new;
-use crate::{ale_mesh_tri_get, ale_mesh_tri_len, Mesh, Tri};
-use ale_math::num_traits::clamp;
-use ale_math::transform::AleTransform;
-use ale_math::{ale_bounding_box_closest_point, ale_bounding_box_size, dot, InnerSpace, MetricSpace, Transform, Zero};
-use ale_math::{vec1, Vector3};
-use rayon::prelude::{ParallelBridge, ParallelIterator};
-use std::cmp::Ordering;
 use std::time::Instant;
+
+use ale_math::{ale_bounding_box_closest_point, dot, InnerSpace, MetricSpace, Transform, Zero};
+use ale_math::Vector3;
+use ale_math::transform::AleTransform;
+use crate::mesh::{Mesh, Tri};
 
 pub struct MeshSDF {
   dist: Vec<Vec<Vec<f32>>>,
@@ -254,9 +251,9 @@ pub fn ale_mesh_sdf_new(mesh: &Mesh, reso: u32) -> MeshSDF {
         let mut min_dist = f32::MAX;
         let mut should_flip = false;
         let mut min_point = Vector3::zero();
-        let tri_len = ale_mesh_tri_len(mesh);
+        let tri_len = mesh.tri_len();
         for tri_idx in 0..tri_len {
-          let tri = ale_mesh_tri_get(mesh, tri_idx).unwrap();
+          let tri = mesh.tri_get(tri_idx).unwrap();
           let point = ale_mesh_point_triangle_closest_point(&tri, xyz.clone());
 
           let dist = point.distance(xyz.clone());

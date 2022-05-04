@@ -8,7 +8,7 @@ use ale_input::{Input, Key};
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
 use ale_math::{ale_bounding_box_closest_point, Array, Vector3, Zero};
-use ale_mesh::sdf::{ale_mesh_sdf_distance, ale_mesh_sdf_find_quadrant, ale_mesh_sdf_new, MeshSDF};
+use ale_resources::mesh::sdf::{ale_mesh_sdf_distance, ale_mesh_sdf_find_quadrant, ale_mesh_sdf_new, MeshSDF};
 use ale_mesh::{ Mesh};
 use ale_opengl::debug::line::{
   ale_opengl_debug_context_new, ale_opengl_debug_line_queue, ale_opengl_debug_point_queue, ale_opengl_debug_render,

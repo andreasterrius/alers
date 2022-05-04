@@ -1,25 +1,26 @@
-use ale_buffer::{Buffer, SeparateBufferBuilder};
-use ale_math::transform::AleTransform;
-use ale_math::Matrix4;
-use ale_math::{Decomposed, One, Quaternion};
-use ale_mesh::{Mesh};
-use gltf::mesh::util::{ReadIndices, ReadTexCoords};
-use gltf::mesh::Reader;
-use gltf::Gltf;
 use std::collections::HashMap;
 
+use ale_math::Quaternion;
+use ale_math::transform::AleTransform;
+use ::gltf::mesh::Reader;
+use ::gltf::mesh::util::{ReadIndices, ReadTexCoords};
+
+use crate::buffer::{Buffer, SeparateBufferBuilder};
+use crate::gltf;
+use crate::mesh::Mesh;
+
 pub fn ale_gltf_load(path: &str) -> Vec<(AleTransform, Mesh)> {
-  let (gltf, buffers, _) = gltf::import(path).unwrap();
+  let (gltf, buffers, _) = ::gltf::import(path).unwrap();
 
   let mut nodes = HashMap::new();
   for node in gltf.nodes() {
     //println!("Node #{} {:?} {:?}", node.index(), node.name(), node);
 
     match node.transform() {
-      gltf::scene::Transform::Matrix { matrix } => {
+      ::gltf::scene::Transform::Matrix { matrix } => {
         // do nothing for now
       }
-      gltf::scene::Transform::Decomposed {
+      ::gltf::scene::Transform::Decomposed {
         translation,
         rotation,
         scale,
@@ -61,8 +62,8 @@ pub fn ale_gltf_load(path: &str) -> Vec<(AleTransform, Mesh)> {
 }
 
 fn intern_get_positions<'a, 's, F>(reader: &Reader<'a, 's, F>) -> (Vec<f32>, (f32, f32, f32), (f32, f32, f32))
-where
-  F: Clone + Fn(gltf::Buffer<'a>) -> Option<&'s [u8]>,
+  where
+    F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut positions = vec![];
   let mut min = (f32::MAX, f32::MAX, f32::MAX);
@@ -93,8 +94,8 @@ where
 }
 
 fn intern_get_normals<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>
-where
-  F: Clone + Fn(gltf::Buffer<'a>) -> Option<&'s [u8]>,
+  where
+    F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut normals = vec![];
   if let Some(read_normals) = reader.read_normals() {
@@ -108,8 +109,8 @@ where
 }
 
 fn intern_get_tex_coords<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>
-where
-  F: Clone + Fn(gltf::Buffer<'a>) -> Option<&'s [u8]>,
+  where
+    F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut tex_coords: Vec<f32> = vec![];
   if let Some(read_tex_coords) = reader.read_tex_coords(0) {
@@ -138,8 +139,8 @@ where
 }
 
 fn intern_get_indices<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<i32>
-where
-  F: Clone + Fn(gltf::Buffer<'a>) -> Option<&'s [u8]>,
+  where
+    F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut indices: Vec<i32> = vec![];
   if let Some(read_indices) = reader.read_indices() {

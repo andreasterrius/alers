@@ -1,15 +1,17 @@
-use crate::constant::{PROJECTION, VIEW};
-use crate::raw;
-use crate::shader::{OpenGLShader};
-use ale_camera::CameraRenderInfo;
-use ale_math::{Matrix, Vector3, Zero};
-use ale_shader::{Shader};
-use ale_variable::Variable;
 use core::mem;
-use gl::types::{GLfloat, GLsizeiptr};
 use std::mem::size_of;
 use std::os::raw::c_void;
 use std::ptr::null;
+
+use gl::types::{GLfloat, GLsizeiptr};
+
+use ale_camera::CameraRenderInfo;
+use ale_math::{Matrix, Vector3};
+use ale_resources::shader::Shader;
+
+use crate::constant::{PROJECTION, VIEW};
+use crate::raw;
+use crate::shader::OpenGLShader;
 
 const BUFFER_SIZE: usize = 200000;
 

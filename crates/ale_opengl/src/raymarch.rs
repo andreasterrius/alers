@@ -1,5 +1,5 @@
-use ale_mesh::Mesh;
-use ale_shader::Shader;
+use ale_resources::mesh::Mesh;
+use ale_resources::shader::Shader;
 use crate::mesh::{OpenGLMesh};
 use crate::shader::{OpenGLShader};
 

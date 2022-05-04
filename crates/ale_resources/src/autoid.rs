@@ -14,6 +14,7 @@ macro_rules! struct_id_impl {
 #[macro_export]
 macro_rules! struct_id {
   ($T: ident) => {
+    use snowflake::ProcessUniqueId;
     #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
     #[cfg_attr(feature = "serde_support", derive(Serialize, Deserialize))]
     pub struct $T(pub ProcessUniqueId);

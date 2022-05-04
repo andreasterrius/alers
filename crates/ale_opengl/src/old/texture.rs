@@ -1,5 +1,6 @@
+use ale_resources::texture::Texture;
+
 use crate::raw::{create_texture, CreateTextureError};
-use ale_texture::Texture;
 
 pub struct TextureDrawInfo {
   pub texture: u32,

@@ -1,21 +1,18 @@
+use std::collections::{HashMap, VecDeque};
+use std::str::FromStr;
+
+use ale_input::Input;
+use ale_math::num_traits::clamp;
+use ale_variable::Variable;
+
 use crate::ConsoleEvent::{Print, Set};
 use crate::OnEnterResult::{ArgumentsFailToParse, ArgumentsNumberDiffer, CommandEmpty, CommandNotFound, EventQueued};
-use ale_input::Input;
-use ale_input::Input::Key;
-use ale_math::num_traits::clamp;
-use ale_math::{Vector3, Vector4};
-use ale_variable::Variable;
-use std::collections::{HashMap, HashSet, VecDeque};
-use std::hash::Hash;
-use std::process::Command;
-use std::str::FromStr;
-use std::sync::mpsc::TryRecvError::Empty;
 
 pub struct Console {
   // All lines that will be rendered
   pub lines: VecDeque<String>,
 
-  // All commands from user, and capabillity to look it up
+  // All commands from user, and capability to look it up
   pub(crate) commands: VecDeque<String>,
   pub(crate) lookup: usize,
 

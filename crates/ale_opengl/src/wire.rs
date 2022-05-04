@@ -1,13 +1,14 @@
-use crate::mesh::{OpenGLMesh};
-use crate::raw;
-use crate::shader::{OpenGLShader};
 use ale_camera::CameraRenderInfo;
 use ale_console::{ale_console_variable_event_handle, ale_console_variable_register, Console};
+use ale_math::{Array, Matrix, Transform};
 use ale_math::transform::AleTransform;
-use ale_math::{Array, Matrix, Transform, Vector3};
-use ale_mesh::{ale_mesh_bounding_box_matrix, ale_mesh_bounding_box_new, Mesh};
-use ale_shader::Shader;
+use ale_resources::mesh::Mesh;
+use ale_resources::shader::Shader;
 use ale_variable::{to_variable, ToVariable};
+
+use crate::mesh::OpenGLMesh;
+use crate::raw;
+use crate::shader::OpenGLShader;
 
 pub struct OpenGLWireContext {
   pub bounding_box_mesh: OpenGLMesh,

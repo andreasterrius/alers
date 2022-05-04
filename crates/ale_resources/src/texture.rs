@@ -1,8 +1,8 @@
 use std::fs::File;
-
-use ale_autoid::*;
 use hdrldr::LoadError;
-use image::{GenericImageView, ImageError};
+use image::ImageError;
+use crate::{struct_id, struct_id_impl};
+
 
 #[derive(Debug)]
 pub struct Texture {
@@ -19,21 +19,23 @@ pub struct Texture {
 struct_id!(TextureId);
 struct_id_impl!(TextureId, Texture, id);
 
-pub fn ale_texture_new(data: TexturePixel, width: u32, height: u32, channel_count: u32) -> Texture {
-  Texture {
-    id: TextureId::new(),
-    data,
-    width,
-    height,
-    channel_count,
-    wrap: TextureWrap {
-      x: TextureWrapType::ClampToEdge,
-      y: TextureWrapType::ClampToEdge,
-    },
-    magnification: TextureMagnification {
-      min: TextureMagnificationType::Linear,
-      max: TextureMagnificationType::Linear,
-    },
+impl Texture {
+  pub fn new(data: TexturePixel, width: u32, height: u32, channel_count: u32) -> Texture {
+    Texture {
+      id: TextureId::new(),
+      data,
+      width,
+      height,
+      channel_count,
+      wrap: TextureWrap {
+        x: TextureWrapType::ClampToEdge,
+        y: TextureWrapType::ClampToEdge,
+      },
+      magnification: TextureMagnification {
+        min: TextureMagnificationType::Linear,
+        max: TextureMagnificationType::Linear,
+      },
+    }
   }
 }
 
@@ -92,7 +94,7 @@ impl From<std::io::Error> for LoadTextureError {
   }
 }
 
-impl From<hdrldr::LoadError> for LoadTextureError {
+impl From<LoadError> for LoadTextureError {
   fn from(_: LoadError) -> Self {
     LoadTextureError::FileNotFound
   }
@@ -110,7 +112,7 @@ pub fn ale_texture_load(path: &str) -> Result<Texture, LoadTextureError> {
     }
 
     let v = intern_flip_byte_vertically(&v, i.width as u32, i.height as u32, 3);
-    Ok(ale_texture_new(
+    Ok(Texture::new(
       TexturePixel::RgbF32(v),
       i.width as u32,
       i.height as u32,
@@ -121,7 +123,7 @@ pub fn ale_texture_load(path: &str) -> Result<Texture, LoadTextureError> {
 
     // TODO: i.raw_pixels() clones underlying bytes, find a way that doesn't
     let v = intern_flip_byte_vertically(&i.to_bytes(), i.width() as u32, i.height() as u32, 3);
-    Ok(ale_texture_new(TexturePixel::RgbU8(v), i.width(), i.height(), 3))
+    Ok(Texture::new(TexturePixel::RgbU8(v), i.width(), i.height(), 3))
   }
 }
 

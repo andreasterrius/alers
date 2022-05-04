@@ -1,18 +1,19 @@
-use crate::constant::{CAMERA_POSITION, ENVIRONMENT_MAP, MODEL, PROJECTION, VIEW};
-use crate::mesh::{OpenGLMesh};
-use crate::old::cubemap::Cubemap;
-use crate::raw;
-use crate::shader::{OpenGLShader};
-use crate::texture::{ale_opengl_texture_new, OpenGLTexture};
+use std::collections::HashMap;
+
 use ale_camera::CameraRenderInfo;
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
 use ale_math::{perspective, Array, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector3};
-use ale_mesh::{Mesh, MeshId};
-use ale_shader::{Shader};
-use ale_texture::{ale_texture_load, Texture};
+use ale_resources::mesh::{Mesh, MeshId};
+use ale_resources::shader::Shader;
+use ale_resources::texture::Texture;
 use ale_variable::Variable;
-use std::collections::HashMap;
+
+use crate::constant::{CAMERA_POSITION, ENVIRONMENT_MAP, MODEL, PROJECTION, VIEW};
+use crate::mesh::OpenGLMesh;
+use crate::raw;
+use crate::shader::OpenGLShader;
+use crate::texture::OpenGLTexture;
 
 pub struct OpenGLPBRContext {
   pub cube_mesh: OpenGLMesh,
@@ -55,7 +56,7 @@ pub fn ale_opengl_pbr_context_new(hdr_texture: &Texture, viewport_size: &Rect, m
   ))
   .unwrap();
 
-  let ogl_hdr_texture = ale_opengl_texture_new(hdr_texture).unwrap();
+  let ogl_hdr_texture = OpenGLTexture::new(hdr_texture).unwrap();
 
   let cubemap_size = Rect::new(512, 512);
   let cubemap_id = unsafe { raw::create_cubemap(cubemap_size.get_width(), cubemap_size.get_height()) };
@@ -115,14 +116,12 @@ pub fn ale_opengl_pbr_render(
     let cubemap = opengl_pbr_context.convoluted_cubemap;
 
     // Bind shader
-    pbr_shader.activate(
-      &vec![
-        Variable::F32_3("albedo".to_owned(), Vector3::new(0.7f32, 0.7, 0.7)),
-        Variable::F32_1("metallic".to_owned(), 0.0f32),
-        Variable::F32_1("roughness".to_owned(), 0.5f32),
-        Variable::F32_1("ao".to_owned(), 0.5f32),
-      ],
-    );
+    pbr_shader.activate(&vec![
+      Variable::F32_3("albedo".to_owned(), Vector3::new(0.7f32, 0.7, 0.7)),
+      Variable::F32_1("metallic".to_owned(), 0.0f32),
+      Variable::F32_1("roughness".to_owned(), 0.5f32),
+      Variable::F32_1("ao".to_owned(), 0.5f32),
+    ]);
 
     raw::uniform1i(pbr_shader.id, "irradianceMap", 0);
     raw::active_texture(0);
@@ -203,14 +202,12 @@ pub fn ale_opengl_pbr_render_debug(
     let cubemap = opengl_pbr_context.convoluted_cubemap;
 
     // Bind shader
-    pbr_shader.activate(
-      &vec![
-        Variable::F32_3("albedo".to_owned(), color),
-        Variable::F32_1("metallic".to_owned(), 0.0f32),
-        Variable::F32_1("roughness".to_owned(), 0.5f32),
-        Variable::F32_1("ao".to_owned(), 0.5f32),
-      ],
-    );
+    pbr_shader.activate(&vec![
+      Variable::F32_3("albedo".to_owned(), color),
+      Variable::F32_1("metallic".to_owned(), 0.0f32),
+      Variable::F32_1("roughness".to_owned(), 0.5f32),
+      Variable::F32_1("ao".to_owned(), 0.5f32),
+    ]);
 
     raw::uniform1i(pbr_shader.id, "irradianceMap", 0);
     raw::active_texture(0);
