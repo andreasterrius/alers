@@ -9,7 +9,7 @@ use crate::buffer::{Buffer, SeparateBufferBuilder};
 use crate::gltf;
 use crate::mesh::Mesh;
 
-pub fn ale_gltf_load(path: &str) -> Vec<(AleTransform, Mesh)> {
+pub fn load(path: &str) -> Vec<(AleTransform, Mesh)> {
   let (gltf, buffers, _) = ::gltf::import(path).unwrap();
 
   let mut nodes = HashMap::new();
@@ -185,10 +185,10 @@ fn intern_construct_indices_buffer(indices: Vec<i32>) -> Buffer<i32> {
 
 #[test]
 pub fn gltf_to_buffers_should_properly_parse() {
-  ale_gltf_load("test_resources/standard.gltf");
+  load("test_resources/standard.gltf");
 }
 
 #[test]
 pub fn gltf_to_buffers_should_properly_parse_cube() {
-  ale_gltf_load("test_resources/cube.glb");
+  load("test_resources/cube.glb");
 }

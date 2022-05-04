@@ -27,7 +27,7 @@ pub fn ale_opengl_wire_context_new() -> OpenGLWireContext {
   );
 
   OpenGLWireContext {
-    bounding_box_mesh: OpenGLMesh::new(&ale_mesh_bounding_box_new()).unwrap(),
+    bounding_box_mesh: OpenGLMesh::new(&Mesh::new_bounding_box()).unwrap(),
     bounding_box_shader: OpenGLShader::new(&wire_shader).unwrap(),
     wire_render_enable: true,
     wire_thickness: 0.01,
@@ -62,7 +62,7 @@ pub fn ale_opengl_wire_boundingbox_render(
     raw::matrix4f(shader.id, "projection", camera_render_info.projection.as_ptr());
 
     for (mut transform, mesh) in meshes {
-      let mut bb_transform = ale_mesh_bounding_box_matrix(mesh.bounding_box);
+      let mut bb_transform = mesh.bounding_box_matrix();
       bb_transform = bb_transform.concat(&transform.matrix_cache());
 
       raw::matrix4f(shader.id, "model", bb_transform.as_ptr());

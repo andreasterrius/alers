@@ -1,7 +1,7 @@
 use crate::raw;
 
-use ale_autoid::*;
 use ale_math::rect::Rect;
+use ale_resources::{struct_id, struct_id_impl};
 
 pub struct Cubemap {
   id: CubemapId,

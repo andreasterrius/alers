@@ -1,33 +1,32 @@
-use crate::Shape::{Cube, Sphere};
+use rand::random;
+
+use ale_app::{ale_app_resource_path, ale_app_run, App};
 use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
-use ale_app::{ale_app_resource_path, ale_app_run, App};
-use ale_camera::flycamera::FlyCamera;
 use ale_camera::Camera;
-use ale_gltf::ale_gltf_load;
 use ale_input::{Action, Input, Key};
+use ale_math::{
+  ale_bounding_box_size, Transform, Vector3, Zero,
+};
+use ale_math::color::Color;
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
-use ale_math::{
-  ale_bounding_box_size, ale_quaternion_look_at, Array, Deg, ElementWise, Euler, Matrix4, Quaternion, Rotation3,
-  Transform, Vector3, Zero,
-};
-use ale_mesh::{Mesh, MeshId};
-use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
+use ale_opengl::{ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
 };
-use ale_opengl::{ale_opengl_clear_render, ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
-use ale_physics::rapier3d::dynamics::{RigidBodyBuilder, RigidBodyHandle};
-use ale_physics::rapier3d::geometry::ColliderHandle;
 use ale_physics::{
   ale_physics_context_new, ale_physics_context_tick, ale_physics_context_update,
   ale_physics_object_linear_velocity_get, ale_physics_object_linear_velocity_set, ale_physics_object_new,
   ale_physics_object_position_set, PhysicsContext, RigidBodyShape, RigidBodyType,
 };
-use ale_texture::ale_texture_load;
-use rand::{random, Rng};
-use ale_math::color::Color;
+use ale_physics::rapier3d::dynamics::RigidBodyHandle;
+use ale_physics::rapier3d::geometry::ColliderHandle;
+use ale_resources::gltf;
+use ale_resources::mesh::{Mesh, MeshId};
+use ale_resources::texture::Texture;
+
+use crate::Shape::{Cube, Sphere};
 
 fn main() {
   ale_app_run(Pong, DisplayInfo::new(Rect::new(1024, 768)));
@@ -113,7 +112,7 @@ impl App<State> for Pong {
      * Create the mesh
      */
     let cube_mesh = Mesh::new_cube();
-    let (_, ball_mesh) = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
+    let (_, ball_mesh) = gltf::load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
 
     /*
      * Physics setup
@@ -190,7 +189,7 @@ impl App<State> for Pong {
     /*
      * Renderer
      */
-    let hdr_texture = ale_texture_load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();
+    let hdr_texture = Texture::load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();
     let opengl_pbr_context = ale_opengl_pbr_context_new(
       &hdr_texture,
       &window.get_display_info().dimension,
@@ -411,7 +410,7 @@ impl App<State> for Pong {
     }
   }
 
-  fn render(&mut self, s : &mut State) {
+  fn render(&mut self, s: &mut State) {
     ale_opengl_clear_render_color(Color::from_rgb(0.123f32, 0.54, 0.514));
 
     let camera_render_info = s.camera.camera_render_info();

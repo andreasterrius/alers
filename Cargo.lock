@@ -78,6 +78,7 @@ dependencies = [
  "ale_resources",
  "ale_variable",
  "gl",
+ "snowflake",
 ]
 
 [[package]]

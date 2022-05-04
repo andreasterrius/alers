@@ -3,28 +3,23 @@ use ale_app::window::Window;
 use ale_app::{ale_app_resource_path, ale_app_run, App};
 use ale_camera::flycamera::FlyCamera;
 use ale_camera::Camera;
-use ale_gltf::ale_gltf_load;
 use ale_input::{Input, Key};
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
-use ale_math::{ale_bounding_box_closest_point, Array, Vector3, Zero};
-use ale_resources::mesh::sdf::{ale_mesh_sdf_distance, ale_mesh_sdf_find_quadrant, ale_mesh_sdf_new, MeshSDF};
-use ale_mesh::{ Mesh};
+use ale_math::{ale_bounding_box_closest_point, Array, Vector3};
 use ale_opengl::debug::line::{
-  ale_opengl_debug_context_new, ale_opengl_debug_line_queue, ale_opengl_debug_point_queue, ale_opengl_debug_render,
-  OpenGLDebugContext,
+  ale_opengl_debug_context_new, ale_opengl_debug_point_queue, ale_opengl_debug_render, OpenGLDebugContext,
 };
-use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
 use ale_opengl::pbr::{
-  ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_debug, ale_opengl_pbr_render_envmap,
-  OpenGLPBRContext,
+  ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
 };
-use ale_opengl::raymarch::{ale_opengl_raymarch_context_new, ale_opengl_raymarch_render, OpenGLRaymarchContext};
 use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_context_new, OpenGLWireContext};
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_raymarch::{ale_ray_new, ale_ray_position_get, ale_raymarch_sdf_single};
-use ale_texture::ale_texture_load;
-use std::borrow::Borrow;
+use ale_resources::gltf;
+use ale_resources::mesh::Mesh;
+use ale_resources::mesh::sdf::{ale_mesh_sdf_distance, ale_mesh_sdf_new, MeshSDF};
+use ale_resources::texture::Texture;
 
 fn main() {
   ale_app_run(SDFDemo, DisplayInfo::new(Rect::new(1024, 800)));
@@ -45,7 +40,7 @@ struct SDFDemo;
 
 impl App<State> for SDFDemo {
   fn load(&mut self, window: &Window) -> State {
-    let (_, mut sphere_mesh) = ale_gltf_load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
+    let (_, mut sphere_mesh) = gltf::load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
     //let mut sphere = vec![(Transform::new(), Mesh::new_cube())];
     let transform = AleTransform::from_position_scale(Vector3::from_value(-2.0), Vector3::from_value(2.0));
 
@@ -57,7 +52,7 @@ impl App<State> for SDFDemo {
     let sphere_sdf = ale_mesh_sdf_new(&sphere_mesh, 10);
     let opengl_wire_context = ale_opengl_wire_context_new();
 
-    let hdr_texture = ale_texture_load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();
+    let hdr_texture = Texture::load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();
     let opengl_pbr_context =
       ale_opengl_pbr_context_new(&hdr_texture, &window.get_display_info().dimension, vec![&sphere_mesh]);
 

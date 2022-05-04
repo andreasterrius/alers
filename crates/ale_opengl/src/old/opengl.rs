@@ -1,23 +1,22 @@
 use std::collections::HashMap;
 
+use ale_camera::CameraRenderInfo;
+use ale_math::{Deg, EuclideanSpace, Matrix, Matrix4, perspective, Point3, Vector3};
+use ale_math::rect::Rect;
+use ale_resources::mesh::{Mesh, MeshId};
+use ale_resources::shader::{Shader, ShaderId};
+use ale_resources::texture::{Texture, TextureId};
+use ale_variable::Variable;
+
 use crate::constant::{CAMERA_POSITION, MODEL, PROJECTION, VIEW};
 use crate::mesh::{OpenGLMesh, OpenGLMeshError};
-use crate::old::cubemap::{Cubemap, CubemapId};
-use crate::old::cubemap::{CubemapDrawInfo, CubemapError};
+use crate::old::cubemap::{Cubemap, CubemapDrawInfo, CubemapError, CubemapId};
 use crate::old::opengl::RenderError::{
   NoCameraSet, UnregisteredCubemap, UnregisteredMesh, UnregisteredShader, UnregisteredTexture,
 };
 use crate::raw;
 use crate::shader::{OpenGLShader, OpenGLShaderError};
-use crate::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureError};
-use ale_camera::CameraRenderInfo;
-use ale_font::Font;
-use ale_math::rect::Rect;
-use ale_math::{perspective, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector3};
-use ale_mesh::{Mesh, MeshId};
-use ale_shader::{Shader, ShaderId};
-use ale_texture::{Texture, TextureId};
-use ale_variable::Variable;
+use crate::texture::{OpenGLTexture, OpenGLTextureError};
 
 pub struct RenderResources {
   static_meshes: HashMap<MeshId, OpenGLMesh>,
@@ -51,7 +50,7 @@ impl RenderResources {
   }
 
   pub fn texture(&mut self, texture: &Texture) -> Result<(), OpenGLTextureError> {
-    self.textures.insert(texture.uid(), ale_opengl_texture_new(texture)?);
+    self.textures.insert(texture.uid(), OpenGLTexture::new(texture)?);
     Ok(())
   }
 

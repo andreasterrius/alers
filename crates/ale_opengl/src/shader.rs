@@ -1,6 +1,6 @@
+use ale_resources::shader::Shader;
 use crate::raw;
 use crate::raw::{create_shader, CreateShaderError};
-use ale_shader::{Shader};
 use ale_variable::Variable;
 
 pub struct OpenGLShaderId(pub u32);

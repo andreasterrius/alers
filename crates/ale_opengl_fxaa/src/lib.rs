@@ -1,12 +1,11 @@
 use ale_console::{
-  ale_console_print_output, ale_console_variable_event_handle, ale_console_variable_register, Console, ConsoleEvent,
+   ale_console_variable_event_handle, ale_console_variable_register, Console, ConsoleEvent,
 };
 use ale_opengl::ale_opengl_clear_render;
 use ale_opengl::render_frame::{ale_opengl_render_frame_render, OpenGLRenderFrameContext};
 use ale_opengl::shader::{OpenGLShader};
-use ale_variable::{to_variable, ToVariable, Variable};
-use std::collections::hash_map::Entry;
-use ale_shader::Shader;
+use ale_resources::shader::Shader;
+use ale_variable::{to_variable, ToVariable};
 
 pub struct OpenGLFXAAContext {
   // The main fxaa shader

@@ -5,10 +5,10 @@ use std::ffi::{c_void, CString};
 use std::ptr::null;
 
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
+use ale_resources::buffer::Buffer;
+use ale_resources::texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 
-use crate::texture::{ale_opengl_texture_new, OpenGLTexture, OpenGLTextureId};
-use ale_buffer::Buffer;
-use ale_texture::{ale_texture_new, Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
+use crate::texture::{OpenGLTextureId};
 
 pub unsafe fn clear_buffer(r: f32, g: f32, b: f32) {
   gl::ClearColor(r, g, b, 1.0f32);
@@ -376,7 +376,7 @@ pub unsafe fn create_framebuffer_texcolor_rbodepth(
   gl::BindFramebuffer(gl::FRAMEBUFFER, fbo);
 
   // Color attachment
-  let texture = ale_texture_new(TexturePixel::RgbU8Null, w, h, 3);
+  let texture = Texture::new(TexturePixel::RgbU8Null, w, h, 3);
   let gl_texture = create_texture(&texture).unwrap().0;
   gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, gl_texture, 0);
 

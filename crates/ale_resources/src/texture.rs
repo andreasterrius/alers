@@ -1,8 +1,8 @@
-use std::fs::File;
-use hdrldr::LoadError;
-use image::ImageError;
 use crate::{struct_id, struct_id_impl};
-
+use hdrldr::LoadError;
+use image::imageops::{flip_vertical, flip_vertical_in_place};
+use image::ImageError;
+use std::fs::File;
 
 #[derive(Debug)]
 pub struct Texture {
@@ -35,6 +35,35 @@ impl Texture {
         min: TextureMagnificationType::Linear,
         max: TextureMagnificationType::Linear,
       },
+    }
+  }
+
+  pub fn load(path: &str) -> Result<Texture, LoadTextureError> {
+    if path.ends_with(".hdr") {
+      let i = hdrldr::load(File::open(path)?)?;
+
+      let mut v = vec![];
+      for p in i.data {
+        v.push(p.r);
+        v.push(p.g);
+        v.push(p.b);
+      }
+
+      let v = intern_flip_byte_vertically(&v, i.width as u32, i.height as u32, 3);
+      Ok(Texture::new(
+        TexturePixel::RgbF32(v),
+        i.width as u32,
+        i.height as u32,
+        3,
+      ))
+    } else {
+      let i = image::open(path)?;
+      let width = i.width();
+      let height = i.height();
+      let bytes = i.into_bytes();
+
+      let v = intern_flip_byte_vertically(&bytes, width, height, 3);
+      Ok(Texture::new(TexturePixel::RgbU8(v), width, height, 3))
     }
   }
 }
@@ -100,33 +129,6 @@ impl From<LoadError> for LoadTextureError {
   }
 }
 
-pub fn ale_texture_load(path: &str) -> Result<Texture, LoadTextureError> {
-  if path.ends_with(".hdr") {
-    let i = hdrldr::load(File::open(path)?)?;
-
-    let mut v = vec![];
-    for p in i.data {
-      v.push(p.r);
-      v.push(p.g);
-      v.push(p.b);
-    }
-
-    let v = intern_flip_byte_vertically(&v, i.width as u32, i.height as u32, 3);
-    Ok(Texture::new(
-      TexturePixel::RgbF32(v),
-      i.width as u32,
-      i.height as u32,
-      3,
-    ))
-  } else {
-    let i = image::open(path)?;
-
-    // TODO: i.raw_pixels() clones underlying bytes, find a way that doesn't
-    let v = intern_flip_byte_vertically(&i.to_bytes(), i.width() as u32, i.height() as u32, 3);
-    Ok(Texture::new(TexturePixel::RgbU8(v), i.width(), i.height(), 3))
-  }
-}
-
 fn intern_flip_byte_vertically<T: Clone>(v: &Vec<T>, width: u32, height: u32, channel_count: u32) -> Vec<T> {
   let column_size = (width * channel_count) as usize;
   let row_size = height as usize;
@@ -144,12 +146,12 @@ fn test_flip_image_vertically() {
     0.0f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0f32, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0f32, 13.0, 14.0, 15.0, 16.0, 17.0,
   ];
 
-  let _t = Texture::from_data(TexturePixel::RgbF32(k), 2, 3, 3);
+  let _t = Texture::new(TexturePixel::RgbF32(k), 2, 3, 3);
 
   let k = vec![
     0.0f32, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0f32, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
   ];
 
-  let t = Texture::from_data(TexturePixel::RgbF32(k), 3, 2, 3);
-  println!("{:?}", t.clone_data_flip_vertically());
+  let t = Texture::new(TexturePixel::RgbF32(k), 3, 2, 3);
+  //println!("{:?}", intern_flip_byte_vertically());
 }

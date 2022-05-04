@@ -1,5 +1,5 @@
 use crate::raw::{create_buffer, CreateBufferError};
-use ale_mesh::{Mesh};
+use ale_resources::mesh::Mesh;
 
 pub struct OpenGLMesh {
   pub vao: u32,

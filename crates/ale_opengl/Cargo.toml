@@ -14,3 +14,4 @@ ale_console = { path = "../ale_console" }
 ale_variable = { path = "../ale_variable" }
 ale_input = { path = "../ale_input" }
 gl = "0.14.0"
+snowflake = "1.3.0"
