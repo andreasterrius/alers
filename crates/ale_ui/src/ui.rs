@@ -13,4 +13,8 @@ impl Root {
     pub fn add_element(&mut self, element : Element) {
         self.elements.0.push(element);
     }
+
+    pub fn get_elements(&self) -> &Elements {
+        &self.elements
+    }
 }

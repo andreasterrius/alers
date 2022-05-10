@@ -1,6 +1,6 @@
 
 use ale_math::{Array, InnerSpace, Matrix4, Vector2, Vector3, Zero};
-use crate::buffer::{Buffer, BufferBuilder};
+use ale_data::buffer::{Buffer, BufferBuilder};
 use crate::{struct_id, struct_id_impl};
 
 pub mod iter;

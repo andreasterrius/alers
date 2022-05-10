@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::ops::Index;
-use ale_math::relative_eq;
 
 #[derive(Debug)]
 pub struct BufferElementInfo {

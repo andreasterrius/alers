@@ -5,7 +5,7 @@ use std::ffi::{c_void, CString};
 use std::ptr::null;
 
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
-use ale_resources::buffer::Buffer;
+use ale_data::buffer::Buffer;
 use ale_resources::texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 
 use crate::texture::{OpenGLTextureId};

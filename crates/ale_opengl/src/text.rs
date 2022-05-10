@@ -22,8 +22,7 @@ impl TextRenderer {
     let text_2d_shader = OpenGLShader::new(&Shader::new(
       include_str!("../../../resources/shaders/text_2d.vert").to_owned(),
       include_str!("../../../resources/shaders/text_2d.frag").to_owned(),
-    ))
-      .unwrap();
+    )).unwrap();
 
     let plane_opengl_mesh = OpenGLMesh::new(&Mesh::new_plane()).unwrap();
 

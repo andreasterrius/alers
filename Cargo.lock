@@ -73,6 +73,7 @@ version = "0.1.0"
 dependencies = [
  "ale_camera",
  "ale_console",
+ "ale_data",
  "ale_input",
  "ale_math",
  "ale_resources",
@@ -112,6 +113,7 @@ dependencies = [
 name = "ale_resources"
 version = "0.1.0"
 dependencies = [
+ "ale_data",
  "ale_math",
  "approx 0.5.1",
  "gltf",
@@ -125,8 +127,11 @@ dependencies = [
 name = "ale_ui"
 version = "0.1.0"
 dependencies = [
+ "ale_camera",
  "ale_data",
  "ale_math",
+ "ale_opengl",
+ "ale_resources",
 ]
 
 [[package]]
@@ -1468,9 +1473,11 @@ name = "ui"
 version = "0.1.0"
 dependencies = [
  "ale_app",
+ "ale_camera",
  "ale_input",
  "ale_math",
  "ale_opengl",
+ "ale_resources",
  "ale_ui",
 ]
 

@@ -5,7 +5,7 @@ use ale_math::transform::AleTransform;
 use ::gltf::mesh::Reader;
 use ::gltf::mesh::util::{ReadIndices, ReadTexCoords};
 
-use crate::buffer::{Buffer, SeparateBufferBuilder};
+use ale_data::buffer::{Buffer, SeparateBufferBuilder};
 use crate::gltf;
 use crate::mesh::Mesh;
 

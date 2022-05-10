@@ -6,5 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ale_math = { path = "../../crates/ale_math" }
-ale_data = { path = "../../crates/ale_data" }
+ale_math = { path = "../ale_math" }
+ale_data = { path = "../ale_data" }
+ale_opengl = { path = "../ale_opengl" }
+ale_resources = { path = "../ale_resources" }
+ale_camera = { path = "../ale_camera" }
