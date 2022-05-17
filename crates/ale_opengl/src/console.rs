@@ -1,8 +1,9 @@
-use crate::text::TextRenderer;
 use ale_camera::CameraRenderInfo;
 use ale_console::Console;
 use ale_math::Vector2;
 use ale_resources::font::Font;
+
+use crate::renderer::text::TextRenderer;
 
 pub fn ale_opengl_console_render(
   text_renderer: &mut TextRenderer,

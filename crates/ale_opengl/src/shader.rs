@@ -1,5 +1,6 @@
 use crate::raw;
 use crate::raw::{create_shader, CreateShaderError};
+use ale_math::Matrix;
 use ale_resources::shader::Shader;
 use ale_variable::Variable;
 use thiserror::Error;
@@ -33,6 +34,7 @@ impl OpenGLShader {
           Variable::F32_4(name, vec) => raw::uniform4f(self.id, &name, vec.x, vec.y, vec.z, vec.w),
           Variable::Bool(name, ff) => raw::uniform1i(self.id, &name, if *ff { 1 } else { 0 }),
           Variable::Void(_) => {}
+          Variable::F32_4_4(name, mat) => raw::matrix4f(self.id, &name, mat.as_ptr()),
         }
       }
     }
@@ -41,6 +43,6 @@ impl OpenGLShader {
 
 #[derive(Error, Debug)]
 pub enum OpenGLShaderError {
-  #[error("compile shader error")]
+  #[error("(OpenGLShaderError::CompilationError) {}", .0)]
   CompilationError(#[from] CreateShaderError),
 }

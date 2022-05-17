@@ -10,10 +10,10 @@ pub mod raw;
 pub mod raymarch;
 pub mod render_frame;
 pub mod shader;
-pub mod text;
+pub mod renderer;
 pub mod texture;
 pub mod wire;
-pub mod renderer;
+pub mod ui;
 
 pub fn ale_opengl_clear_render() {
   // Clear the screen buffer

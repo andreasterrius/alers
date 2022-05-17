@@ -195,6 +195,7 @@ fn intern_on_enter(console: &mut Console) -> OnEnterResult {
           *v = val[0];
         }
         Variable::Void(_) => {}
+        Variable::F32_4_4(_, _) => {}
       }
       console.events.insert(words[0].to_owned(), Set(variable.clone()))
     }

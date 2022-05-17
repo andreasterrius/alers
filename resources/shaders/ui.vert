@@ -3,7 +3,7 @@ layout (location = 0) in vec2 aPos;
 
 out vec2 TexCoords;
 
-uniform vec4 possize;
+uniform vec4 possize; //(pos.x, pos.y, size.x, size.y)
 uniform mat4 projection;
 
 void main()

@@ -54,6 +54,9 @@ dependencies = [
 [[package]]
 name = "ale_data"
 version = "0.1.0"
+dependencies = [
+ "approx 0.5.1",
+]
 
 [[package]]
 name = "ale_input"

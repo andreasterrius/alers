@@ -7,10 +7,12 @@ use ale_math::color::Color;
 use ale_math::rect::Rect;
 use ale_math::{Array, Vector2, Vector3, Zero};
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
-use ale_opengl::text::TextRenderer;
+use ale_opengl::renderer::sprite::SpriteRenderer;
+use ale_opengl::renderer::text::TextRenderer;
 use ale_resources::font::Font;
 use ale_resources::path::ResourcePath;
 use ale_resources::resources::Resources;
+use ale_ui::button::Button;
 use ale_ui::element::Element;
 use ale_ui::layout::Layout;
 use ale_ui::text::Text;
@@ -20,6 +22,7 @@ struct UIApp;
 struct UIState {
   resources: Resources,
   text_renderer: TextRenderer,
+  sprite_renderer: SpriteRenderer,
   ui_root: ui::Root,
   camera: Camera,
 
@@ -42,8 +45,17 @@ impl App<UIState> for UIApp {
       font,
       12,
     )));
+    ui_root.add_element(Element::Button(Button::new(
+      Vector2::new(100.0, 100.0),
+      Vector2::new(20.0, 30.0),
+      Color::from_rgba(1.0, 0.0, 0.0, 1.0),
+      Color::from_rgba(0.0, 1.0, 0.0, 1.0),
+      Color::from_rgba(0.0, 0.0, 1.0, 1.0),
+    )));
 
     let text_renderer = TextRenderer::new_with_resources(&mut resources)?;
+    let sprite_renderer = SpriteRenderer::new_with_resource(&mut resources)?;
+
     let mut camera = Camera::new(Vector3::zero(), window.get_display_info().dimension.clone(), 90.0);
     camera.look_at(Vector3::zero());
 
@@ -53,6 +65,7 @@ impl App<UIState> for UIApp {
     Ok(UIState {
       resources,
       text_renderer,
+      sprite_renderer,
       ui_root,
       camera,
     })
@@ -68,7 +81,8 @@ impl App<UIState> for UIApp {
     ale_opengl_clear_render_color(Color::from_rgb(0.0, 0.0, 0.0));
 
     {
-      let mut layout = Layout::new(&mut s.text_renderer, &mut s.resources, s.camera.camera_render_info());
+      let mut layout = Layout::new(&mut s.text_renderer, &mut s.sprite_renderer,
+                                   &mut s.resources, s.camera.camera_render_info());
       layout.render(&s.ui_root);
     }
   }

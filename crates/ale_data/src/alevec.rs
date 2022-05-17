@@ -204,12 +204,14 @@ fn test_alevec() {
         assert_eq!(num, &result[ctr]);
         ctr += 1;
     }
+    assert_eq!(ctr, 5);
 
     let mut ctr = 0;
     for num in v.iter_mut() {
         assert_eq!(num, &mut result[ctr]);
         ctr += 1;
     }
+    assert_eq!(ctr, 5);
 
     let mut ctr = 0;
     for mut num in v.iter_mut() {

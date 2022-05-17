@@ -1,3 +1,4 @@
+use crate::raw;
 use crate::raw::{create_buffer, CreateBufferError};
 use ale_resources::mesh::Mesh;
 use thiserror::Error;
@@ -19,10 +20,25 @@ impl OpenGLMesh {
       draw_size,
     })
   }
+
+  pub fn activate(&self) {
+    unsafe {
+      raw::bind_vao(self.vao);
+    }
+  }
+
+  pub fn draw(&self) {
+    unsafe {
+      match self.ebo {
+        None => raw::draw_arrays(0, self.draw_size),
+        Some(_) => raw::draw_elements(self.draw_size),
+      }
+    }
+  }
 }
 
 #[derive(Error, Debug)]
 pub enum OpenGLMeshError {
-  #[error("create buffer error")]
+  #[error("(OpenGLMeshError::CreateBufferError)")]
   CreateBufferError(#[from] CreateBufferError),
 }

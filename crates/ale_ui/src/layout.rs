@@ -1,6 +1,7 @@
 use ale_camera::CameraRenderInfo;
-use ale_opengl::text::TextRenderer;
-use ale_resources::font::Font;
+use ale_opengl::renderer::sprite::SpriteRenderer;
+use ale_opengl::renderer::text::TextRenderer;
+
 use ale_resources::resources::Resources;
 
 use crate::button::Button;
@@ -10,6 +11,7 @@ use crate::ui;
 
 pub struct Layout<'a> {
   text_renderer: &'a mut TextRenderer,
+  sprite_renderer: &'a mut SpriteRenderer,
   resources: &'a mut Resources,
   camera_render_info: CameraRenderInfo,
 }
@@ -17,11 +19,13 @@ pub struct Layout<'a> {
 impl<'a> Layout<'a> {
   pub fn new(
     text_renderer: &'a mut TextRenderer,
+    sprite_renderer: &'a mut SpriteRenderer,
     resources: &'a mut Resources,
     camera_render_info: CameraRenderInfo,
   ) -> Layout<'a> {
     Layout {
       text_renderer,
+      sprite_renderer,
       resources,
       camera_render_info,
     }
@@ -59,5 +63,7 @@ impl<'a> Layout<'a> {
     )
   }
 
-  fn render_button(&mut self, button: &Button) {}
+  fn render_button(&mut self, button: &Button) {
+    button.render_with(self.sprite_renderer, self.camera_render_info.orthographic);
+  }
 }

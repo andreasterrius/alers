@@ -1,6 +1,8 @@
-use ale_camera::CameraRenderInfo;
 use std::collections::HashMap;
 
+use thiserror::Error;
+
+use ale_camera::CameraRenderInfo;
 use ale_math::color::Color;
 use ale_math::Vector2;
 use ale_resources::font::{Font, FontLayout, FontTextureKey};
@@ -8,7 +10,6 @@ use ale_resources::mesh::Mesh;
 use ale_resources::resources::Resources;
 use ale_resources::shader;
 use ale_resources::shader::Shader;
-use thiserror::Error;
 
 use crate::mesh::OpenGLMesh;
 use crate::shader::OpenGLShader;
@@ -42,7 +43,7 @@ impl TextRenderer {
     })
   }
 
-  pub fn render(
+  pub fn  render(
     &mut self,
     camera_render_info: &CameraRenderInfo,
     font: &mut Font,

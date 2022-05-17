@@ -1,7 +1,8 @@
 use ale_camera::CameraRenderInfo;
-use ale_math::{Matrix, Vector2};
 use ale_math::color::Color;
-use ale_resources::texture::Texture;
+use ale_math::{Matrix, Vector2};
+use ale_resources::texture::{Texture, TextureId};
+use std::collections::HashMap;
 
 use crate::constant::{PROJECTION, VIEW};
 use crate::mesh::OpenGLMesh;

@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 use ale_data::alevec::{AleVec, AleVecIter, AleVecIterMut, Key};
+use crate::path::ResourcePath;
 
 pub trait Load<Resource, Err> {
     fn load(&self, path: &str) -> Result<Vec<Resource>, Err>;
@@ -22,7 +23,8 @@ impl<Resource, Err, Loader: Load<Resource, Err> + Default> Stash<Resource, Err, 
     }
 
     pub fn load(&mut self, path: &str) -> Result<Vec<Key<Resource>>, Err> {
-        let res = self.loader.load(path)?;
+        let resource_path = &ResourcePath::find(path);
+        let res = self.loader.load(resource_path)?;
 
         let mut keys = vec!();
         for r in res {

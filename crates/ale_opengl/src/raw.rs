@@ -180,13 +180,13 @@ pub unsafe fn create_buffer(
 
 #[derive(Error, Debug)]
 pub enum CreateShaderError {
-  #[error("vertex shader error {}", .0)]
+  #[error("(CreateShaderError::VertexShaderError)\nCause: {}", .0)]
   VertexShaderError(String),
-  #[error("fragment shader error {}", .0)]
+  #[error("(CreateShaderError::FragmentShaderError)\nCause: {}", .0)]
   FragmentShaderError(String),
-  #[error("geometry shader error {}", .0)]
+  #[error("(CreateShaderError::GeometryShaderError)\nCause: {}", .0)]
   GeometryShaderError(String),
-  #[error("link shader error {}", .0)]
+  #[error("(CreateShaderError::LinkingShaderError)\nCause: {}", .0)]
   LinkingShaderError(String),
 }
 
