@@ -1,6 +1,6 @@
 use rand::random;
 
-use ale_app::{ale_app_resource_path, ale_app_run, App};
+use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
 use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
 use ale_camera::Camera;
@@ -107,12 +107,12 @@ struct State {
 }
 
 impl App<State> for Pong {
-  fn load(&mut self, window: &Window) -> State {
+  fn load(&mut self, window: &Window) -> Result<State, AppError> {
     /*
      * Create the mesh
      */
     let cube_mesh = Mesh::new_cube();
-    let (_, ball_mesh) = gltf::load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
+    let ball_mesh = gltf::load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
 
     /*
      * Physics setup
@@ -198,7 +198,7 @@ impl App<State> for Pong {
 
     ale_opengl_depth_test_enable();
 
-    State {
+    Ok(State {
       opengl_pbr_context,
       physics_context,
       //fly_camera,
@@ -212,7 +212,7 @@ impl App<State> for Pong {
       score_right: 0,
       paddle_left_velocity: Vector3::zero(),
       paddle_right_velocity: Vector3::zero(),
-    }
+    })
   }
 
   fn input(&mut self, s: &mut State, inputs: Vec<Input>) {

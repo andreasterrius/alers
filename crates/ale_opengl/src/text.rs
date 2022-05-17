@@ -87,10 +87,10 @@ impl TextRenderer {
 
 #[derive(Error, Debug)]
 pub enum TextRendererError {
-  #[error("shader resource load error: {}", .0)]
+  #[error("(TextRendererError::ShaderLoadError) {}", .0)]
   ShaderLoadError(#[from] shader::LoadError),
-  #[error("opengl shader error: {}", .0)]
+  #[error("(TextRendererError::OpenGLShaderError) {}", .0)]
   OpenGLShaderError(#[from] crate::shader::OpenGLShaderError),
-  #[error("opengl mesh error: {}", .0)]
+  #[error("(TextRendererError::OpenGLMeshError) {}", .0)]
   OpenGLMeshError(#[from] crate::mesh::OpenGLMeshError),
 }

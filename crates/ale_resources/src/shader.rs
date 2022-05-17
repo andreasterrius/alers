@@ -51,8 +51,11 @@ struct_id_impl!(ShaderId, Shader, id);
 
 #[derive(Error, Debug)]
 pub enum LoadError {
-  #[error("{} shader source io error: {:?}", .1, .0)]
-  ShaderSourceIOError(io::Error, String),
+  #[error("(LoadError::ShaderSourceIOError)\n\
+      Path: {}\n\
+      Shader: {}\n\
+      Error: {}", .2, .1, .0)]
+  ShaderSourceIOError(io::Error, String, String),
 }
 
 pub struct Loader;
@@ -62,13 +65,25 @@ impl Load<Shader, LoadError> for Loader {
     let fragment_shader_path = PathBuf::from_str(&format!("{}.frag", path)).unwrap();
     let geom_shader_path = PathBuf::from_str(&format!("{}.geom", path)).unwrap();
 
-    let vertex_shader = match fs::read_to_string(vertex_shader_path) {
+    let vertex_shader = match fs::read_to_string(vertex_shader_path.clone()) {
       Ok(str) => str,
-      Err(err) => return Err(ShaderSourceIOError(err, "vertex shader".to_owned())),
+      Err(err) => {
+        return Err(ShaderSourceIOError(
+          err,
+          "vertex shader".to_owned(),
+          vertex_shader_path.to_str().unwrap().to_owned(),
+        ))
+      }
     };
-    let fragment_shader = match fs::read_to_string(fragment_shader_path) {
+    let fragment_shader = match fs::read_to_string(fragment_shader_path.clone()) {
       Ok(str) => str,
-      Err(err) => return Err(ShaderSourceIOError(err, "fragment shader".to_owned())),
+      Err(err) => {
+        return Err(ShaderSourceIOError(
+          err,
+          "fragment shader".to_owned(),
+          fragment_shader_path.to_str().unwrap().to_owned(),
+        ))
+      }
     };
     let geom_shader = match fs::read_to_string(geom_shader_path) {
       Ok(str) => Some(str),

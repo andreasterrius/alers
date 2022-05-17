@@ -1,9 +1,15 @@
+use std::path::Path;
+
+use thiserror::Error;
+
+use ale_input::Input;
+use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
+
 use crate::display_info::DisplayInfo;
 use crate::tick::{FixedStep, WorldTick};
 use crate::window::Window;
-use ale_input::Input;
-use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
-use std::path::Path;
+
+pub use anyhow::Error as AppError;
 
 pub mod display_info;
 pub mod engine;
@@ -12,8 +18,9 @@ pub mod log;
 pub mod tick;
 pub mod window;
 
+// TODO: Break this to 1 function per trait
 pub trait App<S> {
-  fn load(&mut self, window: &Window) -> S;
+  fn load(&mut self, window: &Window) -> Result<S, anyhow::Error>;
 
   fn input(&mut self, s: &mut S, inputs: Vec<Input>);
 
@@ -25,6 +32,16 @@ pub trait App<S> {
 }
 
 pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
+  let err = ale_app_run_internal(app, display_info);
+  match err {
+    Err(err) => {
+      println!("{}", err);
+    }
+    _ => {}
+  }
+}
+
+pub fn ale_app_run_internal<S, T: App<S>>(mut app: T, display_info: DisplayInfo) -> anyhow::Result<()> {
   // Initialize File Logging
   //alers::log::init_term();
 
@@ -32,7 +49,7 @@ pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
   let mut engine = engine::Engine::new();
   let mut window = engine.windows().new(display_info);
 
-  let mut state = app.load(&window);
+  let mut state = app.load(&window)?;
 
   let mut tick = WorldTick::FixedStep(FixedStep::new(0.01f32));
 
@@ -55,6 +72,8 @@ pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
 
     window.swap_buffers();
   }
+
+  Ok(())
 }
 
 pub fn ale_app_resource_path(path: &str) -> String {

@@ -1,6 +1,6 @@
 use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
-use ale_app::{ale_app_resource_path, ale_app_run, App};
+use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
 use ale_camera::flycamera::FlyCamera;
 use ale_camera::Camera;
 use ale_input::{Input, Key};
@@ -39,8 +39,8 @@ struct State {
 struct SDFDemo;
 
 impl App<State> for SDFDemo {
-  fn load(&mut self, window: &Window) -> State {
-    let (_, mut sphere_mesh) = gltf::load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
+  fn load(&mut self, window: &Window) -> Result<State, AppError> {
+    let mut sphere_mesh = gltf::load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
     //let mut sphere = vec![(Transform::new(), Mesh::new_cube())];
     let transform = AleTransform::from_position_scale(Vector3::from_value(-2.0), Vector3::from_value(2.0));
 
@@ -61,14 +61,14 @@ impl App<State> for SDFDemo {
     ale_opengl_blend_enable();
     ale_opengl_depth_test_enable();
 
-    State {
+    Ok(State {
       fly_camera,
       sphere: (transform, sphere_mesh),
       sphere_sdf,
       opengl_wire_context,
       opengl_pbr_context,
       opengl_line_debug_context,
-    }
+    })
   }
 
   fn input(&mut self, state: &mut State, inputs: Vec<Input>) {
