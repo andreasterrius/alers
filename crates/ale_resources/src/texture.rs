@@ -1,5 +1,5 @@
+use crate::stash::Load;
 use crate::{struct_id, struct_id_impl};
-use hdrldr::LoadError;
 use image::imageops::{flip_vertical, flip_vertical_in_place};
 use image::ImageError;
 use std::fs::File;
@@ -38,7 +38,7 @@ impl Texture {
     }
   }
 
-  pub fn load(path: &str) -> Result<Texture, LoadTextureError> {
+  pub fn load(path: &str) -> Result<Texture, LoadError> {
     if path.ends_with(".hdr") {
       let i = hdrldr::load(File::open(path)?)?;
 
@@ -106,26 +106,46 @@ pub enum TexturePixel {
 }
 
 #[derive(Debug)]
-pub enum LoadTextureError {
+pub enum LoadError {
   ImageError(ImageError),
   FileNotFound,
 }
 
-impl From<ImageError> for LoadTextureError {
+pub struct Loader;
+impl Load<Texture, LoadError> for Loader {
+  fn load(&self, path: &str) -> Result<Vec<Texture>, LoadError> {
+    return match Texture::load(path) {
+      Ok(texture) => {
+        Ok(vec![texture])
+      }
+      Err(err) => {
+        return Err(err);
+      }
+    };
+  }
+}
+
+impl Default for Loader {
+  fn default() -> Self {
+    Loader
+  }
+}
+
+impl From<ImageError> for LoadError {
   fn from(e: ImageError) -> Self {
-    LoadTextureError::ImageError(e)
+    LoadError::ImageError(e)
   }
 }
 
-impl From<std::io::Error> for LoadTextureError {
+impl From<std::io::Error> for LoadError {
   fn from(_e: std::io::Error) -> Self {
-    LoadTextureError::FileNotFound
+    LoadError::FileNotFound
   }
 }
 
-impl From<LoadError> for LoadTextureError {
-  fn from(_: LoadError) -> Self {
-    LoadTextureError::FileNotFound
+impl From<hdrldr::LoadError> for LoadError {
+  fn from(_: hdrldr::LoadError) -> Self {
+    LoadError::FileNotFound
   }
 }
 

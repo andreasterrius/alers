@@ -6,3 +6,4 @@ pub mod texture;
 pub mod shader;
 pub mod resources;
 pub mod path;
+pub mod stash;

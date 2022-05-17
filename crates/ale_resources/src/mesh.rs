@@ -1,6 +1,10 @@
-
-use ale_math::{Array, InnerSpace, Matrix4, Vector2, Vector3, Zero};
+use ale_data::alevec::Key;
 use ale_data::buffer::{Buffer, BufferBuilder};
+use ale_math::transform::AleTransform;
+use ale_math::{Array, InnerSpace, Matrix4, Vector2, Vector3, Zero};
+
+use crate::gltf::load;
+use crate::stash::{Load, Stash};
 use crate::{struct_id, struct_id_impl};
 
 pub mod iter;
@@ -22,6 +26,8 @@ pub struct Mesh {
   pub position_offset: Option<usize>,
   pub uv_offset: Option<usize>,
   pub normal_offset: Option<usize>,
+
+  pub load_transform: AleTransform,
 }
 
 pub struct Tri {
@@ -39,10 +45,16 @@ impl Mesh {
     vertices: Buffer<f32>,
     indices: Option<Buffer<i32>>,
     bounding_box: (Vector3<f32>, Vector3<f32>),
+    load_transform: Option<AleTransform>,
   ) -> Mesh {
     let position_offset = vertices.offset("position");
     let uv_offset = vertices.offset("uv");
     let normal_offset = vertices.offset("normal");
+
+    let load_transform = match load_transform {
+      Some(lt) => lt,
+      None => AleTransform::new(),
+    };
 
     Mesh {
       id: MeshId::new(),
@@ -52,6 +64,7 @@ impl Mesh {
       position_offset,
       uv_offset,
       normal_offset,
+      load_transform,
     }
   }
 
@@ -100,15 +113,15 @@ impl Mesh {
       -1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 0.0, 1.0, // top-left
       -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, // bottom-left
     ])
-      .info("position", 3)
-      .info("normal", 3)
-      .info("uv", 2)
-      .build()
-      .unwrap();
+    .info("position", 3)
+    .info("normal", 3)
+    .info("uv", 2)
+    .build()
+    .unwrap();
 
     let bounding_box = (Vector3::from_value(-1.0), Vector3::from_value(1.0));
 
-    Mesh::new(vertices, None, bounding_box)
+    Mesh::new(vertices, None, bounding_box, None)
   }
 
   pub fn new_plane() -> Mesh {
@@ -119,7 +132,7 @@ impl Mesh {
 
     let bounding_box = (Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 0.0));
 
-    Mesh::new(vertices, None, bounding_box)
+    Mesh::new(vertices, None, bounding_box, None)
   }
 
   pub fn new_ndc_plane() -> Mesh {
@@ -127,14 +140,14 @@ impl Mesh {
       -1.0f32, 1.0, 0.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 1.0, 0.0, -1.0, 1.0, 0.0, 1.0, 1.0, -1.0, 1.0, 0.0, 1.0,
       1.0, 1.0, 1.0,
     ])
-      .info("position", 2)
-      .info("texcoords", 2)
-      .build()
-      .unwrap();
+    .info("position", 2)
+    .info("texcoords", 2)
+    .build()
+    .unwrap();
 
     let bounding_box = (Vector3::new(-1.0, -1.0, 0.0), Vector3::new(1.0, 1.0, 0.0));
 
-    Mesh::new(vertices, None, bounding_box)
+    Mesh::new(vertices, None, bounding_box, None)
   }
 
   pub fn new_bounding_box() -> Mesh {
@@ -191,7 +204,7 @@ impl Mesh {
 
     let bounding_box = (Vector3::from_value(-1.0), Vector3::from_value(1.0));
 
-    Mesh::new(vertices, None, bounding_box)
+    Mesh::new(vertices, None, bounding_box, None)
   }
 
   pub fn bounding_box_matrix(&self) -> Matrix4<f32> {
@@ -214,7 +227,7 @@ impl Mesh {
     }
   }
 
-  pub fn tri_get(&self, i : usize) -> Option<Tri> {
+  pub fn tri_get(&self, i: usize) -> Option<Tri> {
     let column_len = self.vertices.total_column_len();
     if i > self.tri_len() {
       return None;
@@ -270,6 +283,20 @@ impl Mesh {
   }
 }
 
+pub struct LoadError;
+pub struct Loader;
+impl Load<Mesh, LoadError> for Loader {
+  fn load(&self, path: &str) -> Result<Vec<Mesh>, LoadError> {
+    Ok(load(path))
+  }
+}
+
+impl Default for Loader {
+  fn default() -> Self {
+    Loader
+  }
+}
+
 #[test]
 pub fn test_tri_get_no_ebo() {
   use approx::relative_eq;
@@ -304,14 +331,14 @@ pub fn test_tri_get_no_ebo() {
     .build()
     .unwrap();
 
-  let mesh = Mesh::new(buffer, None, (Vector3::zero(), Vector3::zero()));
+  let mesh = Mesh::new(buffer, None, (Vector3::zero(), Vector3::zero()), None);
 
   assert_eq!(mesh.tri_len(), 3);
 
   let tri = mesh.tri_get(0).unwrap();
-  assert_eq!(tri.position[0], Vector3::new(1.0, 1.0, 1.0,));
-  assert_eq!(tri.position[1], Vector3::new(2.0, 2.0, 2.0,));
-  assert_eq!(tri.position[2], Vector3::new(3.0, 3.0, 3.0,));
+  assert_eq!(tri.position[0], Vector3::new(1.0, 1.0, 1.0));
+  assert_eq!(tri.position[1], Vector3::new(2.0, 2.0, 2.0));
+  assert_eq!(tri.position[2], Vector3::new(3.0, 3.0, 3.0));
 
   assert_eq!(tri.uv[0], Vector2::new(10.0, 10.0));
   assert_eq!(tri.uv[1], Vector2::new(20.0, 20.0));
@@ -322,9 +349,9 @@ pub fn test_tri_get_no_ebo() {
   assert_eq!(tri.normal[2], Vector3::new(-2.0, -2.0, -3.0));
 
   let tri = mesh.tri_get(2).unwrap();
-  assert_eq!(tri.position[0], Vector3::new(10.0, 1.0, 1.0,));
-  assert_eq!(tri.position[1], Vector3::new(12.0, 2.0, 2.0,));
-  assert_eq!(tri.position[2], Vector3::new(13.0, 3.0, 3.0,));
+  assert_eq!(tri.position[0], Vector3::new(10.0, 1.0, 1.0));
+  assert_eq!(tri.position[1], Vector3::new(12.0, 2.0, 2.0));
+  assert_eq!(tri.position[2], Vector3::new(13.0, 3.0, 3.0));
 
   assert_eq!(tri.uv[0], Vector2::new(7.0, 10.0));
   assert_eq!(tri.uv[1], Vector2::new(17.0, 20.0));
@@ -444,14 +471,14 @@ pub fn test_tri_get_with_ebo() {
   let indices: Vec<i32> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 2, 5, 8, 4, 1, 7];
   let ibuffer = BufferBuilder::new(indices).info("index", 3).build().unwrap();
 
-  let mesh = Mesh::new(buffer, Some(ibuffer), (Vector3::zero(), Vector3::zero()));
+  let mesh = Mesh::new(buffer, Some(ibuffer), (Vector3::zero(), Vector3::zero()), None);
 
   assert_eq!(mesh.tri_len(), 5);
 
-  let tri = mesh.tri_get( 0).unwrap();
-  assert_eq!(tri.position[0], Vector3::new(1.0, 1.0, 1.0,));
-  assert_eq!(tri.position[1], Vector3::new(2.0, 2.0, 2.0,));
-  assert_eq!(tri.position[2], Vector3::new(3.0, 3.0, 3.0,));
+  let tri = mesh.tri_get(0).unwrap();
+  assert_eq!(tri.position[0], Vector3::new(1.0, 1.0, 1.0));
+  assert_eq!(tri.position[1], Vector3::new(2.0, 2.0, 2.0));
+  assert_eq!(tri.position[2], Vector3::new(3.0, 3.0, 3.0));
 
   assert_eq!(tri.uv[0], Vector2::new(10.0, 10.0));
   assert_eq!(tri.uv[1], Vector2::new(20.0, 20.0));
@@ -462,9 +489,9 @@ pub fn test_tri_get_with_ebo() {
   assert_eq!(tri.normal[2], Vector3::new(-2.0, -2.0, -3.0));
 
   let tri = mesh.tri_get(2).unwrap();
-  assert_eq!(tri.position[0], Vector3::new(10.0, 1.0, 1.0,));
-  assert_eq!(tri.position[1], Vector3::new(12.0, 2.0, 2.0,));
-  assert_eq!(tri.position[2], Vector3::new(13.0, 3.0, 3.0,));
+  assert_eq!(tri.position[0], Vector3::new(10.0, 1.0, 1.0));
+  assert_eq!(tri.position[1], Vector3::new(12.0, 2.0, 2.0));
+  assert_eq!(tri.position[2], Vector3::new(13.0, 3.0, 3.0));
 
   assert_eq!(tri.uv[0], Vector2::new(7.0, 10.0));
   assert_eq!(tri.uv[1], Vector2::new(17.0, 20.0));
@@ -479,9 +506,9 @@ pub fn test_tri_get_with_ebo() {
   // 12.0, 2.0, 2.0, 17.0, 20.0,-3.0, -5.0, -3.0,
 
   let tri = mesh.tri_get(4).unwrap();
-  assert_eq!(tri.position[0], Vector3::new(5.0, 2.0, 2.0,));
-  assert_eq!(tri.position[1], Vector3::new(2.0, 2.0, 2.0,));
-  assert_eq!(tri.position[2], Vector3::new(12.0, 2.0, 2.0,));
+  assert_eq!(tri.position[0], Vector3::new(5.0, 2.0, 2.0));
+  assert_eq!(tri.position[1], Vector3::new(2.0, 2.0, 2.0));
+  assert_eq!(tri.position[2], Vector3::new(12.0, 2.0, 2.0));
 
   assert_eq!(tri.uv[0], Vector2::new(25.0, 20.0));
   assert_eq!(tri.uv[1], Vector2::new(20.0, 20.0));

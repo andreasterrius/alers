@@ -5,6 +5,7 @@ use std::io::Read;
 use rusttype::{point, Scale};
 
 use ale_math::Vector2;
+use crate::stash::Load;
 
 use crate::texture::{Texture, TexturePixel};
 
@@ -37,6 +38,21 @@ pub struct FontGlyphLayout {
   pub font_texture_key: FontTextureKey,
   pub offset_min: Vector2<i32>,
   pub offset_max: Vector2<i32>,
+}
+
+#[derive(Debug)]
+pub struct LoadError;
+pub struct Loader;
+impl Load<Font, LoadError> for Loader {
+  fn load(&self, path: &str) -> Result<Vec<Font>, LoadError> {
+    Ok(vec![Font::load(path)])
+  }
+}
+
+impl Default for Loader {
+  fn default() -> Self {
+    Loader
+  }
 }
 
 impl Font {

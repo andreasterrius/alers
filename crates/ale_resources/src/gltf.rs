@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use ale_math::Quaternion;
-use ale_math::transform::AleTransform;
-use ::gltf::mesh::Reader;
 use ::gltf::mesh::util::{ReadIndices, ReadTexCoords};
+use ::gltf::mesh::Reader;
+use ale_math::transform::AleTransform;
+use ale_math::Quaternion;
 
-use ale_data::buffer::{Buffer, SeparateBufferBuilder};
 use crate::gltf;
 use crate::mesh::Mesh;
+use ale_data::buffer::{Buffer, SeparateBufferBuilder};
 
-pub fn load(path: &str) -> Vec<(AleTransform, Mesh)> {
+pub fn load(path: &str) -> Vec<Mesh> {
   let (gltf, buffers, _) = ::gltf::import(path).unwrap();
 
   let mut nodes = HashMap::new();
@@ -53,8 +53,14 @@ pub fn load(path: &str) -> Vec<(AleTransform, Mesh)> {
       let vbuffer = intern_construct_vertices_buffer(positions, normals, tex_coords);
       let ibuffer = intern_construct_indices_buffer(indices);
 
-      let ale_mesh = Mesh::new(vbuffer, Some(ibuffer), (bb_min.into(), bb_max.into()));
-      objects.push((nodes.remove(&mesh.index()).unwrap(), ale_mesh));
+      let transform = nodes.remove(&mesh.index()).unwrap();
+      let ale_mesh = Mesh::new(
+        vbuffer,
+        Some(ibuffer),
+        (bb_min.into(), bb_max.into()),
+        Some(transform.clone()),
+      );
+      objects.push(ale_mesh);
     }
   }
 
@@ -62,8 +68,8 @@ pub fn load(path: &str) -> Vec<(AleTransform, Mesh)> {
 }
 
 fn intern_get_positions<'a, 's, F>(reader: &Reader<'a, 's, F>) -> (Vec<f32>, (f32, f32, f32), (f32, f32, f32))
-  where
-    F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
+where
+  F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut positions = vec![];
   let mut min = (f32::MAX, f32::MAX, f32::MAX);
@@ -94,8 +100,8 @@ fn intern_get_positions<'a, 's, F>(reader: &Reader<'a, 's, F>) -> (Vec<f32>, (f3
 }
 
 fn intern_get_normals<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>
-  where
-    F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
+where
+  F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut normals = vec![];
   if let Some(read_normals) = reader.read_normals() {
@@ -109,8 +115,8 @@ fn intern_get_normals<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>
 }
 
 fn intern_get_tex_coords<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>
-  where
-    F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
+where
+  F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut tex_coords: Vec<f32> = vec![];
   if let Some(read_tex_coords) = reader.read_tex_coords(0) {
@@ -139,8 +145,8 @@ fn intern_get_tex_coords<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<f32>
 }
 
 fn intern_get_indices<'a, 's, F>(reader: &Reader<'a, 's, F>) -> Vec<i32>
-  where
-    F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
+where
+  F: Clone + Fn(::gltf::Buffer<'a>) -> Option<&'s [u8]>,
 {
   let mut indices: Vec<i32> = vec![];
   if let Some(read_indices) = reader.read_indices() {

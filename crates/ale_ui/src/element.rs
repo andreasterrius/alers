@@ -1,9 +1,11 @@
 use ale_data::alevec::AleVec;
+use crate::button::Button;
 use crate::text::Text;
 
 pub enum Element {
     Elements(Elements),
-    Text(Text)
+    Button(Button),
+    Text(Text),
 }
 
-pub struct Elements (pub AleVec<Element>);
+pub struct Elements(pub AleVec<Element>);

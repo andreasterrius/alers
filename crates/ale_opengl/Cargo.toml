@@ -16,3 +16,4 @@ ale_input = { path = "../ale_input" }
 ale_data = { path = "../ale_data" }
 gl = "0.14.0"
 snowflake = "1.3.0"
+thiserror = "1.0"

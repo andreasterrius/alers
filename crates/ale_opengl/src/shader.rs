@@ -1,7 +1,8 @@
-use ale_resources::shader::Shader;
 use crate::raw;
 use crate::raw::{create_shader, CreateShaderError};
+use ale_resources::shader::Shader;
 use ale_variable::Variable;
+use thiserror::Error;
 
 pub struct OpenGLShaderId(pub u32);
 
@@ -38,13 +39,8 @@ impl OpenGLShader {
   }
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum OpenGLShaderError {
-  CompilationError(CreateShaderError),
-}
-
-impl From<CreateShaderError> for OpenGLShaderError {
-  fn from(error: CreateShaderError) -> Self {
-    OpenGLShaderError::CompilationError(error)
-  }
+  #[error("compile shader error")]
+  CompilationError(#[from] CreateShaderError),
 }

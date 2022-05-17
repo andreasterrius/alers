@@ -1,5 +1,6 @@
 use crate::raw::{create_buffer, CreateBufferError};
 use ale_resources::mesh::Mesh;
+use thiserror::Error;
 
 pub struct OpenGLMesh {
   pub vao: u32,
@@ -20,13 +21,8 @@ impl OpenGLMesh {
   }
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum OpenGLMeshError {
-  CreateBufferError(CreateBufferError),
-}
-
-impl From<CreateBufferError> for OpenGLMeshError {
-  fn from(error: CreateBufferError) -> Self {
-    OpenGLMeshError::CreateBufferError(error)
-  }
+  #[error("create buffer error")]
+  CreateBufferError(#[from] CreateBufferError),
 }

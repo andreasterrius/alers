@@ -2,12 +2,12 @@ use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
 use ale_app::{ale_app_run, App};
 use ale_camera::Camera;
-use ale_input::Input;
+use ale_input::{Input, Key};
 use ale_math::color::Color;
 use ale_math::rect::Rect;
 use ale_math::{Array, Vector2, Vector3, Zero};
-use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
 use ale_opengl::text::TextRenderer;
+use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
 use ale_resources::font::Font;
 use ale_resources::path::ResourcePath;
 use ale_resources::resources::Resources;
@@ -33,7 +33,9 @@ impl App<UIState> for UIApp {
     let mut resources = Resources::new();
     let font = resources
       .fonts
-      .push(Font::load(&ResourcePath::find("font/Inconsolata-Regular.ttf")));
+      .load(&ResourcePath::find("font/Inconsolata-Regular.ttf"))
+      .unwrap()
+      .remove(0);
 
     let mut ui_root = ui::Root::new();
     ui_root.add_element(Element::Text(Text::new(
@@ -43,7 +45,7 @@ impl App<UIState> for UIApp {
       12,
     )));
 
-    let text_renderer = TextRenderer::new();
+    let text_renderer = TextRenderer::new_with_resources(&mut resources).unwrap();
     let mut camera = Camera::new(Vector3::zero(), window.get_display_info().dimension.clone(), 90.0);
     camera.look_at(Vector3::zero());
 

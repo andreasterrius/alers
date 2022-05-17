@@ -80,6 +80,7 @@ dependencies = [
  "ale_variable",
  "gl",
  "snowflake",
+ "thiserror",
 ]
 
 [[package]]
@@ -121,6 +122,7 @@ dependencies = [
  "image 0.24.2",
  "rusttype",
  "snowflake",
+ "thiserror",
 ]
 
 [[package]]
@@ -129,6 +131,7 @@ version = "0.1.0"
 dependencies = [
  "ale_camera",
  "ale_data",
+ "ale_input",
  "ale_math",
  "ale_opengl",
  "ale_resources",

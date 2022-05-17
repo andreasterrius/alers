@@ -1,10 +1,12 @@
-use crate::element::{Element, Elements};
-use crate::text::Text;
-use crate::ui;
 use ale_camera::CameraRenderInfo;
 use ale_opengl::text::TextRenderer;
 use ale_resources::font::Font;
 use ale_resources::resources::Resources;
+
+use crate::button::Button;
+use crate::element::{Element, Elements};
+use crate::text::Text;
+use crate::ui;
 
 pub struct Layout<'a> {
   text_renderer: &'a mut TextRenderer,
@@ -12,13 +14,17 @@ pub struct Layout<'a> {
   camera_render_info: CameraRenderInfo,
 }
 
-impl <'a> Layout<'a> {
+impl<'a> Layout<'a> {
   pub fn new(
     text_renderer: &'a mut TextRenderer,
     resources: &'a mut Resources,
     camera_render_info: CameraRenderInfo,
   ) -> Layout<'a> {
-    Layout { text_renderer, resources, camera_render_info }
+    Layout {
+      text_renderer,
+      resources,
+      camera_render_info,
+    }
   }
 
   pub fn render(&mut self, root: &ui::Root) {
@@ -30,14 +36,17 @@ impl <'a> Layout<'a> {
       match e {
         Element::Elements(ele) => self.render_elements(ele),
         Element::Text(text) => self.render_text(text),
+        Element::Button(button) => self.render_button(button),
       }
     }
   }
 
   fn render_text(&mut self, text: &Text) {
     let font = match self.resources.fonts.get_mut(text.get_font()) {
-      None => { return; }
-      Some(font) => {font}
+      None => {
+        return;
+      }
+      Some(font) => font,
     };
 
     self.text_renderer.render(
@@ -49,4 +58,6 @@ impl <'a> Layout<'a> {
       None,
     )
   }
+
+  fn render_button(&mut self, button: &Button) {}
 }

@@ -1,14 +1,16 @@
 use core::{mem, ptr};
-pub use gl::load_with;
 use std::convert::TryInto;
 use std::ffi::{c_void, CString};
 use std::ptr::null;
 
+pub use gl::load_with;
 use gl::types::{GLchar, GLfloat, GLint, GLsizeiptr};
+use thiserror::Error;
+
 use ale_data::buffer::Buffer;
 use ale_resources::texture::{Texture, TextureMagnificationType, TexturePixel, TextureWrapType};
 
-use crate::texture::{OpenGLTextureId};
+use crate::texture::OpenGLTextureId;
 
 pub unsafe fn clear_buffer(r: f32, g: f32, b: f32) {
   gl::ClearColor(r, g, b, 1.0f32);
@@ -107,8 +109,8 @@ pub unsafe fn draw_elements(draw_size: u32) {
   gl::DrawElements(gl::TRIANGLES, draw_size as i32, gl::UNSIGNED_INT, ptr::null());
 }
 
-#[derive(Debug)]
-pub struct CreateBufferError {}
+#[derive(Error, Debug)]
+pub enum CreateBufferError {}
 
 pub unsafe fn create_buffer(
   vertices: &Buffer<f32>,
@@ -176,12 +178,15 @@ pub unsafe fn create_buffer(
   Ok((vao, vbo, ebo, draw_size))
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum CreateShaderError {
+  #[error("vertex shader error {}", .0)]
   VertexShaderError(String),
+  #[error("fragment shader error {}", .0)]
   FragmentShaderError(String),
+  #[error("geometry shader error {}", .0)]
   GeometryShaderError(String),
-
+  #[error("link shader error {}", .0)]
   LinkingShaderError(String),
 }
 
