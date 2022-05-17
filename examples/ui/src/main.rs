@@ -40,8 +40,8 @@ impl App<UIState> for UIApp {
 
     let mut ui_root = ui::Root::new();
     ui_root.add_element(Element::Text(Text::new(
-      Vector2::zero(),
-      String::from("some label"),
+      Vector2::new(300.0, 300.0),
+      String::from("some label asdadsadas"),
       font,
       12,
     )));

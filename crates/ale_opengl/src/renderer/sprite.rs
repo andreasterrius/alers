@@ -73,10 +73,10 @@ impl SpriteRenderer {
 
 #[derive(Error, Debug)]
 pub enum SpriteRendererError {
-  #[error("(SpriteRendererError::MeshError)")]
+  #[error("(SpriteRendererError::MeshError) {}", .0)]
   MeshError(#[from] OpenGLMeshError),
-  #[error("(SpriteRendererError::ShaderError)")]
+  #[error("(SpriteRendererError::ShaderError) {}", .0)]
   ShaderError(#[from] OpenGLShaderError),
-  #[error("(SpriteRendererError::ShaderLoadError)")]
+  #[error("(SpriteRendererError::ShaderLoadError) {}", .0)]
   ShaderLoadError(#[from] shader::LoadError),
 }

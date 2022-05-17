@@ -12,6 +12,7 @@ use ale_resources::shader;
 use ale_resources::shader::Shader;
 
 use crate::mesh::OpenGLMesh;
+use crate::raw;
 use crate::shader::OpenGLShader;
 use crate::texture::OpenGLTexture;
 
@@ -81,7 +82,7 @@ impl TextRenderer {
         origin + Vector2::new(l.offset_min.x as f32, l.offset_min.y as f32),
         &Color::from_rgb(1.0, 1.0, 1.0),
         &camera_render_info,
-      )
+      );
     }
   }
 }
