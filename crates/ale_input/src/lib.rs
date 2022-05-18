@@ -5,11 +5,12 @@ pub enum Input {
   Key(Key, Scancode, Action, Modifier),
   Char(char),
   MouseMotion {
-    rel_x : f32,
-    rel_y : f32,
-    abs_x : f32,
-    abs_y : f32
+    rel_x: f32,
+    rel_y: f32,
+    abs_x: f32,
+    abs_y: f32,
   },
+  MouseButton(MouseButton, Action, Modifier),
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -155,4 +156,16 @@ bitflags! {
     const CAPSLOCK  = 0b00010000;
     const NUMLOCK   = 0b00100000;
   }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub enum MouseButton {
+  ButtonLeft,   // Button1
+  ButtonRight,  // Button2
+  ButtonMiddle, // Button3
+  Button4,
+  Button5,
+  Button6,
+  Button7,
+  Button8,
 }

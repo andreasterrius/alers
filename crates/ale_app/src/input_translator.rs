@@ -1,4 +1,4 @@
-use glfw::{Action, Key};
+use glfw::{Action, Key, MouseButton};
 
 pub fn translate_key(glfw_key: glfw::Key) -> ale_input::Key {
   match glfw_key {
@@ -159,4 +159,17 @@ pub fn translate_modifier(glfw_modifier: glfw::Modifiers) -> ale_input::Modifier
     modifier.insert(ale_input::Modifier::NUMLOCK);
   }
   modifier
+}
+
+pub fn translate_mousebutton(glfw_mouse: glfw::MouseButton) -> ale_input::MouseButton {
+  match glfw_mouse {
+    MouseButton::Button1 => ale_input::MouseButton::ButtonLeft,
+    MouseButton::Button2 => ale_input::MouseButton::ButtonRight,
+    MouseButton::Button3 => ale_input::MouseButton::ButtonMiddle,
+    MouseButton::Button4 => ale_input::MouseButton::Button4,
+    MouseButton::Button5 => ale_input::MouseButton::Button5,
+    MouseButton::Button6 => ale_input::MouseButton::Button6,
+    MouseButton::Button7 => ale_input::MouseButton::Button7,
+    MouseButton::Button8 => ale_input::MouseButton::Button8,
+  }
 }

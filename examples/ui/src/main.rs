@@ -47,8 +47,8 @@ impl App<UIState> for UIApp {
       12,
     )));
     ui_elements.add(Element::Button(Button::new(
-      Vector2::new(100.0, 100.0),
-      Vector2::new(20.0, 30.0),
+      Vector2::new(100, 100),
+      Vector2::new(20, 30),
       Color::from_rgba(1.0, 0.0, 0.0, 1.0),
       Color::from_rgba(0.0, 1.0, 0.0, 1.0),
       Color::from_rgba(0.0, 0.0, 1.0, 1.0),

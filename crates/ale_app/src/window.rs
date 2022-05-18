@@ -1,5 +1,5 @@
 use crate::display_info::DisplayInfo;
-use crate::input_translator::{translate_action, translate_key, translate_modifier, translate_scancode};
+use crate::input_translator::{translate_action, translate_key, translate_modifier, translate_mousebutton, translate_scancode};
 use ale_input::Input;
 use ale_math::Vector2;
 use glfw::{Action, Context, CursorMode, Key, WindowEvent};
@@ -38,6 +38,7 @@ impl<'a> WindowCreator<'a> {
     glfw_window.set_char_polling(true);
     glfw_window.set_key_polling(true);
     glfw_window.set_cursor_pos_polling(true);
+    glfw_window.set_mouse_button_polling(true);
     glfw_window.set_framebuffer_size_polling(true);
     glfw_window.set_cursor_mode(CursorMode::Normal);
 
@@ -115,6 +116,9 @@ impl Window {
         }),
         glfw::WindowEvent::Char(char) => {
           inputs.push(Input::Char(char));
+        }
+        glfw::WindowEvent::MouseButton(mbtn, action, modifier) => {
+          inputs.push(Input::MouseButton(translate_mousebutton(mbtn), translate_action(action), translate_modifier(modifier)))
         }
         _ => {}
       }
