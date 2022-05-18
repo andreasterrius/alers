@@ -85,11 +85,11 @@ impl FlyCamera {
       Input::Key(Key::S, _, Action::Release, _) => self.move_input.z += 1.0f32,
       Input::Key(Key::Z, _, Action::Press, _) => self.disable_input = !self.disable_input,
 
-      Input::MouseMotion(x, y) => {
-        self.rotate_input.x += *x;
-        self.rotate_input.y += *y;
-        self.delta_rotate_input.x = *x;
-        self.delta_rotate_input.y = *y;
+      Input::MouseMotion{rel_x, rel_y, abs_x, abs_y} => {
+        self.rotate_input.x += *rel_x;
+        self.rotate_input.y += *rel_y;
+        self.delta_rotate_input.x = *rel_x;
+        self.delta_rotate_input.y = *rel_y;
       }
       _ => {}
     }

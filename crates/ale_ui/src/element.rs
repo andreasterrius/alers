@@ -29,9 +29,7 @@ impl Elements {
   pub fn input(&mut self, input: &Input) {
     for child in self.childs.iter_mut() {
       match child {
-        Element::Elements(ele) => {
-          ele.input(input);
-        }
+        Element::Elements(ele) => ele.input(input),
         Element::Button(btn) => btn.input(input),
         Element::Text(txt) => {}
       }

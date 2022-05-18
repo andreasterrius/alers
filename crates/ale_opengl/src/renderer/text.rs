@@ -23,7 +23,7 @@ pub struct TextRenderer {
 }
 
 impl TextRenderer {
-  pub fn new_with_resources(resources: &mut Resources) -> Result<TextRenderer, TextRendererError> {
+  pub fn  new_with_resources(resources: &mut Resources) -> Result<TextRenderer, TextRendererError> {
     let text_shader_key = resources.shaders.stash.load("shaders/text_2d")?.remove(0);
     let plane_mesh_key = resources.meshes.register(Mesh::new_plane());
 

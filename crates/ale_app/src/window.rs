@@ -95,13 +95,20 @@ impl Window {
         glfw::WindowEvent::CursorPos(x, y) => inputs.push(match self.mouse_position {
           None => {
             self.mouse_position = Some((x, y));
-            Input::MouseMotion(0.0f32, 0.0f32)
+            Input::MouseMotion {
+              rel_x: 0.0f32,
+              rel_y: 0.0f32,
+              abs_x: x as f32,
+              abs_y: y as f32,
+            }
           }
           Some(mouse_position) => {
-            let result = Input::MouseMotion(
-              (x - mouse_position.0) as f32 / self.display_info.get_dimension().get_width() as f32,
-              (y - mouse_position.1) as f32 / self.display_info.get_dimension().get_height() as f32,
-            );
+            let result = Input::MouseMotion {
+              rel_x: (x - mouse_position.0) as f32 / self.display_info.get_dimension().get_width() as f32,
+              rel_y: (y - mouse_position.1) as f32 / self.display_info.get_dimension().get_height() as f32,
+              abs_x: x as f32,
+              abs_y: y as f32,
+            };
             self.mouse_position = Some((x, y));
             result
           }

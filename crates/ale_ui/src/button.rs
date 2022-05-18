@@ -34,15 +34,14 @@ impl Button {
 
   pub fn input(&self, input: &Input) {
     match input {
-      Input::MouseMotion(x, y) => {
-        println!("{} {}", x, y);
+      Input::MouseMotion{rel_x, rel_y, abs_x, abs_y} => {
+        println!("{} {}", abs_x, abs_y);
       }
       _ => {}
     }
   }
 
   pub fn render_with(&self, rr : &mut RenderResources) {
-
     rr.sprite_renderer.render_flat_box_border(
       self.position,
       self.size,

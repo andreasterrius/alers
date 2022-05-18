@@ -4,7 +4,12 @@ use bitflags::bitflags;
 pub enum Input {
   Key(Key, Scancode, Action, Modifier),
   Char(char),
-  MouseMotion(f32, f32),
+  MouseMotion {
+    rel_x : f32,
+    rel_y : f32,
+    abs_x : f32,
+    abs_y : f32
+  },
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
