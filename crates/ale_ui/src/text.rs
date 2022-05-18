@@ -1,6 +1,7 @@
 use ale_data::alevec::Key;
 use ale_math::Vector2;
 use ale_resources::font::Font;
+use crate::element::RenderResources;
 
 pub struct Text {
   pos: Vector2<f32>,
@@ -19,27 +20,21 @@ impl Text {
     }
   }
 
-  pub fn set_text(&mut self, text: String) {
-    self.text = text;
-  }
+  pub fn render_with(&mut self, rr : &mut RenderResources) {
+    let font = match rr.resources.fonts.get_mut(self.font) {
+      None => {
+        return;
+      }
+      Some(font) => font,
+    };
 
-  pub fn set_pos(&mut self, pos: Vector2<f32>) {
-    self.pos = pos;
-  }
-
-  pub fn get_text(&self) -> &str {
-    &self.text
-  }
-
-  pub fn get_pos(&self) -> Vector2<f32> {
-    return self.pos;
-  }
-
-  pub fn get_font(&self) -> Key<Font> {
-    self.font
-  }
-
-  pub fn get_font_size(&self) -> u32 {
-    self.font_size
+    rr.text_renderer.render(
+      &rr.camera_render_info,
+      font,
+      self.font_size,
+      self.pos,
+      &self.text,
+      None,
+    )
   }
 }

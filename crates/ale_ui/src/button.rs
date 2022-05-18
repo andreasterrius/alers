@@ -2,6 +2,7 @@ use ale_input::Input;
 use ale_math::color::Color;
 use ale_math::{Matrix4, Vector2};
 use ale_opengl::renderer::sprite::SpriteRenderer;
+use crate::element::RenderResources;
 
 pub struct Button {
   position: Vector2<f32>,
@@ -31,16 +32,24 @@ impl Button {
     };
   }
 
-  pub fn input(&self, input: &Input) {}
+  pub fn input(&self, input: &Input) {
+    match input {
+      Input::MouseMotion(x, y) => {
+        println!("{} {}", x, y);
+      }
+      _ => {}
+    }
+  }
 
-  pub fn render_with(&self, sprite_renderer: &SpriteRenderer, ortho: Matrix4<f32>) {
-    sprite_renderer.render_flat_box_border(
+  pub fn render_with(&self, rr : &mut RenderResources) {
+
+    rr.sprite_renderer.render_flat_box_border(
       self.position,
       self.size,
       self.idle_color,
       2.0f32,
       self.enter_color,
-      ortho,
+      rr.camera_render_info.orthographic,
     )
   }
 }
