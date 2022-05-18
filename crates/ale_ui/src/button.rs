@@ -50,12 +50,16 @@ impl Button {
         let y = *abs_y as i32;
         if self.rect.is_inside(x, y) {
           self.is_hover = true;
+        } else {
+          self.is_hover = false;
         }
       }
       Input::MouseButton(mbtn, action, modifier) => {
         println!("{} {:?} {:?}", self.is_hover, mbtn, action);
         if self.is_hover && mbtn == &MouseButton::ButtonLeft && action == &Action::Press{
           self.is_pressed = true;
+        } else {
+          self.is_pressed = false;
         }
       }
       _ => {}
