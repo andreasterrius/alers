@@ -15,6 +15,7 @@ use ale_resources::resources::Resources;
 use ale_ui::button::Button;
 use ale_ui::element;
 use ale_ui::element::{Element, RenderResources};
+use ale_ui::layout::Layout;
 use ale_ui::text::Text;
 
 struct UIApp;
@@ -22,12 +23,18 @@ struct UIState {
   resources: Resources,
   text_renderer: TextRenderer,
   sprite_renderer: SpriteRenderer,
-  ui_elements: element::Elements,
+  ui_elements: element::Panel,
   camera: Camera,
 }
 
 fn main() {
-  ale_app_run(UIApp, DisplayInfo::new(Rect::new(800, 600)));
+  ale_app_run(
+    UIApp,
+    DisplayInfo::new(Rect {
+      position: Vector2::zero(),
+      size: Vector2::new(800, 600),
+    }),
+  );
 }
 
 impl App<UIState> for UIApp {
@@ -39,7 +46,7 @@ impl App<UIState> for UIApp {
       .unwrap()
       .remove(0);
 
-    let mut ui_elements = element::Elements::new();
+    let mut ui_elements = element::Panel::new(Layout::NoLayout);
     ui_elements.add(Element::Text(Text::new(
       Vector2::new(300.0, 300.0),
       String::from("some label asdadsadas"),

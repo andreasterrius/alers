@@ -339,7 +339,7 @@ impl RenderTasks for SimpleRenderTasks {
 
           unsafe {
             let (framebuffer, _) =
-              raw::create_framebuffer_cubemap(projection_dimension.get_height(), projection_dimension.get_width());
+              raw::create_framebuffer_cubemap(projection_dimension.size.x, projection_dimension.size.y);
 
             raw::use_shader(equirect_shader);
             raw::uniform1i(equirect_shader, "equirectangularMaps", 0);
@@ -358,10 +358,10 @@ impl RenderTasks for SimpleRenderTasks {
             };
 
             raw::set_viewport(
-              projection_dimension.get_x(),
-              projection_dimension.get_y(),
-              projection_dimension.get_width(),
-              projection_dimension.get_height(),
+              projection_dimension.position.x,
+              projection_dimension.position.y,
+              projection_dimension.size.x,
+              projection_dimension.size.y,
             );
             raw::bind_framebuffer(framebuffer.0);
             for i in 0..6 {
@@ -376,7 +376,7 @@ impl RenderTasks for SimpleRenderTasks {
             raw::bind_vao(0);
             // unbind framebuffer
             raw::bind_framebuffer(0);
-            raw::set_viewport(0, 0, original_dimension.get_width(), original_dimension.get_height());
+            raw::set_viewport(0, 0, original_dimension.size.x, original_dimension.size.y);
           }
         }
         Renderable::Skybox {

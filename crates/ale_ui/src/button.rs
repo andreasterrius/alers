@@ -1,9 +1,10 @@
-use crate::element::RenderResources;
 use ale_input::{Action, Input, MouseButton};
 use ale_math::color::Color;
 use ale_math::rect::Rect;
 use ale_math::{Matrix4, Vector2};
 use ale_opengl::renderer::sprite::SpriteRenderer;
+
+use crate::element::RenderResources;
 
 pub struct Button {
   rect: Rect,
@@ -25,7 +26,7 @@ impl Button {
     click_color: Color,
   ) -> Button {
     return Button {
-      rect: Rect::from_xy(position.x as i32, position.y as i32, size.x, size.y),
+      rect: Rect { position, size },
       idle_color,
       hover_color: enter_color,
       press_color: click_color,
@@ -38,7 +39,6 @@ impl Button {
   pub fn before_tick(&mut self) {}
 
   pub fn input(&mut self, input: &Input) {
-
     match input {
       Input::MouseMotion {
         rel_x,
@@ -56,7 +56,7 @@ impl Button {
       }
       Input::MouseButton(mbtn, action, modifier) => {
         println!("{} {:?} {:?}", self.is_hover, mbtn, action);
-        if self.is_hover && mbtn == &MouseButton::ButtonLeft && action == &Action::Press{
+        if self.is_hover && mbtn == &MouseButton::ButtonLeft && action == &Action::Press {
           self.is_pressed = true;
         } else {
           self.is_pressed = false;
@@ -76,8 +76,8 @@ impl Button {
     }
 
     rr.sprite_renderer.render_flat_box(
-      Vector2::new(self.rect.get_x() as f32, self.rect.get_y() as f32),
-      Vector2::new(self.rect.get_width() as f32, self.rect.get_height() as f32),
+      Vector2::new(self.rect.position.x as f32, self.rect.position.y as f32),
+      Vector2::new(self.rect.size.x as f32, self.rect.size.y as f32),
       button_color,
       rr.camera_render_info.orthographic,
     )

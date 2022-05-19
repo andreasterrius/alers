@@ -1,12 +1,13 @@
+use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
 use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
-use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
-use ale_camera::flycamera::FlyCamera;
 use ale_camera::Camera;
+use ale_camera::flycamera::FlyCamera;
 use ale_input::{Input, Key};
+use ale_math::{ale_bounding_box_closest_point, Array, Vector2, Vector3, Zero};
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
-use ale_math::{ale_bounding_box_closest_point, Array, Vector3};
+use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_opengl::debug::line::{
   ale_opengl_debug_context_new, ale_opengl_debug_point_queue, ale_opengl_debug_render, OpenGLDebugContext,
 };
@@ -14,7 +15,6 @@ use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
 };
 use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_context_new, OpenGLWireContext};
-use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_raymarch::{ale_ray_new, ale_ray_position_get, ale_raymarch_sdf_single};
 use ale_resources::gltf;
 use ale_resources::mesh::Mesh;
@@ -22,7 +22,10 @@ use ale_resources::mesh::sdf::{ale_mesh_sdf_distance, ale_mesh_sdf_new, MeshSDF}
 use ale_resources::texture::Texture;
 
 fn main() {
-  ale_app_run(SDFDemo, DisplayInfo::new(Rect::new(1024, 800)));
+  ale_app_run(SDFDemo,DisplayInfo::new(Rect {
+    position: Vector2::zero(),
+    size: Vector2::new(1024, 800),
+  }));
 }
 
 struct State {

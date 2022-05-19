@@ -27,8 +27,8 @@ impl<'a> WindowCreator<'a> {
     let (mut glfw_window, glfw_events) = self
       .glfw
       .create_window(
-        display_info.get_dimension().get_width(),
-        display_info.get_dimension().get_height(),
+        display_info.get_dimension().size.x,
+        display_info.get_dimension().size.y,
         "Alers",
         glfw::WindowMode::Windowed,
       )
@@ -105,8 +105,8 @@ impl Window {
           }
           Some(mouse_position) => {
             let result = Input::MouseMotion {
-              rel_x: (x - mouse_position.0) as f32 / self.display_info.get_dimension().get_width() as f32,
-              rel_y: (y - mouse_position.1) as f32 / self.display_info.get_dimension().get_height() as f32,
+              rel_x: (x - mouse_position.0) as f32 / self.display_info.get_dimension().size.x as f32,
+              rel_y: (y - mouse_position.1) as f32 / self.display_info.get_dimension().size.y as f32,
               abs_x: x as f32,
               abs_y: y as f32,
             };
@@ -132,8 +132,8 @@ impl Window {
 
   pub fn get_screen_size(&self) -> Vector2<u32> {
     Vector2::new(
-      self.display_info.dimension.get_width(),
-      self.display_info.dimension.get_height(),
+      self.display_info.dimension.size.x,
+      self.display_info.dimension.size.y,
     )
   }
 }

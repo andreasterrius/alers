@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use ale_camera::CameraRenderInfo;
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
-use ale_math::{perspective, Array, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector3};
+use ale_math::{perspective, Array, Deg, EuclideanSpace, Matrix, Matrix4, Point3, Vector2, Vector3, Zero};
 use ale_resources::mesh::{Mesh, MeshId};
 use ale_resources::shader::Shader;
 use ale_resources::texture::Texture;
@@ -58,8 +58,11 @@ pub fn ale_opengl_pbr_context_new(hdr_texture: &Texture, viewport_size: &Rect, m
 
   let ogl_hdr_texture = OpenGLTexture::new(hdr_texture).unwrap();
 
-  let cubemap_size = Rect::new(512, 512);
-  let cubemap_id = unsafe { raw::create_cubemap(cubemap_size.get_width(), cubemap_size.get_height()) };
+  let cubemap_size = Rect {
+    position: Vector2::zero(),
+    size: Vector2::new(512, 512),
+  };
+  let cubemap_id = unsafe { raw::create_cubemap(cubemap_size.size.x, cubemap_size.size.y) };
 
   intern_opengl_pbr_equirect_project(
     &equirect_shader,
@@ -70,11 +73,14 @@ pub fn ale_opengl_pbr_context_new(hdr_texture: &Texture, viewport_size: &Rect, m
     &cube_mesh,
   );
 
-  let convoluted_cubemap_size = Rect::new(32, 32);
+  let convoluted_cubemap_size = Rect {
+    position: Vector2::zero(),
+    size: Vector2::new(32, 32),
+  };
   let convoluted_cubemap_id = unsafe {
     raw::create_cubemap(
-      convoluted_cubemap_size.get_width(),
-      convoluted_cubemap_size.get_height(),
+      convoluted_cubemap_size.size.x,
+      convoluted_cubemap_size.size.y,
     )
   };
 
@@ -267,7 +273,7 @@ fn intern_opengl_pbr_equirect_project(
 
   unsafe {
     let (framebuffer, _) =
-      raw::create_framebuffer_cubemap(projection_dimension.get_height(), projection_dimension.get_width());
+      raw::create_framebuffer_cubemap(projection_dimension.size.x, projection_dimension.size.y);
 
     raw::use_shader(equirect_shader.id);
     raw::uniform1i(equirect_shader.id, "equirectangularMaps", 0);
@@ -284,10 +290,10 @@ fn intern_opengl_pbr_equirect_project(
     };
 
     raw::set_viewport(
-      projection_dimension.get_x(),
-      projection_dimension.get_y(),
-      projection_dimension.get_width(),
-      projection_dimension.get_height(),
+      projection_dimension.position.x,
+      projection_dimension.position.y,
+      projection_dimension.size.x,
+      projection_dimension.size.y,
     );
     raw::bind_framebuffer(framebuffer.0);
     for i in 0..6 {
@@ -302,6 +308,6 @@ fn intern_opengl_pbr_equirect_project(
     raw::bind_vao(0);
     // unbind framebuffer
     raw::bind_framebuffer(0);
-    raw::set_viewport(0, 0, original_dimension.get_width(), original_dimension.get_height());
+    raw::set_viewport(0, 0, original_dimension.size.x, original_dimension.size.y);
   }
 }

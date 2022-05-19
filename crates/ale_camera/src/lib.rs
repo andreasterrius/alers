@@ -19,7 +19,7 @@ pub struct Camera {
 
 impl Camera {
   pub fn new(position: Vector3<f32>, display_rect: Rect, fov: f32) -> Camera {
-    let aspect_ratio = display_rect.get_width() as f32 / display_rect.get_height() as f32;
+    let aspect_ratio = display_rect.size.x as f32 / display_rect.size.y as f32;
 
     Camera {
       transform: AleTransform::from_position_rotation(position, Quaternion::one()),
@@ -84,9 +84,6 @@ impl Camera {
     self.aspect_ratio
   }
 
-  pub fn viewport_size(&self) -> (u32, u32) {
-    (self.display_rect.get_height(), self.display_rect.get_width())
-  }
 
   fn recalculate_matrices(&mut self) {
     self.orthographic_mat = None;
@@ -120,8 +117,8 @@ impl Camera {
       None => {
         self.orthographic_mat = Some(ortho(
           0.0f32,
-          self.display_rect.get_width() as f32,
-          self.display_rect.get_height() as f32,
+          self.display_rect.size.x as f32,
+          self.display_rect.size.y as f32,
           0.0,
           -1.0,
           1.0f32,

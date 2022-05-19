@@ -1,27 +1,25 @@
 use rand::random;
 
-use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
 use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
+use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
 use ale_camera::Camera;
 use ale_input::{Action, Input, Key};
-use ale_math::{
-  ale_bounding_box_size, Transform, Vector3, Zero,
-};
 use ale_math::color::Color;
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
-use ale_opengl::{ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
+use ale_math::{ale_bounding_box_size, Transform, Vector2, Vector3, Zero};
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
 };
+use ale_opengl::{ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
+use ale_physics::rapier3d::dynamics::RigidBodyHandle;
+use ale_physics::rapier3d::geometry::ColliderHandle;
 use ale_physics::{
   ale_physics_context_new, ale_physics_context_tick, ale_physics_context_update,
   ale_physics_object_linear_velocity_get, ale_physics_object_linear_velocity_set, ale_physics_object_new,
   ale_physics_object_position_set, PhysicsContext, RigidBodyShape, RigidBodyType,
 };
-use ale_physics::rapier3d::dynamics::RigidBodyHandle;
-use ale_physics::rapier3d::geometry::ColliderHandle;
 use ale_resources::gltf;
 use ale_resources::mesh::{Mesh, MeshId};
 use ale_resources::texture::Texture;
@@ -29,7 +27,13 @@ use ale_resources::texture::Texture;
 use crate::Shape::{Cube, Sphere};
 
 fn main() {
-  ale_app_run(Pong, DisplayInfo::new(Rect::new(1024, 768)));
+  ale_app_run(
+    Pong,
+    DisplayInfo::new(Rect {
+      position: Vector2::zero(),
+      size: Vector2::new(800, 600),
+    }),
+  );
 }
 
 struct Pong;
