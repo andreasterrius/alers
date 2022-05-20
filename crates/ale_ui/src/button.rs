@@ -5,9 +5,10 @@ use ale_math::{Matrix4, Vector2};
 use ale_opengl::renderer::sprite::SpriteRenderer;
 
 use crate::element::RenderResources;
+use crate::layout::Layout;
 
 pub struct Button {
-  rect: Rect,
+  pub (crate) layout: Layout,
   idle_color: Color,
   hover_color: Color,
   press_color: Color,
@@ -26,7 +27,7 @@ impl Button {
     click_color: Color,
   ) -> Button {
     return Button {
-      rect: Rect { position, size },
+      layout: Layout::new_local(position, size),
       idle_color,
       hover_color: enter_color,
       press_color: click_color,
@@ -48,7 +49,7 @@ impl Button {
       } => {
         let x = *abs_x as i32;
         let y = *abs_y as i32;
-        if self.rect.is_inside(x, y) {
+        if self.layout.is_inside(x, y) {
           self.is_hover = true;
         } else {
           self.is_hover = false;
@@ -76,8 +77,8 @@ impl Button {
     }
 
     rr.sprite_renderer.render_flat_box(
-      Vector2::new(self.rect.position.x as f32, self.rect.position.y as f32),
-      Vector2::new(self.rect.size.x as f32, self.rect.size.y as f32),
+      Vector2::new(self.layout.global_position.x as f32, self.layout.global_position.y as f32),
+      Vector2::new(self.layout.global_size.x as f32, self.layout.global_size.y as f32),
       button_color,
       rr.camera_render_info.orthographic,
     )

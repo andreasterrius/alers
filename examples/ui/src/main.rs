@@ -15,7 +15,7 @@ use ale_resources::resources::Resources;
 use ale_ui::button::Button;
 use ale_ui::element;
 use ale_ui::element::{Element, RenderResources};
-use ale_ui::layout::Layout;
+use ale_ui::layout::LayoutType;
 use ale_ui::text::Text;
 
 struct UIApp;
@@ -46,9 +46,9 @@ impl App<UIState> for UIApp {
       .unwrap()
       .remove(0);
 
-    let mut ui_elements = element::Panel::new(Layout::NoLayout);
+    let mut ui_elements = element::Panel::new(LayoutType::NoLayout);
     ui_elements.add(Element::Text(Text::new(
-      Vector2::new(300.0, 300.0),
+      Vector2::new(300, 300),
       String::from("some label asdadsadas"),
       font,
       12,
@@ -60,6 +60,7 @@ impl App<UIState> for UIApp {
       Color::from_rgba(0.0, 1.0, 0.0, 1.0),
       Color::from_rgba(0.0, 0.0, 1.0, 1.0),
     )));
+    ui_elements.refresh_layout();
 
     let text_renderer = TextRenderer::new_with_resources(&mut resources)?;
     let sprite_renderer = SpriteRenderer::new_with_resource(&mut resources)?;
