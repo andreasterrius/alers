@@ -15,7 +15,7 @@ use ale_resources::resources::Resources;
 use ale_ui::button::Button;
 use ale_ui::element;
 use ale_ui::element::{Element, RenderResources};
-use ale_ui::layout::LayoutType;
+use ale_ui::layout::{LayoutType, TableLayoutType};
 use ale_ui::text::Text;
 
 struct UIApp;
@@ -46,21 +46,25 @@ impl App<UIState> for UIApp {
       .unwrap()
       .remove(0);
 
-    let mut ui_elements = element::Panel::new(LayoutType::NoLayout);
+    let mut ui_elements = element::Panel::new_root(
+      LayoutType::TableLayout(TableLayoutType::new_divider(vec![vec![0.7, 0.3], vec![0.2, 0.3, 0.5]], vec![0.7, 0.3])),
+      window.get_display_info().dimension.size,
+    );
     ui_elements.add(Element::Text(Text::new(
       Vector2::new(300, 300),
       String::from("some label asdadsadas"),
       font,
       12,
     )));
-    ui_elements.add(Element::Button(Button::new(
-      Vector2::new(100, 100),
-      Vector2::new(20, 30),
-      Color::from_rgba(1.0, 0.0, 0.0, 1.0),
-      Color::from_rgba(0.0, 1.0, 0.0, 1.0),
-      Color::from_rgba(0.0, 0.0, 1.0, 1.0),
-    )));
-    ui_elements.refresh_layout();
+    ui_elements.add(Element::Button(Button::new(Vector2::zero(), Vector2::zero(),
+                                                Color::yellow(), Color::yellow(), Color::yellow())));
+    ui_elements.add(Element::Button(Button::new(Vector2::zero(), Vector2::zero(),
+      Color::green(), Color::green(), Color::green())));
+    ui_elements.add(Element::Button(Button::new(Vector2::zero(), Vector2::zero(),
+                                                Color::blue(), Color::blue(), Color::blue())));
+    ui_elements.add(Element::Button(Button::new(Vector2::zero(), Vector2::zero(),
+                                                Color::red(), Color::red(), Color::red())));
+    ui_elements.refresh_layout()?;
 
     let text_renderer = TextRenderer::new_with_resources(&mut resources)?;
     let sprite_renderer = SpriteRenderer::new_with_resource(&mut resources)?;

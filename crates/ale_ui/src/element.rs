@@ -2,7 +2,7 @@ use ale_camera::CameraRenderInfo;
 use ale_data::alevec::AleVec;
 use ale_input::Input;
 use ale_math::rect::Rect;
-use ale_math::Vector2;
+use ale_math::{Vector2, Zero};
 use ale_opengl::renderer::sprite::SpriteRenderer;
 use ale_opengl::renderer::text::TextRenderer;
 use ale_resources::resources::Resources;
@@ -32,9 +32,9 @@ impl Panel {
     };
   }
 
-  pub fn new_layout(layout_type: LayoutType, local_position: Vector2<i32>, local_size: Vector2<u32>) -> Panel {
+  pub fn new_root(layout_type: LayoutType, local_size: Vector2<u32>) -> Panel {
     return Panel {
-      layout: Layout::new_local(local_position, local_size),
+      layout: Layout::new_local(Vector2::zero(), local_size),
       layout_type,
       childs: AleVec::new(),
     };

@@ -20,7 +20,7 @@ impl LayoutType {
 #[derive(Error, Debug)]
 pub enum LayoutError {
   #[error(transparent)]
-  TableLayoutTypeError(#[from] TableLayoutTypeError)
+  TableLayoutTypeError(#[from] TableLayoutTypeError),
 }
 
 pub struct TableLayoutType {
@@ -50,7 +50,7 @@ impl TableLayoutType {
 
   pub fn add_column(&mut self, row_index: usize, divider: f32) -> Result<(), TableLayoutTypeError> {
     if row_index >= self.row_divider.len() {
-      return Err(TableLayoutTypeError::RowNotFound(row_index, self.row_divider.len()));
+      return Err(RowNotFound(row_index, self.row_divider.len()));
     }
 
     self.column_dividers[row_index].push(divider);
@@ -65,14 +65,14 @@ impl TableLayoutType {
 
     let mut child_index = 0;
     let mut upper_left_pos = Vector2::from_value(0);
-    for column_divider in &self.column_dividers {
+    for (row_index, column_divider) in self.column_dividers.iter().enumerate() {
       let mut column_percentage_total = 0.0f32;
       for column in column_divider {
         column_percentage_total += column;
       }
 
-      let row = match self.row_divider.get(child_index) {
-        None => return Err(RowNotFound(child_index, self.row_divider.len())),
+      let row = match self.row_divider.get(row_index) {
+        None => return Err(RowNotFound(row_index, self.row_divider.len())),
         Some(r) => r,
       };
 
@@ -106,6 +106,7 @@ pub enum TableLayoutTypeError {
   RowNotFound(usize, usize),
 }
 
+#[derive(Debug)]
 pub struct Layout {
   pub position: Vector2<i32>,
   pub size: Vector2<u32>,

@@ -8,6 +8,26 @@ pub struct Color {
 }
 
 impl Color {
+  pub fn red() -> Color {
+    return Color::from_rgb(1.0, 0.0, 0.0);
+  }
+
+  pub fn green() -> Color {
+    return Color::from_rgb(0.0, 1.0, 0.0);
+  }
+
+  pub fn yellow() -> Color {
+    return Color::from_rgb(1.0, 1.0, 0.0);
+  }
+
+  pub fn blue() -> Color {
+    return Color::from_rgb(0.0, 0.0, 1.0);
+  }
+
+  pub fn white() -> Color {
+    return Color::from_rgb(1.0, 1.0, 1.0);
+  }
+
   pub fn from_rgb(r: f32, g: f32, b: f32) -> Color {
     Color { r, g, b, a: 1.0 }
   }
