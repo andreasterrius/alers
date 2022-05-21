@@ -12,3 +12,4 @@ ale_opengl = { path = "../ale_opengl" }
 ale_resources = { path = "../ale_resources" }
 ale_camera = { path = "../ale_camera" }
 ale_input = { path = "../ale_input" }
+thiserror = "1.0"

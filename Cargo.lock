@@ -140,6 +140,7 @@ dependencies = [
  "ale_math",
  "ale_opengl",
  "ale_resources",
+ "thiserror",
 ]
 
 [[package]]

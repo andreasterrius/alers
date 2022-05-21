@@ -8,7 +8,7 @@ use ale_opengl::renderer::text::TextRenderer;
 use ale_resources::resources::Resources;
 
 use crate::button::Button;
-use crate::layout::{Layout, LayoutType};
+use crate::layout::{Layout, LayoutError, LayoutType};
 use crate::text::Text;
 
 pub enum Element {
@@ -18,9 +18,9 @@ pub enum Element {
 }
 
 pub struct Panel {
-  pub (crate) layout: Layout,
-  pub (crate) layout_type: LayoutType,
-  pub (crate) childs: AleVec<Element>,
+  pub(crate) layout: Layout,
+  pub(crate) layout_type: LayoutType,
+  pub(crate) childs: AleVec<Element>,
 }
 
 impl Panel {
@@ -32,24 +32,24 @@ impl Panel {
     };
   }
 
-  pub fn new_layout(layout_type: LayoutType, local_position : Vector2<i32>, local_size : Vector2<u32>) -> Panel {
+  pub fn new_layout(layout_type: LayoutType, local_position: Vector2<i32>, local_size: Vector2<u32>) -> Panel {
     return Panel {
       layout: Layout::new_local(local_position, local_size),
       layout_type,
       childs: AleVec::new(),
-    }
+    };
   }
 
   pub fn add(&mut self, element: Element) {
     self.childs.push(element);
   }
 
-  pub fn resize(&mut self, new_size : Vector2<u32>) {
+  pub fn resize(&mut self, new_size: Vector2<u32>) {
     self.layout.size = new_size;
     self.refresh_layout();
   }
 
-  pub fn refresh_layout(&mut self){
+  pub fn refresh_layout(&mut self) -> Result<(), LayoutError> {
     let mut child_layouts = vec![];
     for child in self.childs.iter_mut() {
       match child {
@@ -61,7 +61,7 @@ impl Panel {
       }
     }
 
-    self.layout_type.arrange(child_layouts);
+    self.layout_type.arrange(&self.layout, child_layouts)
   }
 
   pub fn input(&mut self, input: &Input) {
@@ -77,9 +77,7 @@ impl Panel {
   pub fn render_with(&mut self, render_resources: &mut RenderResources) {
     for e in self.childs.iter_mut() {
       match e {
-        Element::Panel(ele) => {
-          ele.render_with(render_resources)
-        },
+        Element::Panel(ele) => ele.render_with(render_resources),
         Element::Text(text) => text.render_with(render_resources),
         Element::Button(button) => button.render_with(render_resources),
       }
