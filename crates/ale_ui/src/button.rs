@@ -37,6 +37,18 @@ impl Button {
     };
   }
 
+  pub fn new_basic(color : Color) -> Button {
+    return Button {
+      layout: Layout::new(),
+      idle_color: color,
+      hover_color: color,
+      press_color: color,
+      is_pressed: false,
+      is_hover: false,
+      is_disable: false
+    }
+  }
+
   pub fn before_tick(&mut self) {}
 
   pub fn input(&mut self, input: &Input) {
@@ -56,7 +68,6 @@ impl Button {
         }
       }
       Input::MouseButton(mbtn, action, modifier) => {
-        println!("{} {:?} {:?}", self.is_hover, mbtn, action);
         if self.is_hover && mbtn == &MouseButton::ButtonLeft && action == &Action::Press {
           self.is_pressed = true;
         } else {

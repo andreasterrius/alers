@@ -47,7 +47,10 @@ impl App<UIState> for UIApp {
       .remove(0);
 
     let mut ui_elements = element::Panel::new_root(
-      LayoutType::TableLayout(TableLayoutType::new_divider(vec![vec![0.7, 0.3], vec![0.2, 0.3, 0.5]], vec![0.7, 0.3])),
+      LayoutType::TableLayout(TableLayoutType::new_divider(
+        vec![vec![0.7, 0.3], vec![0.2, 0.3, 0.5]],
+        vec![0.7, 0.3],
+      )),
       window.get_display_info().dimension.size,
     );
     ui_elements.add(Element::Text(Text::new(
@@ -56,14 +59,10 @@ impl App<UIState> for UIApp {
       font,
       12,
     )));
-    ui_elements.add(Element::Button(Button::new(Vector2::zero(), Vector2::zero(),
-                                                Color::yellow(), Color::yellow(), Color::yellow())));
-    ui_elements.add(Element::Button(Button::new(Vector2::zero(), Vector2::zero(),
-      Color::green(), Color::green(), Color::green())));
-    ui_elements.add(Element::Button(Button::new(Vector2::zero(), Vector2::zero(),
-                                                Color::blue(), Color::blue(), Color::blue())));
-    ui_elements.add(Element::Button(Button::new(Vector2::zero(), Vector2::zero(),
-                                                Color::red(), Color::red(), Color::red())));
+    ui_elements.add(Element::Button(Button::new_basic(Color::red())));
+    ui_elements.add(Element::Button(Button::new_basic(Color::green())));
+    ui_elements.add(Element::Button(Button::new_basic(Color::blue())));
+    ui_elements.add(Element::Button(Button::new_basic(Color::yellow())));
     ui_elements.refresh_layout()?;
 
     let text_renderer = TextRenderer::new_with_resources(&mut resources)?;
