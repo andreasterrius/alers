@@ -1,31 +1,35 @@
-use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
 use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
-use ale_camera::Camera;
+use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
 use ale_camera::flycamera::FlyCamera;
+use ale_camera::Camera;
 use ale_input::{Input, Key};
-use ale_math::{ale_bounding_box_closest_point, Array, Vector2, Vector3, Zero};
 use ale_math::rect::Rect;
 use ale_math::transform::AleTransform;
-use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
+use ale_math::{ale_bounding_box_closest_point, Array, Vector2, Vector3, Zero};
 use ale_opengl::debug::line::{
   ale_opengl_debug_context_new, ale_opengl_debug_point_queue, ale_opengl_debug_render, OpenGLDebugContext,
 };
 use ale_opengl::pbr::{
   ale_opengl_pbr_context_new, ale_opengl_pbr_render, ale_opengl_pbr_render_envmap, OpenGLPBRContext,
 };
-use ale_opengl::wire::{ale_opengl_wire_boundingbox_render, ale_opengl_wire_context_new, OpenGLWireContext};
+use ale_opengl::wire::MeshWireRenderer;
+use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_depth_test_enable};
 use ale_raymarch::{ale_ray_new, ale_ray_position_get, ale_raymarch_sdf_single};
 use ale_resources::gltf;
-use ale_resources::mesh::Mesh;
 use ale_resources::mesh::sdf::{ale_mesh_sdf_distance, ale_mesh_sdf_new, MeshSDF};
+use ale_resources::mesh::Mesh;
+use ale_resources::resources::Resources;
 use ale_resources::texture::Texture;
 
 fn main() {
-  ale_app_run(SDFDemo,DisplayInfo::new(Rect {
-    position: Vector2::zero(),
-    size: Vector2::new(1024, 800),
-  }));
+  ale_app_run(
+    SDFDemo,
+    DisplayInfo::new(Rect {
+      position: Vector2::zero(),
+      size: Vector2::new(1024, 800),
+    }),
+  );
 }
 
 struct State {
@@ -34,7 +38,7 @@ struct State {
   sphere: (AleTransform, Mesh),
   sphere_sdf: MeshSDF,
 
-  opengl_wire_context: OpenGLWireContext,
+  mesh_wire_renderer: MeshWireRenderer,
   opengl_pbr_context: OpenGLPBRContext,
   opengl_line_debug_context: OpenGLDebugContext,
 }
@@ -46,6 +50,7 @@ impl App<State> for SDFDemo {
     let mut sphere_mesh = gltf::load(&ale_app_resource_path("gltf/bakso.gltf")).remove(0);
     //let mut sphere = vec![(Transform::new(), Mesh::new_cube())];
     let transform = AleTransform::from_position_scale(Vector3::from_value(-2.0), Vector3::from_value(2.0));
+    let mut resources = Resources::new();
 
     let fly_camera = FlyCamera::new(Camera::new(
       Vector3::from_value(0.0),
@@ -53,7 +58,7 @@ impl App<State> for SDFDemo {
       90.0,
     ));
     let sphere_sdf = ale_mesh_sdf_new(&sphere_mesh, 10);
-    let opengl_wire_context = ale_opengl_wire_context_new();
+    let mesh_wire_renderer = MeshWireRenderer::new_with_resource(&mut resources)?;
 
     let hdr_texture = Texture::load(&ale_app_resource_path("hdr/GravelPlaza_Env.hdr")).unwrap();
     let opengl_pbr_context =
@@ -68,7 +73,7 @@ impl App<State> for SDFDemo {
       fly_camera,
       sphere: (transform, sphere_mesh),
       sphere_sdf,
-      opengl_wire_context,
+      mesh_wire_renderer,
       opengl_pbr_context,
       opengl_line_debug_context,
     })
@@ -111,7 +116,6 @@ impl App<State> for SDFDemo {
             );
             curr_point = ale_ray_position_get(&ray, curr_dist);
           }
-          println!();
         }
         _ => {}
       }
@@ -164,8 +168,8 @@ impl App<State> for SDFDemo {
     ale_opengl_debug_render(&state.opengl_line_debug_context, &camera_render_info);
     //ale_opengl_line_debug_clear(&mut state.opengl_line_debug_context);
 
-    ale_opengl_wire_boundingbox_render(
-      &mut state.opengl_wire_context,
+
+    state.mesh_wire_renderer.render_bounding_box(
       vec![(&mut state.sphere.0, &mut state.sphere.1)],
       &camera_render_info,
     );

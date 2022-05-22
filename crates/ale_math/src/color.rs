@@ -28,6 +28,8 @@ impl Color {
     return Color::from_rgb(1.0, 1.0, 1.0);
   }
 
+  pub fn light_blue() -> Color { return Color::from_rgb(0.123f32, 0.54, 0.514); }
+
   pub fn from_rgb(r: f32, g: f32, b: f32) -> Color {
     Color { r, g, b, a: 1.0 }
   }

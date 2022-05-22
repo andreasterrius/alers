@@ -1,11 +1,13 @@
+use thiserror::Error;
+
 use ale_data::alevec::Key;
 use ale_data::buffer::{Buffer, BufferBuilder};
-use ale_math::transform::AleTransform;
 use ale_math::{Array, InnerSpace, Matrix4, Vector2, Vector3, Zero};
+use ale_math::transform::AleTransform;
 
+use crate::{struct_id, struct_id_impl};
 use crate::gltf::load;
 use crate::stash::{Load, Stash};
-use crate::{struct_id, struct_id_impl};
 
 pub mod iter;
 pub mod sdf;
@@ -283,6 +285,8 @@ impl Mesh {
   }
 }
 
+#[derive(Error, Debug)]
+#[error("LoadError")]
 pub struct LoadError;
 pub struct Loader;
 impl Load<Mesh, LoadError> for Loader {

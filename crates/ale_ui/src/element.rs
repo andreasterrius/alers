@@ -8,10 +8,12 @@ use ale_opengl::renderer::text::TextRenderer;
 use ale_resources::resources::Resources;
 
 use crate::button::Button;
+use crate::empty::Empty;
 use crate::layout::{Layout, LayoutError, LayoutType};
 use crate::text::Text;
 
 pub enum Element {
+  Empty(Empty),
   Panel(Panel),
   Button(Button),
   Text(Text),
@@ -58,6 +60,7 @@ impl Panel {
         }
         Element::Button(btn) => child_layouts.push(&mut btn.layout),
         Element::Text(txt) => child_layouts.push(&mut txt.layout),
+        Element::Empty(empty) => child_layouts.push(&mut empty.layout),
       }
     }
 
@@ -70,6 +73,7 @@ impl Panel {
         Element::Panel(ele) => ele.input(input),
         Element::Button(btn) => btn.input(input),
         Element::Text(txt) => {}
+        Element::Empty(empty) => {}
       }
     }
   }
@@ -80,6 +84,7 @@ impl Panel {
         Element::Panel(ele) => ele.render_with(render_resources),
         Element::Text(text) => text.render_with(render_resources),
         Element::Button(button) => button.render_with(render_resources),
+        Element::Empty(_) => {}
       }
     }
   }

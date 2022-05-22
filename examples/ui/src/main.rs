@@ -2,14 +2,18 @@ use ale_app::display_info::DisplayInfo;
 use ale_app::window::Window;
 use ale_app::{ale_app_run, App, AppError};
 use ale_camera::Camera;
-use ale_input::{Input, Key};
+use ale_data::alevec::Key;
+use ale_input::{Input};
 use ale_math::color::Color;
 use ale_math::rect::Rect;
 use ale_math::{Array, Vector2, Vector3, Zero};
+use ale_math::transform::AleTransform;
 use ale_opengl::renderer::sprite::SpriteRenderer;
 use ale_opengl::renderer::text::TextRenderer;
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render_color, ale_opengl_depth_test_enable};
+use ale_opengl::wire::MeshWireRenderer;
 use ale_resources::font::Font;
+use ale_resources::mesh::Mesh;
 use ale_resources::path::ResourcePath;
 use ale_resources::resources::Resources;
 use ale_ui::button::Button;
@@ -23,7 +27,9 @@ struct UIState {
   resources: Resources,
   text_renderer: TextRenderer,
   sprite_renderer: SpriteRenderer,
+  mesh_wire_renderer: MeshWireRenderer,
   ui_elements: element::Panel,
+  bakso : Key<Mesh>,
   camera: Camera,
 }
 
@@ -46,6 +52,8 @@ impl App<UIState> for UIApp {
       .unwrap()
       .remove(0);
 
+    let bakso = resources.meshes.load("gltf/bakso.gltf")?.remove(0);
+
     let mut ui_elements = element::Panel::new_root(
       LayoutType::TableLayout(TableLayoutType::new_divider(
         vec![vec![0.7, 0.3], vec![0.2, 0.3, 0.5]],
@@ -59,16 +67,17 @@ impl App<UIState> for UIApp {
       font,
       12,
     )));
-    ui_elements.add(Element::Button(Button::new_basic(Color::red())));
-    ui_elements.add(Element::Button(Button::new_basic(Color::green())));
-    ui_elements.add(Element::Button(Button::new_basic(Color::blue())));
-    ui_elements.add(Element::Button(Button::new_basic(Color::yellow())));
+    // ui_elements.add(Element::Button(Button::new_basic(Color::red())));
+    // ui_elements.add(Element::Button(Button::new_basic(Color::green())));
+    // ui_elements.add(Element::Button(Button::new_basic(Color::blue())));
+    // ui_elements.add(Element::Button(Button::new_basic(Color::yellow())));
     ui_elements.refresh_layout()?;
 
     let text_renderer = TextRenderer::new_with_resources(&mut resources)?;
     let sprite_renderer = SpriteRenderer::new_with_resource(&mut resources)?;
+    let mesh_wire_renderer = MeshWireRenderer::new_with_resource(&mut resources)?;
 
-    let mut camera = Camera::new(Vector3::zero(), window.get_display_info().dimension.clone(), 90.0);
+    let mut camera = Camera::new(Vector3::from_value(5.0f32), window.get_display_info().dimension.clone(), 90.0);
     camera.look_at(Vector3::zero());
 
     ale_opengl_depth_test_enable();
@@ -78,8 +87,10 @@ impl App<UIState> for UIApp {
       resources,
       text_renderer,
       sprite_renderer,
+      mesh_wire_renderer,
       ui_elements,
       camera,
+      bakso,
     })
   }
 
@@ -94,8 +105,9 @@ impl App<UIState> for UIApp {
   fn tick(&mut self, s: &mut UIState) {}
 
   fn render(&mut self, s: &mut UIState) {
-    ale_opengl_clear_render_color(Color::from_rgb(0.0, 0.0, 0.0));
+    ale_opengl_clear_render_color(Color::light_blue());
 
+    // Render UI
     {
       let mut render_resources = RenderResources::new(
         &mut s.text_renderer,
@@ -104,6 +116,13 @@ impl App<UIState> for UIApp {
         s.camera.camera_render_info(),
       );
       s.ui_elements.render_with(&mut render_resources);
+    }
+
+    // Render Game Window
+    {
+      let bakso = s.resources.meshes.get(s.bakso).unwrap();
+      s.mesh_wire_renderer.render_bounding_box(
+        vec![(&mut AleTransform::new(), bakso)], &s.camera.camera_render_info());
     }
   }
 }

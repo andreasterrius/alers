@@ -13,3 +13,4 @@ ale_math = { path = "../../crates/ale_math" }
 ale_input = { path= "../../crates/ale_input" }
 ale_resources = { path= "../../crates/ale_resources" }
 ale_camera = { path= "../../crates/ale_camera" }
+ale_data = { path= "../../crates/ale_data" }
