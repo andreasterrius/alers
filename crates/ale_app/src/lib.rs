@@ -10,6 +10,7 @@ use crate::tick::{FixedStep, WorldTick};
 use crate::window::Window;
 
 pub use anyhow::Error as AppError;
+use ale_opengl::viewport::Viewport;
 
 pub mod display_info;
 pub mod engine;

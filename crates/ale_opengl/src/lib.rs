@@ -13,6 +13,7 @@ pub mod shader;
 pub mod renderer;
 pub mod texture;
 pub mod wire;
+pub mod viewport;
 
 pub fn ale_opengl_clear_render() {
   // Clear the screen buffer

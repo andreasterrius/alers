@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use ale_camera::CameraRenderInfo;
 use ale_data::alevec::AleVec;
 use ale_input::Input;
@@ -87,6 +88,20 @@ impl Panel {
         Element::Empty(_) => {}
       }
     }
+  }
+
+  pub fn get_empty_layouts(&self) -> HashMap<String, &Empty> {
+    let mut empties = HashMap::new();
+    for e in self.childs.iter() {
+      match e {
+        Element::Panel(ele) => empties.extend(ele.get_empty_layouts()),
+        Element::Empty(empty) => {
+          empties.insert(empty.name.clone(), empty);
+        }
+        _ => {}
+      }
+    }
+    return empties
   }
 }
 
