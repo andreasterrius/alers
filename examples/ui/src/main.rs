@@ -125,14 +125,16 @@ impl App<UIState> for UIApp {
       s.ui_elements.render_with(&mut render_resources);
     }
 
-    // Render Game Window
+
+    // Render Games Window
     {
       let empty = s.ui_elements.get_empty_layouts()["game_render"];
-      unsafe { raw::set_viewport(empty.layout.position.x, empty.layout.position.y, empty.layout.size.x, empty.layout.size.y); }
+      unsafe { raw::set_viewport(0, 600-empty.layout.size.y as i32, empty.layout.size.x, empty.layout.size.y); }
       s.camera.set_viewport(empty.layout.position, empty.layout.size);
       let bakso = s.resources.meshes.get(s.bakso).unwrap();
       s.mesh_wire_renderer
         .render_bounding_box(vec![(&mut AleTransform::new(), bakso)], &s.camera.camera_render_info());
+      s.camera.set_viewport(Vector2::zero(), Vector2::new(800, 600));
     }
 
     unsafe {
