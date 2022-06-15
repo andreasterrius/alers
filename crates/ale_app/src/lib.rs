@@ -5,19 +5,23 @@ use thiserror::Error;
 use ale_input::Input;
 use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
 
-use crate::display_info::DisplayInfo;
+use crate::display::DisplaySetting;
 use crate::tick::{FixedStep, WorldTick};
 use crate::window::Window;
 
 pub use anyhow::Error as AppError;
 use ale_opengl::viewport::Viewport;
+use ale_ui::element;
+use ale_world::world;
+use ale_world::world::World;
 
-pub mod display_info;
+pub mod display;
 pub mod engine;
 pub mod input_translator;
 pub mod log;
 pub mod tick;
 pub mod window;
+pub mod app;
 
 // TODO: Break this to 1 function per trait
 pub trait App<S> {
@@ -32,7 +36,7 @@ pub trait App<S> {
   fn render(&mut self, s: &mut S);
 }
 
-pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
+pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplaySetting) {
   let err = ale_app_run_internal(app, display_info);
   match err {
     Err(err) => {
@@ -42,7 +46,7 @@ pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplayInfo) {
   }
 }
 
-pub fn ale_app_run_internal<S, T: App<S>>(mut app: T, display_info: DisplayInfo) -> anyhow::Result<()> {
+pub fn ale_app_run_internal<S, T: App<S>>(mut app: T, display_info: DisplaySetting) -> anyhow::Result<()> {
   // Initialize File Logging
   //alers::log::init_term();
 
@@ -66,9 +70,6 @@ pub fn ale_app_run_internal<S, T: App<S>>(mut app: T, display_info: DisplayInfo)
     }
 
     app.tick(&mut state);
-
-    // Initialize render queue & assign render tasks
-    let mut render_tasks = SimpleRenderTasks::new();
     app.render(&mut state);
 
     window.swap_buffers();

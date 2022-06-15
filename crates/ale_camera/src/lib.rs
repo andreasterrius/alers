@@ -87,6 +87,7 @@ impl Camera {
   pub fn set_viewport(&mut self, position: Vector2<i32>, size: Vector2<u32>) {
     self.display_rect = Rect { position, size };
     self.aspect_ratio = self.display_rect.size.x as f32 / self.display_rect.size.y as f32;
+    self.recalculate_matrices();
   }
 
   fn recalculate_matrices(&mut self) {
@@ -120,10 +121,10 @@ impl Camera {
     match self.orthographic_mat {
       None => {
         self.orthographic_mat = Some(ortho(
-          0.0f32,
+          self.display_rect.position.x as f32,
           self.display_rect.size.x as f32,
           self.display_rect.size.y as f32,
-          0.0,
+          self.display_rect.position.y as f32,
           -1.0,
           1.0f32,
         ))

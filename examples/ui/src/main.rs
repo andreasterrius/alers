@@ -1,4 +1,4 @@
-use ale_app::display_info::DisplayInfo;
+use ale_app::display::DisplaySetting;
 use ale_app::window::Window;
 use ale_app::{ale_app_run, App, AppError};
 use ale_camera::Camera;
@@ -38,7 +38,7 @@ struct UIState {
 fn main() {
   ale_app_run(
     UIApp,
-    DisplayInfo::new(Rect {
+    DisplaySetting::new(Rect {
       position: Vector2::zero(),
       size: Vector2::new(800, 600),
     }),
@@ -81,11 +81,11 @@ impl App<UIState> for UIApp {
     let mesh_wire_renderer = MeshWireRenderer::new_with_resource(&mut resources)?;
 
     let mut camera = Camera::new(
-      Vector3::from_value(5.0f32),
+      Vector3::new(0.0f32, 0.0, 5.0),
       window.get_display_info().dimension.clone(),
       90.0,
     );
-    camera.look_at(Vector3::zero());
+    //camera.look_at(Vector3::zero());
 
     ale_opengl_depth_test_enable();
     ale_opengl_blend_enable();
@@ -128,15 +128,20 @@ impl App<UIState> for UIApp {
     // Render Game Window
     {
       let empty = s.ui_elements.get_empty_layouts()["game_render"];
-      unsafe { raw::set_viewport(empty.layout.position.x, empty.layout.position.y, empty.layout.size.x, empty.layout.size.y); }
+      //println!("{:?}", empty.layout);
+      unsafe { raw::set_viewport(empty.layout.position.x,
+                                 600-empty.layout.position.y-empty.layout.size.y as i32,
+                                 empty.layout.size.x,
+                                 empty.layout.size.y); }
       s.camera.set_viewport(empty.layout.position, empty.layout.size);
       let bakso = s.resources.meshes.get(s.bakso).unwrap();
       s.mesh_wire_renderer
         .render_bounding_box(vec![(&mut AleTransform::new(), bakso)], &s.camera.camera_render_info());
-    }
 
-    unsafe {
-      raw::set_viewport(0, 0, 800, 600)
+      unsafe {
+        raw::set_viewport(0, 0, 800, 600);
+      }
+      s.camera.set_viewport(Vector2::new(0, 0), Vector2::new(800, 600));
     }
   }
 }

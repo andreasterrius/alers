@@ -1,6 +1,6 @@
 use rand::random;
 
-use ale_app::display_info::DisplayInfo;
+use ale_app::display::DisplaySetting;
 use ale_app::window::Window;
 use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
 use ale_camera::Camera;
@@ -29,7 +29,7 @@ use crate::Shape::{Cube, Sphere};
 fn main() {
   ale_app_run(
     Pong,
-    DisplayInfo::new(Rect {
+    DisplaySetting::new(Rect {
       position: Vector2::zero(),
       size: Vector2::new(800, 600),
     }),
@@ -393,10 +393,10 @@ impl App<State> for Pong {
       let random_mult: Vector3<f32> = Vector3::new(random(), 0.0, random());
       let mut velocity = initial_velocity
         + Vector3::new(
-          random_mult.x * random_velocity_base.x,
-          random_mult.y * random_velocity_base.y,
-          random_mult.z * random_velocity_base.z,
-        );
+        random_mult.x * random_velocity_base.x,
+        random_mult.y * random_velocity_base.y,
+        random_mult.z * random_velocity_base.z,
+      );
 
       let go_top: bool = random();
       let go_left: bool = random();

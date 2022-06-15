@@ -1,4 +1,4 @@
-use crate::display_info::DisplayInfo;
+use crate::display::DisplaySetting;
 use crate::input_translator::{translate_action, translate_key, translate_modifier, translate_mousebutton, translate_scancode};
 use ale_input::Input;
 use ale_math::Vector2;
@@ -15,7 +15,7 @@ impl<'a> WindowCreator<'a> {
     WindowCreator { glfw }
   }
 
-  pub fn new(self, display_info: DisplayInfo) -> Window {
+  pub fn new(self, display_info: DisplaySetting) -> Window {
     self.glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
     self
       .glfw
@@ -59,7 +59,7 @@ pub struct Window {
   glfw_window: glfw::Window,
   glfw_events: Receiver<(f64, WindowEvent)>,
 
-  display_info: DisplayInfo,
+  display_info: DisplaySetting,
 
   mouse_position: Option<(f64, f64)>,
 }
@@ -67,6 +67,10 @@ pub struct Window {
 impl Window {
   pub fn is_closing(&self) -> bool {
     self.glfw_window.should_close()
+  }
+
+  pub fn close(&mut self) {
+    self.glfw_window.set_should_close(true);
   }
 
   pub fn swap_buffers(&mut self) {
@@ -126,7 +130,7 @@ impl Window {
     inputs
   }
 
-  pub fn get_display_info(&self) -> &DisplayInfo {
+  pub fn get_display_info(&self) -> &DisplaySetting {
     &self.display_info
   }
 
