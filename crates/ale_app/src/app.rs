@@ -6,6 +6,8 @@ use crate::{AppError, DisplaySetting, engine, FixedStep, WorldTick};
 pub trait Init {
   fn request_windows(&self) -> Vec<DisplaySetting>;
 
+  fn register(&self, world: &mut World);
+
   fn init(&self, resources: &mut Resources, world: &mut World) -> Result<(), AppError>;
 }
 
@@ -29,6 +31,7 @@ impl App {
     let mut resources = Resources::new();
     let mut world = World::new();
 
+    init.register(&mut world);
     init.init(&mut resources, &mut world)?;
 
     let mut tick = WorldTick::FixedStep(FixedStep::new(0.01f32));
