@@ -49,7 +49,7 @@ impl<'a> WindowCreator<'a> {
     Window {
       glfw_window,
       glfw_events,
-      display_info,
+      display_setting: display_info,
       mouse_position: None,
     }
   }
@@ -59,7 +59,7 @@ pub struct Window {
   glfw_window: glfw::Window,
   glfw_events: Receiver<(f64, WindowEvent)>,
 
-  display_info: DisplaySetting,
+  pub display_setting: DisplaySetting,
 
   mouse_position: Option<(f64, f64)>,
 }
@@ -75,6 +75,10 @@ impl Window {
 
   pub fn swap_buffers(&mut self) {
     self.glfw_window.swap_buffers();
+  }
+
+  pub fn make_current(&mut self){
+    self.glfw_window.make_current();
   }
 
   pub fn input(&mut self) -> Vec<Input> {
@@ -109,8 +113,8 @@ impl Window {
           }
           Some(mouse_position) => {
             let result = Input::MouseMotion {
-              rel_x: (x - mouse_position.0) as f32 / self.display_info.get_dimension().size.x as f32,
-              rel_y: (y - mouse_position.1) as f32 / self.display_info.get_dimension().size.y as f32,
+              rel_x: (x - mouse_position.0) as f32 / self.display_setting.get_dimension().size.x as f32,
+              rel_y: (y - mouse_position.1) as f32 / self.display_setting.get_dimension().size.y as f32,
               abs_x: x as f32,
               abs_y: y as f32,
             };
@@ -131,13 +135,13 @@ impl Window {
   }
 
   pub fn get_display_info(&self) -> &DisplaySetting {
-    &self.display_info
+    &self.display_setting
   }
 
   pub fn get_screen_size(&self) -> Vector2<u32> {
     Vector2::new(
-      self.display_info.dimension.size.x,
-      self.display_info.dimension.size.y,
+      self.display_setting.dimension.size.x,
+      self.display_setting.dimension.size.y,
     )
   }
 }

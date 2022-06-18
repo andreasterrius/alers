@@ -1,4 +1,5 @@
 use ale_math::rect::Rect;
+use ale_world::components::Id;
 
 #[derive(Clone)]
 pub enum TargetMonitor {
@@ -10,15 +11,16 @@ pub enum TargetMonitor {
 }
 
 #[derive(Clone)]
-pub struct  DisplaySetting {
+pub struct DisplaySetting {
+  pub id: u32,
+  // client level identifier
   pub dimension: Rect,
-
   pub target: TargetMonitor,
 }
 
 impl DisplaySetting {
   pub fn new(dimension: Rect) -> DisplaySetting {
-    DisplaySetting { dimension, target: TargetMonitor::PRIMARY }
+    DisplaySetting { id: 0, dimension, target: TargetMonitor::PRIMARY }
   }
 
   pub fn get_dimension(&self) -> &Rect {

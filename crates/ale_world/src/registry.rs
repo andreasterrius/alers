@@ -21,8 +21,7 @@ pub fn cast_mut<'a, From, To>(x: &'a mut From, registry: &Registry) -> Option<&'
     To: ?Sized + 'static,
 {
   registry
-    .cast_into::<To>()
-    .expect("Calling cast_mut to cast into an unregistered trait object")
+    .cast_into::<To>()?
     .from_mut(x)
 }
 

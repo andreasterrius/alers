@@ -11,3 +11,4 @@ ale_resources = { path = "../../crates/ale_resources" }
 ale_world = { path = "../../crates/ale_world" }
 ale_math = { path = "../../crates/ale_math" }
 ale_input = { path = "../../crates/ale_input" }
+ale_ui = { path = "../../crates/ale_ui"}

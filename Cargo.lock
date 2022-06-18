@@ -490,6 +490,7 @@ dependencies = [
  "ale_input",
  "ale_math",
  "ale_resources",
+ "ale_ui",
  "ale_world",
 ]
 
