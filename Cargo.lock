@@ -40,9 +40,9 @@ dependencies = [
  "ale_opengl",
  "ale_resources",
  "ale_ui",
+ "ale_window",
  "ale_world",
  "anyhow",
- "glfw",
  "log",
  "simplelog",
  "thiserror",
@@ -165,10 +165,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "ale_window"
+version = "0.1.0"
+dependencies = [
+ "ale_data",
+ "ale_input",
+ "ale_math",
+ "ale_opengl",
+ "ale_ui",
+ "glfw",
+ "log",
+ "simplelog",
+]
+
+[[package]]
 name = "ale_world"
 version = "0.1.0"
 dependencies = [
+ "ale_camera",
+ "ale_data",
  "ale_input",
+ "ale_opengl",
+ "ale_resources",
+ "ale_ui",
+ "ale_window",
  "hecs",
  "inventory",
  "traitcast_core",
@@ -487,10 +507,14 @@ name = "editor"
 version = "0.1.0"
 dependencies = [
  "ale_app",
+ "ale_camera",
+ "ale_data",
  "ale_input",
  "ale_math",
+ "ale_opengl",
  "ale_resources",
  "ale_ui",
+ "ale_window",
  "ale_world",
 ]
 
@@ -615,8 +639,8 @@ dependencies = [
 
 [[package]]
 name = "glfw"
-version = "0.44.0"
-source = "git+https://github.com/bjz/glfw-rs.git#84747b799565e23c162e47a8e4690b346aa5014d"
+version = "0.45.0"
+source = "git+https://github.com/bjz/glfw-rs.git#3e7598e1ba7ffcf8377cd7ce5c9220b47ce5681d"
 dependencies = [
  "bitflags",
  "glfw-sys",
@@ -627,9 +651,9 @@ dependencies = [
 
 [[package]]
 name = "glfw-sys"
-version = "3.3.5"
+version = "4.0.0+3.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b0cbb12e2dfac494316e91f6bf7cf070ccd9c61501a02f4af14d71222c9f67f"
+checksum = "5abed6d39a50226676aab893d6b4ad154da7e93fcdfed90d7696758a1b477ed1"
 dependencies = [
  "cmake",
 ]
@@ -1121,6 +1145,7 @@ dependencies = [
  "ale_opengl",
  "ale_physics",
  "ale_resources",
+ "ale_window",
  "rand 0.8.5",
 ]
 
@@ -1429,6 +1454,7 @@ dependencies = [
  "ale_opengl",
  "ale_raymarch",
  "ale_resources",
+ "ale_window",
 ]
 
 [[package]]
@@ -1614,6 +1640,7 @@ dependencies = [
  "ale_opengl",
  "ale_resources",
  "ale_ui",
+ "ale_window",
 ]
 
 [[package]]

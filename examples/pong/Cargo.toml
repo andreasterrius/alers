@@ -14,4 +14,5 @@ ale_physics = { path = "../../crates/ale_physics" }
 ale_camera = { path= "../../crates/ale_camera" }
 ale_input = { path= "../../crates/ale_input" }
 ale_resources = { path = "../../crates/ale_resources" }
+ale_window = { path = "../../crates/ale_window" }
 rand = "0.8.3"

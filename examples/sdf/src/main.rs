@@ -1,5 +1,5 @@
-use ale_app::display::DisplaySetting;
-use ale_app::window::Window;
+use ale_window::display::DisplaySetting;
+use ale_window::window::Window;
 use ale_app::{ale_app_resource_path, ale_app_run, App, AppError};
 use ale_camera::flycamera::FlyCamera;
 use ale_camera::Camera;

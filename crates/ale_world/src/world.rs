@@ -1,52 +1,58 @@
 use std::any::Any;
 use traitcast_core::{ImplEntry, Registry, TraitcastFrom};
-use crate::components::{Camera, Id, Render, Tick};
+use ale_data::alevec::{AleVec, Key};
+use crate::components::{Camera, OnSpawn, Render, Tick};
+use crate::engine::Engine;
+use crate::event::EventQueue;
 use crate::registry::{EntryBuilder, Traitcast};
+use crate::viewport::ViewportDescriptor;
+
+type EntityKey = Key<Box<dyn Any>>;
 
 pub struct World {
   registry: Registry,
 
   // Owning pointer
-  entities: Vec<Box<dyn Any>>,
+  entities: AleVec<Box<dyn Any>>,
 
+  // TODO: remember which entity has which index for deletion (unordered_set)
   // Weak pointers
   ticks: Vec<*mut dyn Tick>,
   renders: Vec<*mut dyn Render>,
-  camera: Vec<*mut dyn Camera>,
+  cameras: Vec<*mut dyn Camera>,
   // input: Vec<*mut dyn Input>,
 
-  unique_id_counter: u32,
-
-  //TODO: remember which entity has which index for deletion (unordered_set)
+  event_queue: EventQueue,
 }
 
 impl World {
   pub fn new() -> World {
     World {
-      entities: vec![],
-      ticks: vec![],
-      renders: vec![],
-      camera: vec![],
+      entities: AleVec::new(),
+      ticks: vec!(),
+      renders: vec!(),
+      cameras: vec!(),
       registry: Registry::new(),
-      unique_id_counter: 1,
-      // input: vec![]
+      event_queue: EventQueue::new(),
     }
   }
 
-  pub fn spawn<T: 'static>(&mut self, mut entity: T) {
+  pub fn spawn<T: 'static>(&mut self, mut entity: T) -> EntityKey {
     // Register the traits this thing have
     World::save_component(&self.registry, &mut self.ticks, &mut entity);
     World::save_component(&self.registry, &mut self.renders, &mut entity);
-
-    // Pass id if entity needs it
-    if let Some(comp) = World::get_component::<dyn Id>(&self.registry, &mut entity) {
-      comp.id(self.unique_id_counter);
-      self.unique_id_counter += 1;
-    }
+    World::save_component(&self.registry, &mut self.cameras, &mut entity);
 
     // Get ownership of pointer, save it to entities
     let b = Box::new(entity);
-    self.entities.push(b);
+    let key = self.entities.push(b);
+
+    let ent = self.entities.get_mut(key).unwrap();
+    if let Some(comp) = World::get::<dyn Key>(&self.registry, ent) {
+      comp.id(key);
+    }
+
+    return key;
   }
 
   pub fn enable(&mut self, e: &[EntryBuilder]) {
@@ -63,7 +69,7 @@ impl World {
     }
   }
 
-  fn get_component<'a, T: ?Sized + 'static>(registry: &'a Registry, entity: &'a mut dyn Any) -> Option<&'a mut T> {
+  fn get<'a, T: ?Sized + 'static>(registry: &'a Registry, entity: &'a mut dyn Any) -> Option<&'a mut T> {
     let item: Option<&mut T> = entity.cast_mut(registry);
     item
   }
@@ -74,7 +80,7 @@ impl World {
     }
   }
 
-  pub fn tick(&mut self, delta_time: f32) {
+  pub fn tick(&mut self, engine: &mut Engine, delta_time: f32) {
     for t in &self.ticks {
       unsafe { (**t).tick(delta_time); }
     }

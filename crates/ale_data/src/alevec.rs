@@ -17,6 +17,7 @@ pub struct Data<T> {
 pub struct Key<T> {
     generation: usize,
     index: usize,
+    valid: bool,
     phantom: PhantomData<T>,
 }
 
@@ -46,12 +47,16 @@ impl<T> AleVec<T> {
         Key {
             generation: self.generation,
             index: self.vec.len() - 1,
+            valid: true,
             phantom: Default::default(),
         }
     }
 
     pub fn remove(&mut self, key: Key<T>) {
         if key.generation != self.generation {
+            return;
+        }
+        if !key.valid {
             return;
         }
         self.vec[key.index].is_deleted = true;
@@ -78,6 +83,9 @@ impl<T> AleVec<T> {
         if key.generation != self.generation {
             return None;
         }
+        if !key.valid {
+            return None;
+        }
         return match self.vec.get(key.index) {
             None => None,
             Some(d) => {
@@ -91,6 +99,9 @@ impl<T> AleVec<T> {
 
     pub fn get_mut(&mut self, key: Key<T>) -> Option<&mut T> {
         if key.generation != self.generation {
+            return None;
+        }
+        if !key.valid {
             return None;
         }
         return match self.vec.get_mut(key.index) {
@@ -170,6 +181,18 @@ impl<T> Clone for Key<T> {
         Key {
             generation: self.generation,
             index: self.index,
+            valid: self.valid,
+            phantom: Default::default()
+        }
+    }
+}
+
+impl <T> Key<T> {
+    pub fn empty() -> Self {
+        Key {
+            generation: 0,
+            index: 0,
+            valid: false,
             phantom: Default::default()
         }
     }

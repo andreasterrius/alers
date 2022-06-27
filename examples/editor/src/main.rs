@@ -1,9 +1,12 @@
-use ale_app::app::{App, Init};
-use ale_app::display::{DisplaySetting, TargetMonitor};
+use ale_app::app::{App, Genesis};
+use ale_window::display::{DisplaySetting, TargetMonitor};
 use ale_math::{Vector2, Zero};
 use ale_math::rect::Rect;
 use ale_resources::resources::Resources;
+use ale_world::engine::Engine;
+use ale_world::viewport::ViewportDescriptor;
 use ale_world::world::World;
+use crate::scene::camera::EditorCamera;
 use crate::ui::main_frame::MainFrame;
 
 mod ui;
@@ -11,39 +14,37 @@ mod scene;
 
 struct Editor;
 
-enum Windows {
-  Main = 0,
-  Test = 1
-}
+impl Genesis for Editor {
+  fn register_components(&self, world: &mut World) {
+    MainFrame::register_components(world);
+    EditorCamera::register_components(world);
+  }
 
-impl Init for Editor {
-  fn request_initial_windows(&self) -> Vec<DisplaySetting> {
-    vec![
+  fn init(&self, engine: &mut Engine, world: &mut World) -> Result<(), ale_app::AppError> {
+    let main_window_key = engine.windows.add(
       DisplaySetting {
-        id: Windows::Main as u32,
         dimension: Rect {
           position: Vector2::zero(),
           size: Vector2::new(800, 600),
         },
-        target: TargetMonitor::PRIMARY,
+        initial_target: TargetMonitor::PRIMARY,
+      });
+    let sub_window_key = engine.windows.add(DisplaySetting {
+      dimension: Rect {
+        position: Vector2::zero(),
+        size: Vector2::new(400, 300),
       },
-      DisplaySetting {
-        id: Windows::Test as u32,
-        dimension: Rect {
-          position: Vector2::zero(),
-          size: Vector2::new(400, 300),
-        },
-        target: TargetMonitor::PRIMARY,
-      }
-    ]
-  }
+      initial_target: TargetMonitor::PRIMARY,
+    });
 
-  fn register_components(&self, world: &mut World) {
-    MainFrame::register_components(world);
-  }
+    engine.windows.insert(window_settings.id, window_backend.windows().new(window_settings));
 
-  fn init(&self, resources: &mut Resources, world: &mut World) -> Result<(), ale_app::AppError> {
-    world.spawn(MainFrame::new());
+    // Spawn entities
+    let editor_camera = EditorCamera::new();
+    let editor_camera_key = world.spawn(editor_camera);
+
+    world.spawn(MainFrame::new(engine, editor_camera_key));
+
 
     Ok(())
   }

@@ -1,59 +1,12 @@
-use crate::display::DisplaySetting;
-use crate::input_translator::{translate_action, translate_key, translate_modifier, translate_mousebutton, translate_scancode};
-use ale_input::Input;
-use ale_math::Vector2;
-use glfw::{Action, Context, CursorMode, Key, WindowEvent};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, RwLock};
+use glfw::{Action, Context, CursorMode, Key, WindowEvent};
+use ale_input::Input;
+use ale_math::Vector2;
+use ale_ui::element::Panel;
+use crate::display::DisplaySetting;
+use crate::input_translator::{translate_action, translate_key, translate_modifier, translate_mousebutton, translate_scancode};
 
-pub struct WindowCreator<'a> {
-  glfw: &'a mut glfw::Glfw,
-}
-
-impl<'a> WindowCreator<'a> {
-  pub fn new_creator(glfw: &'a mut glfw::Glfw) -> WindowCreator<'a> {
-    WindowCreator { glfw }
-  }
-
-  pub fn new(self, display_info: DisplaySetting) -> Window {
-    self.glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
-    self
-      .glfw
-      .window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
-    #[cfg(target_os = "macos")]
-    glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
-    // glfw window creation
-    // --------------------
-    let (mut glfw_window, glfw_events) = self
-      .glfw
-      .create_window(
-        display_info.get_dimension().size.x,
-        display_info.get_dimension().size.y,
-        "Alers",
-        glfw::WindowMode::Windowed,
-      )
-      .expect("Failed to create GLFW window");
-
-    glfw_window.make_current();
-    glfw_window.set_char_polling(true);
-    glfw_window.set_key_polling(true);
-    glfw_window.set_cursor_pos_polling(true);
-    glfw_window.set_mouse_button_polling(true);
-    glfw_window.set_framebuffer_size_polling(true);
-    glfw_window.set_cursor_mode(CursorMode::Normal);
-
-    // gl: load all OpenGL function pointers
-    // ---------------------------------------
-    ale_opengl::raw::load_with(|symbol| glfw_window.get_proc_address(symbol) as *const _);
-
-    Window {
-      glfw_window,
-      glfw_events,
-      display_setting: display_info,
-      mouse_position: None,
-    }
-  }
-}
 
 pub struct Window {
   glfw_window: glfw::Window,
@@ -62,9 +15,22 @@ pub struct Window {
   pub display_setting: DisplaySetting,
 
   mouse_position: Option<(f64, f64)>,
+  ui_layout: Option<Panel>,
 }
 
 impl Window {
+  pub fn new(glfw_window: glfw::Window,
+             glfw_events: Receiver<(f64, WindowEvent)>,
+             display_setting: DisplaySetting, ) -> Window {
+    Window {
+      glfw_window,
+      glfw_events,
+      display_setting,
+      mouse_position: None,
+      ui_layout: None,
+    }
+  }
+
   pub fn is_closing(&self) -> bool {
     self.glfw_window.should_close()
   }
@@ -77,7 +43,7 @@ impl Window {
     self.glfw_window.swap_buffers();
   }
 
-  pub fn make_current(&mut self){
+  pub fn make_current(&mut self) {
     self.glfw_window.make_current();
   }
 
@@ -143,5 +109,9 @@ impl Window {
       self.display_setting.dimension.size.x,
       self.display_setting.dimension.size.y,
     )
+  }
+
+  pub fn set_layout(&mut self, ui_layout: Panel) {
+    self.ui_layout = Some(ui_layout);
   }
 }

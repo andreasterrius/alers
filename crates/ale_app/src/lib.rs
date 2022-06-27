@@ -5,22 +5,17 @@ use thiserror::Error;
 use ale_input::Input;
 use ale_opengl::old::opengl::{RenderResources, SimpleRenderTasks};
 
-use crate::display::DisplaySetting;
-use crate::tick::{FixedStep, WorldTick};
-use crate::window::Window;
+use ale_window::display::DisplaySetting;
+use ale_window::tick::{FixedStep, WorldTick};
+use ale_window::window::Window;
 
 pub use anyhow::Error as AppError;
 use ale_opengl::viewport::Viewport;
 use ale_ui::element;
+use ale_window::backend;
 use ale_world::world;
 use ale_world::world::World;
 
-pub mod display;
-pub mod engine;
-pub mod input_translator;
-pub mod log;
-pub mod tick;
-pub mod window;
 pub mod app;
 
 // TODO: Break this to 1 function per trait
@@ -51,8 +46,8 @@ pub fn ale_app_run_internal<S, T: App<S>>(mut app: T, display_info: DisplaySetti
   //alers::log::init_term();
 
   // Initialize the engine
-  let mut engine = engine::Engine::new();
-  let mut window = engine.windows().new(display_info);
+  let mut engine = backend::Windows::add();
+  let mut window = engine.creator().new(display_info);
 
   let mut state = app.load(&window)?;
 
