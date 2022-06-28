@@ -1,7 +1,7 @@
 use glfw::{Context, CursorMode};
-use ale_data::alevec::{AleVec, Key};
+use ale_data::alevec::{AleVec, AleVecIter, AleVecIterMut, Key};
 use crate::display::DisplaySetting;
-use crate::window::{Window, WindowCreator};
+use crate::window::{Window};
 
 pub struct Windows {
   glfw: glfw::Glfw,
@@ -54,11 +54,51 @@ impl Windows {
     ))
   }
 
-  pub fn creator(&mut self) -> WindowCreator {
-    WindowCreator::new_creator(&mut self.glfw)
-  }
-
   pub fn poll_inputs(&mut self) {
     self.glfw.poll_events();
+
+    for window in self.windows.iter_mut() {
+      window.make_current();
+      window.input();
+    }
+  }
+
+  pub fn cleanup(&mut self){
+    let mut to_be_removed = vec!();
+    let window_keys : Vec<Key<Window>> = self.windows.keys_iter().collect();
+
+    for key in window_keys {
+      let window = self.windows.get_mut(key);
+      match window {
+        None => {}
+        Some(window) => {
+          if window.is_closing() {
+            to_be_removed.push(key);
+          }
+        }
+      }
+    }
+
+    for rem in to_be_removed {
+      self.windows.remove_drop(rem);
+    }
+  }
+
+  pub fn get(&self, key : Key<Window>) -> Option<&Window> {
+    return self.windows.get(key)
+  }
+
+  pub fn get_mut(&mut self, key : Key<Window>) -> Option<&mut Window> {
+    return self.windows.get_mut(key)
+  }
+
+  pub fn len(&self) -> usize { self.windows.len() }
+
+  pub fn iter(&self) -> AleVecIter<Window> {
+    return self.windows.iter()
+  }
+
+  pub fn iter_mut(&mut self) -> AleVecIterMut<Window> {
+    return self.windows.iter_mut()
   }
 }

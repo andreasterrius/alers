@@ -13,6 +13,7 @@ pub use anyhow::Error as AppError;
 use ale_opengl::viewport::Viewport;
 use ale_ui::element;
 use ale_window::backend;
+use ale_window::backend::Windows;
 use ale_world::world;
 use ale_world::world::World;
 
@@ -46,16 +47,20 @@ pub fn ale_app_run_internal<S, T: App<S>>(mut app: T, display_info: DisplaySetti
   //alers::log::init_term();
 
   // Initialize the engine
-  let mut engine = backend::Windows::add();
-  let mut window = engine.creator().new(display_info);
+  let mut windows = Windows::new();
+  let mut window_key = windows.add(display_info);
 
-  let mut state = app.load(&window)?;
+
+  let window = windows.get(window_key).unwrap();
+  let mut state = app.load(window)?;
 
   let mut tick = WorldTick::FixedStep(FixedStep::new(0.01f32));
 
   // Main Game Loop
-  while !window.is_closing() {
-    engine.poll_inputs();
+  while windows.len() != 0 {
+    windows.poll_inputs();
+
+    let window = windows.get_mut(window_key).unwrap();
     app.input(&mut state, window.input());
 
     tick.prepare_tick();

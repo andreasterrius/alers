@@ -7,7 +7,7 @@ use crate::event::EventQueue;
 use crate::registry::{EntryBuilder, Traitcast};
 use crate::viewport::ViewportDescriptor;
 
-type EntityKey = Key<Box<dyn Any>>;
+pub type EntityKey = Key<Box<dyn Any>>;
 
 pub struct World {
   registry: Registry,
@@ -48,8 +48,8 @@ impl World {
     let key = self.entities.push(b);
 
     let ent = self.entities.get_mut(key).unwrap();
-    if let Some(comp) = World::get::<dyn Key>(&self.registry, ent) {
-      comp.id(key);
+    if let Some(comp) = World::get::<dyn OnSpawn>(&self.registry, ent) {
+      comp.take_key(key);
     }
 
     return key;

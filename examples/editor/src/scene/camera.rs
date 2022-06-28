@@ -2,11 +2,12 @@ use std::path::Components;
 use std::rc::Rc;
 use ale_camera::CameraRenderInfo;
 use ale_camera::flycamera::FlyCamera;
-use ale_math::Vector3;
+use ale_math::rect::Rect;
+use ale_math::{Vector3, Zero};
 use ale_world::components::{Camera, OnSpawn};
 use ale_world::wire_component;
-use ale_world::world::{EntityId, World};
-use crate::Editor;
+use ale_world::world::{EntityKey, World};
+use crate::{Editor, Vector2};
 
 pub struct EditorCamera {
   pub key: EntityKey,
@@ -22,9 +23,12 @@ impl EditorCamera {
   }
 
   pub fn new() -> EditorCamera {
-    let mut fly_camera = FlyCamera::new(Camera::new(
+    let mut fly_camera = FlyCamera::new(ale_camera::Camera::new(
       Vector3::new(0.0, 10.0, 0.0),
-      window.get_display_info().dimension.clone(),
+      Rect {
+        position: Vector2::zero(),
+        size: Vector2::new(800, 600),
+      },
       90.0,
     ));
 

@@ -30,11 +30,8 @@ impl App {
     genesis.register_components(&mut world);
     genesis.init(&mut engine, &mut world)?;
 
-    while windows.len() > 0 {
-      window_backend.poll_inputs();
-      for window in &mut engine.windows {
-        window.input();
-      }
+    while engine.windows.len() > 0 {
+      engine.windows.poll_inputs();
 
       tick.prepare_tick();
       let delta_time = tick.delta_time();
@@ -45,9 +42,9 @@ impl App {
       }
 
       world.tick(&mut engine, delta_time);
-
       App::render(&mut engine, &mut world);
-      App::cleanup_closed_windows(&mut windows);
+
+      engine.windows.cleanup();
     }
 
     Ok(())
@@ -57,29 +54,24 @@ impl App {
             world : &mut World) {
 
     for vw in &mut engine.viewport_descriptor.iter() {
-      let window = engine.windows.get(vw.window_id);
-      window.make_current();
-      ale_opengl_clear_render();
-    }
-
-    for window in engine.windows {
-      window.make_current();
-      ale_opengl_clear_render();
-      // render the world to each window
-      world.render(window.display_setting.id);
-      window.swap_buffers();
-    }
-  }
-
-  fn cleanup_closed_windows(windows : &mut Vec<Window>) {
-    let mut removed_index = vec!();
-    for (index, window) in &mut windows.iter().enumerate() {
-      if window.is_closing() {
-        removed_index.push(index);
+      let window = engine.windows.get_mut(vw.window_key);
+      match window {
+        None => {}
+        Some(window) => {
+          window.make_current();
+          ale_opengl_clear_render();
+          window.swap_buffers();
+        }
       }
     }
-    for ri in removed_index {
-      windows.remove(ri);
-    }
+
+    // for window in engine.windows {
+    //   window.make_current();
+    //   ale_opengl_clear_render();
+    //   // render the world to each window
+    //   world.render(window.display_setting.id);
+    //   window.swap_buffers();
+    // }
   }
+
 }

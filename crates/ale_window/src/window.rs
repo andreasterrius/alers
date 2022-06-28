@@ -15,7 +15,6 @@ pub struct Window {
   pub display_setting: DisplaySetting,
 
   mouse_position: Option<(f64, f64)>,
-  ui_layout: Option<Panel>,
 }
 
 impl Window {
@@ -27,7 +26,6 @@ impl Window {
       glfw_events,
       display_setting,
       mouse_position: None,
-      ui_layout: None,
     }
   }
 
@@ -111,7 +109,4 @@ impl Window {
     )
   }
 
-  pub fn set_layout(&mut self, ui_layout: Panel) {
-    self.ui_layout = Some(ui_layout);
-  }
 }

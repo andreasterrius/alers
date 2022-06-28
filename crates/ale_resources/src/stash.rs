@@ -46,7 +46,7 @@ impl<Resource, Err, Loader: Load<Resource, Err> + Default> Stash<Resource, Err, 
     }
 
     pub fn remove(&mut self, key: Key<Resource>) {
-        self.resources.remove(key)
+        self.resources.remove_no_drop(key)
     }
 
     pub fn iter(&self) -> AleVecIter<Resource> {

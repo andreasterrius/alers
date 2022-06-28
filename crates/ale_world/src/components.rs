@@ -1,7 +1,7 @@
 use traitcast_core::TraitcastFrom as Component;
 use ale_camera::CameraRenderInfo;
 use crate::engine::Engine;
-use crate::world::{EntityId, World};
+use crate::world::{EntityKey, World};
 
 
 pub trait Tick: Component {
