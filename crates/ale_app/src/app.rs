@@ -51,18 +51,19 @@ impl App {
   }
 
   fn render(engine: &mut Engine,
-            world : &mut World) {
-
+            world: &mut World) {
     for vw in &mut engine.viewport_descriptor.iter() {
       let window = engine.windows.get_mut(vw.window_key);
-      match window {
-        None => {}
-        Some(window) => {
-          window.make_current();
-          ale_opengl_clear_render();
-          window.swap_buffers();
-        }
+      if window.is_none() {
+        return;
       }
+      let window = window.unwrap();
+
+      engine.panels.render();
+
+      window.make_current();
+      ale_opengl_clear_render();
+      window.swap_buffers();
     }
 
     // for window in engine.windows {
@@ -73,5 +74,4 @@ impl App {
     //   window.swap_buffers();
     // }
   }
-
 }

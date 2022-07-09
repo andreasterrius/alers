@@ -67,7 +67,7 @@ impl Viewport {
     panel.add(Element::Button(Button::new_basic(Color::yellow())));
     panel.refresh_layout()?;
 
-    let panel_key = engine.ui_layouts.push(panel);
+    let panel_key = engine.panels.push(panel);
 
     let main_viewport_key = engine.viewport_descriptor.push(ViewportDescriptor::new(editor_camera_key, main_window_key));
     let test_viewport_key = engine.viewport_descriptor.push(ViewportDescriptor::with_panel_multi(
