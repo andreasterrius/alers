@@ -1,12 +1,14 @@
-use std::sync::mpsc::Receiver;
-use std::sync::{Arc, RwLock};
-use glfw::{Action, Context, CursorMode, Key, WindowEvent};
+use crate::display::DisplaySetting;
+use crate::input_translator::{
+  translate_action, translate_key, translate_modifier, translate_mousebutton, translate_scancode,
+};
 use ale_input::Input;
 use ale_math::Vector2;
 use ale_ui::element::Panel;
-use crate::display::DisplaySetting;
-use crate::input_translator::{translate_action, translate_key, translate_modifier, translate_mousebutton, translate_scancode};
-
+use glfw::{Action, Context, CursorMode, Key, WindowEvent};
+use std::sync::mpsc::Receiver;
+use std::sync::{Arc, RwLock};
+use ale_data::alevec;
 
 pub struct Window {
   glfw_window: glfw::Window,
@@ -15,17 +17,21 @@ pub struct Window {
   pub display_setting: DisplaySetting,
 
   mouse_position: Option<(f64, f64)>,
+  pub panel_key: Option<alevec::Key<Panel>>,
 }
 
 impl Window {
-  pub fn new(glfw_window: glfw::Window,
-             glfw_events: Receiver<(f64, WindowEvent)>,
-             display_setting: DisplaySetting, ) -> Window {
+  pub fn new(
+    glfw_window: glfw::Window,
+    glfw_events: Receiver<(f64, WindowEvent)>,
+    display_setting: DisplaySetting,
+  ) -> Window {
     Window {
       glfw_window,
       glfw_events,
       display_setting,
       mouse_position: None,
+      panel_key: None
     }
   }
 
@@ -89,9 +95,11 @@ impl Window {
         glfw::WindowEvent::Char(char) => {
           inputs.push(Input::Char(char));
         }
-        glfw::WindowEvent::MouseButton(mbtn, action, modifier) => {
-          inputs.push(Input::MouseButton(translate_mousebutton(mbtn), translate_action(action), translate_modifier(modifier)))
-        }
+        glfw::WindowEvent::MouseButton(mbtn, action, modifier) => inputs.push(Input::MouseButton(
+          translate_mousebutton(mbtn),
+          translate_action(action),
+          translate_modifier(modifier),
+        )),
         _ => {}
       }
     }
@@ -109,4 +117,11 @@ impl Window {
     )
   }
 
+  pub fn attach_panel(&mut self, panel : alevec::Key<Panel>) {
+    self.panel_key = Some(panel);
+  }
+
+  pub fn remove_panel(&mut self, panel: alevec::Key<Panel>) {
+    self.panel_key = None;
+  }
 }

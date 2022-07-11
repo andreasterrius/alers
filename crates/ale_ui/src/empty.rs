@@ -2,13 +2,11 @@ use crate::layout::Layout;
 
 pub struct Empty {
   pub layout: Layout,
-  pub(crate) name: String,
 }
 
 impl Empty {
-  pub fn new(name: String) -> Empty {
+  pub fn new() -> Empty {
     Empty {
-      name,
       layout: Layout::new(),
     }
   }

@@ -1,6 +1,6 @@
 use traitcast_core::TraitcastFrom as Component;
 use ale_camera::CameraRenderInfo;
-use crate::engine::Engine;
+use ale_opengl::renderer;
 use crate::world::{EntityKey, World};
 
 
@@ -10,7 +10,7 @@ pub trait Tick: Component {
   fn tick(&mut self, delta_time: f32);
 }
 
-pub trait Input: Component {
+pub trait Inputable: Component {
   fn input(&mut self, input: ale_input::Input);
 }
 
@@ -18,10 +18,10 @@ pub trait OnSpawn: Component {
   fn take_key(&mut self, key: EntityKey);
 }
 
-pub trait Render: Component {
-  fn render(&mut self) {}
+pub trait Renderable: Component {
+  fn get_render_task(&mut self) -> renderer::task::Task;
 }
 
 pub trait Camera: Component {
-  fn camera(&mut self) -> CameraRenderInfo;
+  fn get_camera_info(&mut self) -> CameraRenderInfo;
 }

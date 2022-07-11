@@ -1,8 +1,15 @@
+use snowflake::ProcessUniqueId;
 use std::borrow::Borrow;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
+use lazy_static::lazy_static;
+
+lazy_static! {
+  static ref EMPTY_UNIQUE_ID : ProcessUniqueId = ProcessUniqueId::new();
+}
 
 pub struct AleVec<T> {
+  unique_id: ProcessUniqueId,
   generation: usize,
   vec: Vec<Data<T>>,
   len: usize,
@@ -18,6 +25,7 @@ pub struct Data<T> {
 // will identify an entry in the vec
 #[derive(Debug, Eq, PartialEq)]
 pub struct Key<T> {
+  unique_id: ProcessUniqueId,
   generation: usize,
   index: usize,
   valid: bool,
@@ -27,6 +35,7 @@ pub struct Key<T> {
 impl<T> AleVec<T> {
   pub fn new() -> AleVec<T> {
     AleVec {
+      unique_id: ProcessUniqueId::new(),
       generation: 0,
       vec: vec![],
       len: 0,
@@ -35,6 +44,7 @@ impl<T> AleVec<T> {
 
   pub fn with_capacity(capacity: usize) -> AleVec<T> {
     AleVec {
+      unique_id: ProcessUniqueId::new(),
       generation: 0,
       vec: Vec::with_capacity(capacity),
       len: 0,
@@ -48,6 +58,7 @@ impl<T> AleVec<T> {
     });
     self.len += 1;
     Key {
+      unique_id: ProcessUniqueId::new(),
       generation: self.generation,
       index: self.vec.len() - 1,
       valid: true,
@@ -104,13 +115,16 @@ impl<T> AleVec<T> {
     if !key.valid {
       return None;
     }
+    if key.unique_id != self.unique_id {
+      return None;
+    }
     return match self.vec.get(key.index) {
       None => None,
       Some(d) => {
         if d.delete_later {
           return None;
         }
-        if d.object.is_none(){
+        if d.object.is_none() {
           return None;
         }
         d.object.as_ref()
@@ -125,13 +139,16 @@ impl<T> AleVec<T> {
     if !key.valid {
       return None;
     }
+    if key.unique_id != self.unique_id {
+      return None;
+    }
     return match self.vec.get_mut(key.index) {
       None => None,
       Some(d) => {
         if d.delete_later {
           return None;
         }
-        if d.object.is_none(){
+        if d.object.is_none() {
           return None;
         }
         d.object.as_mut()
@@ -144,24 +161,15 @@ impl<T> AleVec<T> {
   }
 
   pub fn iter(&self) -> AleVecIter<T> {
-    return AleVecIter {
-      alevec: self,
-      index: 0,
-    };
+    return AleVecIter { alevec: self, index: 0 };
   }
 
   pub fn iter_mut(&mut self) -> AleVecIterMut<T> {
-    return AleVecIterMut {
-      alevec: self,
-      index: 0,
-    };
+    return AleVecIterMut { alevec: self, index: 0 };
   }
 
   pub fn keys_iter(&self) -> AleVecKeyIter<T> {
-    return AleVecKeyIter {
-      alevec: self,
-      index: 0,
-    };
+    return AleVecKeyIter { alevec: self, index: 0 };
   }
 }
 
@@ -221,6 +229,7 @@ impl<'a, T> Iterator for AleVecKeyIter<'a, T> {
       self.index += 1;
       if !d.delete_later {
         return Some(Key {
+          unique_id: ProcessUniqueId::new(),
           generation: self.alevec.generation,
           index: i,
           valid: true,
@@ -235,6 +244,7 @@ impl<'a, T> Iterator for AleVecKeyIter<'a, T> {
 impl<T> Clone for Key<T> {
   fn clone(&self) -> Self {
     Key {
+      unique_id: ProcessUniqueId::new(),
       generation: self.generation,
       index: self.index,
       valid: self.valid,
@@ -246,6 +256,7 @@ impl<T> Clone for Key<T> {
 impl<T> Key<T> {
   pub fn empty() -> Self {
     Key {
+      unique_id: *EMPTY_UNIQUE_ID,
       generation: 0,
       index: 0,
       valid: false,
@@ -312,7 +323,6 @@ fn test_alevec() {
   assert_eq!(realloc_vec.vec.len(), 2);
 }
 
-
 #[test]
 fn test_alevec_key_iter() {
   let mut v = AleVec::new();
@@ -322,7 +332,7 @@ fn test_alevec_key_iter() {
 
   v.remove_no_drop(k2);
 
-  let keys : Vec<Key<i32>> = v.keys_iter().collect();
+  let keys: Vec<Key<i32>> = v.keys_iter().collect();
   assert_eq!(keys[0], k1);
   assert_eq!(keys[1], k3);
 }

@@ -18,6 +18,8 @@ use ale_world::world;
 use ale_world::world::World;
 
 pub mod app;
+pub mod engine;
+pub mod visitor;
 
 // TODO: Break this to 1 function per trait
 pub trait App<S> {
@@ -73,6 +75,7 @@ pub fn ale_app_run_internal<S, T: App<S>>(mut app: T, display_info: DisplaySetti
     app.render(&mut state);
 
     window.swap_buffers();
+    windows.cleanup();
   }
 
   Ok(())

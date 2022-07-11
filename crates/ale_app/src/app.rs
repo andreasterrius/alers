@@ -1,12 +1,18 @@
 use std::slice::Windows;
+
+use ale_opengl::old::opengl::SimpleRenderTasks;
 use ale_opengl::{ale_opengl_clear_render, ale_opengl_clear_render_color};
 use ale_resources::resources;
 use ale_resources::resources::Resources;
+use ale_ui::element::{Panel, RenderResources};
 use ale_window::backend;
 use ale_window::window::Window;
-use ale_world::engine::Engine;
-use ale_world::viewport::ViewportDescriptor;
+use ale_world::components::Renderable;
+use ale_world::visitor::RenderableVisitor;
 use ale_world::world::World;
+
+use crate::engine::Engine;
+use crate::visitor::WorldVisitor;
 use crate::{AppError, DisplaySetting, FixedStep, WorldTick};
 
 pub trait Genesis {
@@ -15,20 +21,28 @@ pub trait Genesis {
   fn init(&self, engine: &mut Engine, world: &mut World) -> Result<(), AppError>;
 }
 
-pub struct App {}
+pub struct App {
+  genesis: Box<dyn Genesis>,
+}
 
 impl App {
-  pub fn run(init: &dyn Genesis) {
-    App::internal_run(init).unwrap();
+  pub fn new<T: Genesis + 'static>(init: T) -> App {
+    App {
+      genesis: Box::new(init),
+    }
   }
 
-  fn internal_run(genesis: &dyn Genesis) -> anyhow::Result<()> {
+  pub fn run(mut self) {
+    self.run_app_loop().unwrap();
+  }
+
+  fn run_app_loop(&mut self) -> anyhow::Result<()> {
     let mut tick = WorldTick::FixedStep(FixedStep::new(0.01f32));
     let mut world = World::new();
-    let mut engine = Engine::new();
+    let mut engine = Engine::new()?;
 
-    genesis.register_components(&mut world);
-    genesis.init(&mut engine, &mut world)?;
+    self.genesis.register_components(&mut world);
+    self.genesis.init(&mut engine, &mut world)?;
 
     while engine.windows.len() > 0 {
       engine.windows.poll_inputs();
@@ -41,8 +55,8 @@ impl App {
         world.fixed_tick(tick.delta_time());
       }
 
-      world.tick(&mut engine, delta_time);
-      App::render(&mut engine, &mut world);
+      world.tick(delta_time);
+      self.render(&mut engine, &mut world);
 
       engine.windows.cleanup();
     }
@@ -50,28 +64,16 @@ impl App {
     Ok(())
   }
 
-  fn render(engine: &mut Engine,
-            world: &mut World) {
-    for vw in &mut engine.viewport_descriptor.iter() {
-      let window = engine.windows.get_mut(vw.window_key);
-      if window.is_none() {
-        return;
-      }
-      let window = window.unwrap();
+  fn render(&mut self, engine: &mut Engine, world: &mut World) {
+    let mut world_visitor = WorldVisitor::new();
+    world.visit_renderables(&mut world_visitor);
+    world.visit_cameras(&mut world_visitor);
 
-      engine.panels.render();
-
+    for window in &mut engine.windows.iter_mut() {
       window.make_current();
+
       ale_opengl_clear_render();
       window.swap_buffers();
     }
-
-    // for window in engine.windows {
-    //   window.make_current();
-    //   ale_opengl_clear_render();
-    //   // render the world to each window
-    //   world.render(window.display_setting.id);
-    //   window.swap_buffers();
-    // }
   }
 }

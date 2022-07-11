@@ -1,8 +1,7 @@
-
-pub enum Type {
-  
+pub enum Task {
+    StaticMesh(StaticMesh)
 }
 
-pub struct Task {
-  
+pub struct StaticMesh {
+    
 }

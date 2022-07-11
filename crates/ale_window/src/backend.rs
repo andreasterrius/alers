@@ -1,11 +1,13 @@
+use std::collections::HashMap;
 use glfw::{Context, CursorMode};
 use ale_data::alevec::{AleVec, AleVecIter, AleVecIterMut, Key};
+use ale_ui::panels::Panels;
 use crate::display::DisplaySetting;
 use crate::window::{Window};
 
 pub struct Windows {
   glfw: glfw::Glfw,
-  windows : AleVec<Window>
+  windows : AleVec<Window>,
 }
 
 impl Windows {

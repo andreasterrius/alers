@@ -1,5 +1,3 @@
-use ale_window::display::DisplaySetting;
-use ale_window::window::Window;
 use ale_app::{ale_app_run, App, AppError};
 use ale_camera::Camera;
 use ale_data::alevec::Key;
@@ -10,19 +8,21 @@ use ale_math::transform::AleTransform;
 use ale_math::{Array, Vector2, Vector3, Zero};
 use ale_opengl::renderer::sprite::SpriteRenderer;
 use ale_opengl::renderer::text::TextRenderer;
+use ale_opengl::viewport::Viewport;
 use ale_opengl::wire::MeshWireRenderer;
 use ale_opengl::{ale_opengl_blend_enable, ale_opengl_clear_render_color, ale_opengl_depth_test_enable, raw};
-use ale_opengl::viewport::Viewport;
 use ale_resources::font::Font;
 use ale_resources::mesh::Mesh;
 use ale_resources::path::ResourcePath;
 use ale_resources::resources::Resources;
 use ale_ui::button::Button;
 use ale_ui::element;
-use ale_ui::element::{Element, RenderResources};
+use ale_ui::element::{Element, Panel, RenderResources};
 use ale_ui::empty::Empty;
 use ale_ui::layout::{LayoutType, TableLayoutType};
 use ale_ui::text::Text;
+use ale_window::display::DisplaySetting;
+use ale_window::window::Window;
 
 struct UIApp;
 struct UIState {
@@ -31,6 +31,7 @@ struct UIState {
   sprite_renderer: SpriteRenderer,
   mesh_wire_renderer: MeshWireRenderer,
   ui_elements: element::Panel,
+  game_panel_key: Key<Element>,
   bakso: Key<Mesh>,
   camera: Camera,
 }
@@ -69,11 +70,11 @@ impl App<UIState> for UIApp {
     //   font,
     //   12,
     // )));
-    ui_elements.add(Element::Empty(Empty::new("game_render".to_owned())));
-    ui_elements.add(Element::Button(Button::new_basic(Color::red())));
-    ui_elements.add(Element::Button(Button::new_basic(Color::green())));
-    ui_elements.add(Element::Button(Button::new_basic(Color::blue())));
-    ui_elements.add(Element::Button(Button::new_basic(Color::yellow())));
+    let game_panel_key = ui_elements.push(Element::Empty(Empty::new()));
+    ui_elements.push(Element::Button(Button::new_basic(Color::red())));
+    ui_elements.push(Element::Button(Button::new_basic(Color::green())));
+    ui_elements.push(Element::Button(Button::new_basic(Color::blue())));
+    ui_elements.push(Element::Button(Button::new_basic(Color::yellow())));
     ui_elements.refresh_layout()?;
 
     let text_renderer = TextRenderer::new_with_resources(&mut resources)?;
@@ -98,6 +99,7 @@ impl App<UIState> for UIApp {
       ui_elements,
       camera,
       bakso,
+      game_panel_key
     })
   }
 
@@ -129,10 +131,14 @@ impl App<UIState> for UIApp {
     {
       let empty = s.ui_elements.get_empty_layouts()["game_render"];
       //println!("{:?}", empty.layout);
-      unsafe { raw::set_viewport(empty.layout.position.x,
-                                 600-empty.layout.position.y-empty.layout.size.y as i32,
-                                 empty.layout.size.x,
-                                 empty.layout.size.y); }
+      unsafe {
+        raw::set_viewport(
+          empty.layout.position.x,
+          600 - empty.layout.position.y - empty.layout.size.y as i32,
+          empty.layout.size.x,
+          empty.layout.size.y,
+        );
+      }
       s.camera.set_viewport(empty.layout.position, empty.layout.size);
       let bakso = s.resources.meshes.get(s.bakso).unwrap();
       s.mesh_wire_renderer

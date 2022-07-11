@@ -7,13 +7,9 @@ edition = "2021"
 
 [dependencies]
 ale_input = { path = "../ale_input" }
-ale_opengl = { path = "../ale_opengl" }
 ale_camera = { path = "../ale_camera" }
-ale_window = { path = "../ale_window" }
+ale_opengl = { path = "../ale_opengl" }
 ale_data = { path = "../ale_data" }
-ale_resources = { path = "../ale_resources" }
-ale_ui = { path = "../ale_ui" }
-hecs = "0.7.6"
 inventory = "0.1.*"
 
 [dependencies.traitcast_core]

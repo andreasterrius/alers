@@ -1,13 +1,25 @@
-use std::any::Any;
-use traitcast_core::{ImplEntry, Registry, TraitcastFrom};
-use ale_data::alevec::{AleVec, Key};
-use crate::components::{Camera, OnSpawn, Render, Tick};
-use crate::engine::Engine;
+use crate::components::{Camera, OnSpawn, Renderable, Tick};
 use crate::event::EventQueue;
 use crate::registry::{EntryBuilder, Traitcast};
-use crate::viewport::ViewportDescriptor;
+use crate::visitor;
+use crate::visitor::{RenderableVisitor, CameraVisitor};
+use ale_data::alevec::{AleVec, Key};
+use std::any::Any;
+use traitcast_core::{ImplEntry, Registry, TraitcastFrom};
 
 pub type EntityKey = Key<Box<dyn Any>>;
+
+macro_rules! visitor_impl {
+  ($component_name: ident, $visitor_name: ident, $field_ident:ident, $fn_name:ident) => {
+    pub fn $fn_name<T: $visitor_name>(&mut self, visitor: &mut T) {
+      for t in &self.$field_ident {
+        unsafe {
+          visitor.visit(&mut **t);
+        }
+      }
+    }
+  };
+}
 
 pub struct World {
   registry: Registry,
@@ -18,10 +30,9 @@ pub struct World {
   // TODO: remember which entity has which index for deletion (unordered_set)
   // Weak pointers
   ticks: Vec<*mut dyn Tick>,
-  renders: Vec<*mut dyn Render>,
+  renders: Vec<*mut dyn Renderable>,
   cameras: Vec<*mut dyn Camera>,
   // input: Vec<*mut dyn Input>,
-
   event_queue: EventQueue,
 }
 
@@ -29,9 +40,9 @@ impl World {
   pub fn new() -> World {
     World {
       entities: AleVec::new(),
-      ticks: vec!(),
-      renders: vec!(),
-      cameras: vec!(),
+      ticks: vec![],
+      renders: vec![],
+      cameras: vec![],
       registry: Registry::new(),
       event_queue: EventQueue::new(),
     }
@@ -65,7 +76,7 @@ impl World {
     let item: Option<&mut T> = entity.cast_mut(registry);
     match item {
       None => { /* do nothing */ }
-      Some(t) => { v.push(t as *mut T) }
+      Some(t) => v.push(t as *mut T),
     }
   }
 
@@ -76,19 +87,21 @@ impl World {
 
   pub fn fixed_tick(&mut self, delta_time: f32) {
     for t in &self.ticks {
-      unsafe { (**t).fixed_tick(delta_time); }
+      unsafe {
+        (**t).fixed_tick(delta_time);
+      }
     }
   }
 
-  pub fn tick(&mut self, engine: &mut Engine, delta_time: f32) {
+  pub fn tick(&mut self, delta_time: f32) {
     for t in &self.ticks {
-      unsafe { (**t).tick(delta_time); }
+      unsafe {
+        (**t).tick(delta_time);
+      }
     }
   }
 
-  pub fn render(&mut self, window_id: u32) {
-    for t in &self.renders {
-      unsafe { (**t).render(); }
-    }
-  }
+  visitor_impl!(Renderable, RenderableVisitor, renders, visit_renderables);
+  visitor_impl!(Camera, CameraVisitor, cameras, visit_cameras);
 }
+

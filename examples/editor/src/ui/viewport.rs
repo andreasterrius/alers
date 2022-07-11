@@ -1,44 +1,42 @@
 use std::collections::HashMap;
 
+use ale_app::engine::Engine;
 use ale_app::AppError;
-use ale_camera::Camera;
 use ale_camera::flycamera::FlyCamera;
+use ale_camera::Camera;
 use ale_data::alevec::{AleVec, Key};
-use ale_math::{Vector2, Zero};
 use ale_math::color::Color;
 use ale_math::rect::Rect;
+use ale_math::{Vector2, Zero};
 use ale_ui::button::Button;
 use ale_ui::element;
 use ale_ui::element::Element;
 use ale_ui::empty::Empty;
 use ale_ui::layout::{Layout, LayoutType, TableLayoutType};
 use ale_window::display::{DisplaySetting, TargetMonitor};
-use ale_world::components::{Input, OnSpawn, Tick};
-use ale_world::engine::Engine;
-use ale_world::viewport::ViewportDescriptor;
+use ale_window::window::Window;
+use ale_world::components::{Inputable, OnSpawn, Tick};
 use ale_world::wire_component;
 use ale_world::world::{EntityKey, World};
 use element::Panel;
 use LayoutType::TableLayout;
 
-const GAME_RENDER: &str = "game_render";
-
 pub struct Viewport {
-  main_viewport_key: Key<ViewportDescriptor>,
-  test_viewport_key: Key<ViewportDescriptor>,
+  main_window_key: Key<Window>,
+  sub_window_key: Key<Window>,
+
+  game_panel_key: Key<Element>,
 }
 
 impl Viewport {
-  pub fn new(engine: &mut Engine,
-             editor_camera_key: EntityKey) -> Result<Viewport, AppError> {
-    let main_window_key = engine.windows.add(
-      DisplaySetting {
-        dimension: Rect {
-          position: Vector2::zero(),
-          size: Vector2::new(800, 600),
-        },
-        initial_target: TargetMonitor::PRIMARY,
-      });
+  pub fn new(engine: &mut Engine, editor_camera_key: EntityKey) -> Result<Viewport, AppError> {
+    let main_window_key = engine.windows.add(DisplaySetting {
+      dimension: Rect {
+        position: Vector2::zero(),
+        size: Vector2::new(800, 600),
+      },
+      initial_target: TargetMonitor::PRIMARY,
+    });
     let sub_window_key = engine.windows.add(DisplaySetting {
       dimension: Rect {
         position: Vector2::zero(),
@@ -60,23 +58,25 @@ impl Viewport {
     //   font,
     //   12,
     // )));
-    panel.add(Element::Empty(Empty::new("game_render".to_owned())));
-    panel.add(Element::Button(Button::new_basic(Color::red())));
-    panel.add(Element::Button(Button::new_basic(Color::green())));
-    panel.add(Element::Button(Button::new_basic(Color::blue())));
-    panel.add(Element::Button(Button::new_basic(Color::yellow())));
+    let game_panel_key = panel.push(Element::Empty(Empty::new()));
+    panel.push(Element::Button(Button::new_basic(Color::red())));
+    panel.push(Element::Button(Button::new_basic(Color::green())));
+    panel.push(Element::Button(Button::new_basic(Color::blue())));
+    panel.push(Element::Button(Button::new_basic(Color::yellow())));
     panel.refresh_layout()?;
 
     let panel_key = engine.panels.push(panel);
-
-    let main_viewport_key = engine.viewport_descriptor.push(ViewportDescriptor::new(editor_camera_key, main_window_key));
-    let test_viewport_key = engine.viewport_descriptor.push(ViewportDescriptor::with_panel_multi(
-      HashMap::from([(GAME_RENDER.to_owned(), editor_camera_key)]), panel_key, sub_window_key));
+    match engine.windows.get_mut(main_window_key) {
+      None => {}
+      Some(w) => {
+        w.attach_panel(panel_key);
+      }
+    }
 
     Ok(Viewport {
-      main_viewport_key,
-      test_viewport_key,
+      main_window_key,
+      sub_window_key,
+      game_panel_key,
     })
   }
 }
-

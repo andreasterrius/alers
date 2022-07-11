@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use ale_camera::CameraRenderInfo;
-use ale_data::alevec::AleVec;
+use ale_data::alevec::{AleVec, Key};
 use ale_input::Input;
 use ale_math::rect::Rect;
 use ale_math::{Vector2, Zero};
@@ -43,8 +43,8 @@ impl Panel {
     };
   }
 
-  pub fn add(&mut self, element: Element) {
-    self.childs.push(element);
+  pub fn push(&mut self, element: Element) -> Key<Element> {
+    self.childs.push(element)
   }
 
   pub fn resize(&mut self, new_size: Vector2<u32>) {
@@ -96,7 +96,7 @@ impl Panel {
       match e {
         Element::Panel(ele) => empties.extend(ele.get_empty_layouts()),
         Element::Empty(empty) => {
-          empties.insert(empty.name.clone(), empty);
+         // empties.insert(empty.name.clone(), empty);
         }
         _ => {}
       }

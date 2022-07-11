@@ -37,7 +37,7 @@ impl EditorCamera {
 }
 
 impl Camera for EditorCamera {
-  fn camera(&mut self) -> CameraRenderInfo {
+  fn get_camera_info(&mut self) -> CameraRenderInfo {
     self.fly_camera.get_camera_render_info()
   }
 }
