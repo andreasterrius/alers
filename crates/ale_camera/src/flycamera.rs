@@ -5,6 +5,7 @@ use ale_math::{Deg, Quaternion, Vector2, Vector3, Zero};
 
 pub const SMALL_NUMBERF32: f32 = 1e-12;
 
+#[derive(Debug)]
 pub struct FlyCamera {
   camera: Camera,
 

@@ -13,11 +13,12 @@ pub enum TargetMonitor {
 pub struct DisplaySetting {
   pub dimension: Rect,
   pub initial_target: TargetMonitor,
+  pub is_hidden: bool,
 }
 
 impl DisplaySetting {
   pub fn new(dimension: Rect) -> DisplaySetting {
-    DisplaySetting { dimension, initial_target: TargetMonitor::PRIMARY }
+    DisplaySetting { dimension, initial_target: TargetMonitor::PRIMARY, is_hidden: false }
   }
 
   pub fn get_dimension(&self) -> &Rect {

@@ -1,3 +1,4 @@
+use log::info;
 use crate::scene::camera::EditorCamera;
 use crate::ui::viewport::Viewport;
 use ale_app::app::{App, Genesis};
@@ -19,13 +20,12 @@ impl Genesis for Editor {
   }
 
   fn init(&self, engine: &mut Engine, world: &mut World) -> Result<(), ale_app::AppError> {
+
     // Spawn entities required by a viewport
     let editor_camera_key = world.spawn(EditorCamera::new());
 
     // Register viewport and how to render
     let viewport = Viewport::new(engine, editor_camera_key)?;
-
-    // Create world entities
 
     Ok(())
   }

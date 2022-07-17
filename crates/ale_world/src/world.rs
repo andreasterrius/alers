@@ -2,7 +2,7 @@ use crate::components::{Camera, OnSpawn, Renderable, Tick};
 use crate::event::EventQueue;
 use crate::registry::{EntryBuilder, Traitcast};
 use crate::visitor;
-use crate::visitor::{RenderableVisitor, CameraVisitor};
+use crate::visitor::{CameraVisitor, RenderableVisitor};
 use ale_data::alevec::{AleVec, Key};
 use std::any::Any;
 use traitcast_core::{ImplEntry, Registry, TraitcastFrom};
@@ -14,7 +14,10 @@ macro_rules! visitor_impl {
     pub fn $fn_name<T: $visitor_name>(&mut self, visitor: &mut T) {
       for t in &self.$field_ident {
         unsafe {
-          visitor.visit(&mut **t);
+          match (*t).as_mut() {
+            None => {}
+            Some(ent) => visitor.visit(ent),
+          };
         }
       }
     }
@@ -49,14 +52,15 @@ impl World {
   }
 
   pub fn spawn<T: 'static>(&mut self, mut entity: T) -> EntityKey {
-    // Register the traits this thing have
-    World::save_component(&self.registry, &mut self.ticks, &mut entity);
-    World::save_component(&self.registry, &mut self.renders, &mut entity);
-    World::save_component(&self.registry, &mut self.cameras, &mut entity);
-
     // Get ownership of pointer, save it to entities
-    let b = Box::new(entity);
+    let mut b = Box::new(entity);
     let key = self.entities.push(b);
+    let mut ent = self.entities.get_mut(key).unwrap();
+
+    // Register the traits this thing have
+    World::save_component(&self.registry, &mut self.ticks, ent.as_any_mut());
+    World::save_component(&self.registry, &mut self.renders, ent.as_any_mut());
+    World::save_component(&self.registry, &mut self.cameras, ent.as_any_mut());
 
     let ent = self.entities.get_mut(key).unwrap();
     if let Some(comp) = World::get::<dyn OnSpawn>(&self.registry, ent) {
@@ -104,4 +108,3 @@ impl World {
   visitor_impl!(Renderable, RenderableVisitor, renders, visit_renderables);
   visitor_impl!(Camera, CameraVisitor, cameras, visit_cameras);
 }
-

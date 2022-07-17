@@ -9,6 +9,7 @@ use ale_world::wire_component;
 use ale_world::world::{EntityKey, World};
 use crate::{Editor, Vector2};
 
+#[derive(Debug)]
 pub struct EditorCamera {
   pub key: EntityKey,
   pub fly_camera: FlyCamera,
@@ -23,7 +24,7 @@ impl EditorCamera {
   }
 
   pub fn new() -> EditorCamera {
-    let mut fly_camera = FlyCamera::new(ale_camera::Camera::new(
+    let fly_camera = FlyCamera::new(ale_camera::Camera::new(
       Vector3::new(0.0, 10.0, 0.0),
       Rect {
         position: Vector2::zero(),

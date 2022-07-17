@@ -58,7 +58,7 @@ impl<T> AleVec<T> {
     });
     self.len += 1;
     Key {
-      unique_id: ProcessUniqueId::new(),
+      unique_id: self.unique_id,
       generation: self.generation,
       index: self.vec.len() - 1,
       valid: true,
@@ -229,7 +229,7 @@ impl<'a, T> Iterator for AleVecKeyIter<'a, T> {
       self.index += 1;
       if !d.delete_later {
         return Some(Key {
-          unique_id: ProcessUniqueId::new(),
+          unique_id: self.alevec.unique_id,
           generation: self.alevec.generation,
           index: i,
           valid: true,
@@ -244,7 +244,7 @@ impl<'a, T> Iterator for AleVecKeyIter<'a, T> {
 impl<T> Clone for Key<T> {
   fn clone(&self) -> Self {
     Key {
-      unique_id: ProcessUniqueId::new(),
+      unique_id: self.unique_id,
       generation: self.generation,
       index: self.index,
       valid: self.valid,

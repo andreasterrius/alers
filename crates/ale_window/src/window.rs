@@ -1,19 +1,21 @@
-use crate::display::DisplaySetting;
+use crate::display::{DisplaySetting, TargetMonitor};
 use crate::input_translator::{
   translate_action, translate_key, translate_modifier, translate_mousebutton, translate_scancode,
 };
 use ale_input::Input;
-use ale_math::Vector2;
+use ale_math::{Vector2, Zero};
 use ale_ui::element::Panel;
 use glfw::{Action, Context, CursorMode, Key, WindowEvent};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, RwLock};
 use ale_data::alevec;
+use ale_math::rect::Rect;
 
 pub struct Window {
   glfw_window: glfw::Window,
   glfw_events: Receiver<(f64, WindowEvent)>,
 
+  pub is_hidden : bool, // hidden window, for context
   pub display_setting: DisplaySetting,
 
   mouse_position: Option<(f64, f64)>,
@@ -25,10 +27,12 @@ impl Window {
     glfw_window: glfw::Window,
     glfw_events: Receiver<(f64, WindowEvent)>,
     display_setting: DisplaySetting,
+    is_hidden: bool,
   ) -> Window {
     Window {
       glfw_window,
       glfw_events,
+      is_hidden,
       display_setting,
       mouse_position: None,
       panel_key: None

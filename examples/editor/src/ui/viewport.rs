@@ -36,6 +36,7 @@ impl Viewport {
         size: Vector2::new(800, 600),
       },
       initial_target: TargetMonitor::PRIMARY,
+      is_hidden: false
     });
     let sub_window_key = engine.windows.add(DisplaySetting {
       dimension: Rect {
@@ -43,6 +44,7 @@ impl Viewport {
         size: Vector2::new(400, 300),
       },
       initial_target: TargetMonitor::PRIMARY,
+      is_hidden: false
     });
 
     let mut panel = element::Panel::new_root(

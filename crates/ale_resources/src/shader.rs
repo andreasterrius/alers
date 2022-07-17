@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::{fs, io};
+use log::info;
 
 use thiserror::Error;
 
@@ -64,6 +65,10 @@ impl Load<Shader, LoadError> for Loader {
     let vertex_shader_path = PathBuf::from_str(&format!("{}.vert", path)).unwrap();
     let fragment_shader_path = PathBuf::from_str(&format!("{}.frag", path)).unwrap();
     let geom_shader_path = PathBuf::from_str(&format!("{}.geom", path)).unwrap();
+
+    info!("shader_load, vertex: {}", vertex_shader_path.to_str().unwrap_or("None"));
+    info!("shader_load, fragment: {}", fragment_shader_path.to_str().unwrap_or("None"));
+    info!("shader_load, geom: {}", geom_shader_path.to_str().unwrap_or("None"));
 
     let vertex_shader = match fs::read_to_string(vertex_shader_path.clone()) {
       Ok(str) => str,

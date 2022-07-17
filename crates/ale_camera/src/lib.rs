@@ -6,9 +6,10 @@ use std::sync::Arc;
 
 pub mod flycamera;
 
+#[derive(Debug)]
 pub struct Camera {
   transform: AleTransform,
-  fov: f32,
+  pub fov: f32,
   aspect_ratio: f32,
   display_rect: Rect,
 
@@ -110,6 +111,7 @@ impl Camera {
   }
 
   fn projection_mat(&mut self) -> Matrix4<f32> {
+    println!("{:?}", self);
     match self.projection_mat {
       None => self.projection_mat = Some(perspective(Deg(self.fov), self.aspect_ratio, 0.1f32, 100.0f32)),
       Some(_) => (),

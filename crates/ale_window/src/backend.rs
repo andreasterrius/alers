@@ -13,6 +13,7 @@ pub struct Windows {
 impl Windows {
   pub fn new() -> Windows {
     let glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
+
     Windows {
       glfw,
       windows: AleVec::new()
@@ -23,6 +24,13 @@ impl Windows {
     self.glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
     self.glfw
       .window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+
+    if display_setting.is_hidden {
+      self.glfw.window_hint(glfw::WindowHint::Visible(false));
+    }
+    else {
+      self.glfw.window_hint(glfw::WindowHint::Visible(true));
+    }
     #[cfg(target_os = "macos")]
     glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
     // glfw window creation
@@ -53,6 +61,7 @@ impl Windows {
       glfw_window,
       glfw_events,
       display_setting,
+      false,
     ))
   }
 

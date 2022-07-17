@@ -1,4 +1,6 @@
+use std::fs::File;
 use std::path::Path;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use thiserror::Error;
 
@@ -10,6 +12,8 @@ use ale_window::tick::{FixedStep, WorldTick};
 use ale_window::window::Window;
 
 pub use anyhow::Error as AppError;
+use log::{info, LevelFilter};
+use simplelog::{ColorChoice, CombinedLogger, Config, SimpleLogger, TerminalMode, TermLogger, WriteLogger};
 use ale_opengl::viewport::Viewport;
 use ale_ui::element;
 use ale_window::backend;
@@ -46,12 +50,11 @@ pub fn ale_app_run<S, T: App<S>>(mut app: T, display_info: DisplaySetting) {
 
 pub fn ale_app_run_internal<S, T: App<S>>(mut app: T, display_info: DisplaySetting) -> anyhow::Result<()> {
   // Initialize File Logging
-  //alers::log::init_term();
+  init_term();
 
   // Initialize the engine
   let mut windows = Windows::new();
   let mut window_key = windows.add(display_info);
-
 
   let window = windows.get(window_key).unwrap();
   let mut state = app.load(window)?;
@@ -90,4 +93,27 @@ pub fn ale_app_resource_path(path: &str) -> String {
     .join("resources")
     .join(path);
   p.to_str().unwrap().to_owned()
+}
+
+pub fn init() {
+  let now_ms = SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .expect("Time went backwards")
+      .as_millis();
+  CombinedLogger::init(vec![
+    TermLogger::new(LevelFilter::Warn, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+    WriteLogger::new(
+      LevelFilter::Info,
+      Config::default(),
+      File::create(format!("alers-{}.log", now_ms)).unwrap(),
+    ),
+  ])
+      .unwrap();
+}
+
+pub fn init_term() {
+  TermLogger::init(LevelFilter::Debug,
+                   Config::default(),
+                   TerminalMode::Mixed,
+                   ColorChoice::Auto).unwrap();
 }

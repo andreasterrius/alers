@@ -1,4 +1,5 @@
 use std::marker::PhantomData;
+use log::info;
 use ale_data::alevec::{AleVec, AleVecIter, AleVecIterMut, Key};
 use crate::path::ResourcePath;
 
@@ -25,6 +26,8 @@ impl<Resource, Err, Loader: Load<Resource, Err> + Default> Stash<Resource, Err, 
     pub fn load(&mut self, path: &str) -> Result<Vec<Key<Resource>>, Err> {
         let resource_path = &ResourcePath::find(path);
         let res = self.loader.load(resource_path)?;
+
+        info!("load: {}", resource_path);
 
         let mut keys = vec!();
         for r in res {

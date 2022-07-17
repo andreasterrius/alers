@@ -13,7 +13,7 @@ use ale_world::world::World;
 
 use crate::engine::Engine;
 use crate::visitor::WorldVisitor;
-use crate::{AppError, DisplaySetting, FixedStep, WorldTick};
+use crate::{AppError, DisplaySetting, FixedStep, init_term, WorldTick};
 
 pub trait Genesis {
   fn register_components(&self, world: &mut World);
@@ -37,6 +37,8 @@ impl App {
   }
 
   fn run_app_loop(&mut self) -> anyhow::Result<()> {
+    init_term();
+
     let mut tick = WorldTick::FixedStep(FixedStep::new(0.01f32));
     let mut world = World::new();
     let mut engine = Engine::new()?;
@@ -70,6 +72,9 @@ impl App {
     world.visit_cameras(&mut world_visitor);
 
     for window in &mut engine.windows.iter_mut() {
+      if window.is_hidden {
+        continue
+      }
       window.make_current();
 
       ale_opengl_clear_render();
