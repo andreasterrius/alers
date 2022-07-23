@@ -12,7 +12,7 @@ use ale_world::visitor::RenderableVisitor;
 use ale_world::world::World;
 
 use crate::engine::Engine;
-use crate::visitor::WorldVisitor;
+use crate::visitor::{FixedTickVisitor, TickVisitor, WorldVisitor};
 use crate::{AppError, DisplaySetting, FixedStep, init_term, WorldTick};
 
 pub trait Genesis {
@@ -54,14 +54,21 @@ impl App {
 
       while tick.should_tick() {
         tick.tick();
-        world.fixed_tick(tick.delta_time());
+
+        // fixed tick
+        let mut fixed_tick_vis = FixedTickVisitor { delta_time: tick.delta_time() };
+        world.visit_mut(&mut fixed_tick_vis);
       }
 
-      world.tick(delta_time);
+      //tick
+      let mut tick_vis = TickVisitor { delta_time };
+      world.visit_mut(&mut tick_vis);
+
+      // render
       self.render(&mut engine, &mut world);
 
+      // cleanup
       engine.windows.cleanup();
-      println!("{}", engine.windows.len());
     }
 
     Ok(())
@@ -74,7 +81,7 @@ impl App {
 
     for window in &mut engine.windows.iter_mut() {
       if window.is_hidden {
-        continue
+        continue;
       }
       window.make_current();
 

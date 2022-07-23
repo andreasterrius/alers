@@ -56,9 +56,6 @@ impl<DynTrait: ?Sized> std::iter::FromIterator<ImplEntry<DynTrait>> for CastInto
 }
 
 impl<To: ?Sized + 'static> CastIntoTrait<To> {
-  /// Tries to cast the given reference to a dynamic trait object. This will
-  /// always return None if the implementation of the target trait, for the
-  /// concrete type of x, has not been registered via `traitcast_to_impl!`.
   pub fn cast_ref<'a, From>(&self, x: &'a From) -> Option<&'a To>
   where
     From: TraitcastFrom + ?Sized,
@@ -69,10 +66,11 @@ impl<To: ?Sized + 'static> CastIntoTrait<To> {
     (s.cast_ref)(x)
   }
 
-  /// Tries to cast the given mutable reference to a dynamic trait object.
-  /// This will always return None if the implementation of the target trait,
-  /// for the concrete type of x, has not been registered via
-  /// `traitcast_to_impl!`.
+  pub fn cast_ref_dynamic<'a>(&self, tid: TypeId, x: &'a dyn Any) -> Option<&'a To>{
+    let s = self.map.get(&tid)?;
+    (s.cast_ref)(x)
+  }
+
   pub fn cast_mut<'a, From>(&self, x: &'a mut From) -> Option<&'a mut To>
   where
     From: TraitcastFrom + ?Sized,
@@ -83,25 +81,9 @@ impl<To: ?Sized + 'static> CastIntoTrait<To> {
     (s.cast_mut)(x)
   }
 
-  /// Tries to cast the given pointer to a dynamic trait object. This will
-  /// always return Err if the implementation of the target trait, for the
-  /// concrete type of x, has not been registered via `traitcast_to_impl!`.
-  pub fn cast_box<From>(&self, x: Box<From>) -> Result<Box<To>, Box<dyn Any>>
-  where
-    From: TraitcastFrom + ?Sized,
-  {
-    let x = x.as_any_box();
-
-    // Must ensure we take the type id of what's in the box, not the type
-    // id of the box itself.
-    let tid = (*x).type_id();
-
-    let s = match self.map.get(&tid) {
-      Some(s) => s,
-      None => return Err(x),
-    };
-
-    (s.cast_box)(x)
+  pub fn cast_mut_dynamic<'a>(&self, tid: TypeId, x: &'a mut dyn Any) -> Option<&'a mut To>{
+    let s = self.map.get(&tid)?;
+    (s.cast_mut)(x)
   }
 }
 
@@ -182,62 +164,62 @@ impl TraitcastFrom for dyn Any {
   }
 }
 
-/// Constructs a `ImplEntry` for a trait and a concrete struct implementing
-/// that trait.
-///
-/// # Example
-/// ```
-/// # use traitcast_core::impl_entry;
-/// # use traitcast_core::ImplEntry;
-/// use std::fmt::Display;
-/// let x: ImplEntry<Display> = impl_entry!(dyn Display, i32);
-/// ```
-#[macro_export]
-macro_rules! impl_entry {
-  ($source:ty, $target:ty) => {
-    $crate::ImplEntry::<$source> {
-      cast_box: |x| {
-        let x: Box<$target> = x.downcast()?;
-        let x: Box<$source> = x;
-        Ok(x)
-      },
-      cast_mut: |x| {
-        let x: &mut $target = x.downcast_mut()?;
-        let x: &mut $source = x;
-        Some(x)
-      },
-      cast_ref: |x| {
-        let x: &$target = x.downcast_ref()?;
-        let x: &$source = x;
-        Some(x)
-      },
-      tid: std::any::TypeId::of::<$target>(),
-      from_name: stringify!($source),
-      into_name: stringify!($target),
-    }
-  };
-}
-
-/// Creates a struct named `$wrapper` which wraps `ImplEntry<dyn $trait>` for
-/// the given `$trait`. This is useful because it allows implementing traits on
-/// the `ImplEntry<dyn $trait>` from external modules. This is an
-/// implementation detail of `traitcast_to_trait!`.
-#[macro_export]
-macro_rules! defn_impl_entry_wrapper {
-    ($type:ty, $vis:vis $wrapper:ident) => {
-        #[allow(non_camel_case_types)]
-        $vis struct $wrapper(pub $crate::ImplEntry<$type>);
-
-        impl std::convert::From<$crate::ImplEntry<$type>> for $wrapper {
-            fn from(x: $crate::ImplEntry<$type>) -> Self {
-                $wrapper(x)
-            }
-        }
-
-        impl std::convert::AsRef<$crate::ImplEntry<$type>> for $wrapper {
-            fn as_ref(&self) -> &$crate::ImplEntry<$type> {
-                &self.0
-            }
-        }
-    };
-}
+// /// Constructs a `ImplEntry` for a trait and a concrete struct implementing
+// /// that trait.
+// ///
+// /// # Example
+// /// ```
+// /// # use traitcast_core::impl_entry;
+// /// # use traitcast_core::ImplEntry;
+// /// use std::fmt::Display;
+// /// let x: ImplEntry<Display> = impl_entry!(dyn Display, i32);
+// /// ```
+// #[macro_export]
+// macro_rules! impl_entry {
+//   ($source:ty, $target:ty) => {
+//     $crate::ImplEntry::<$source> {
+//       cast_box: |x| {
+//         let x: Box<$target> = x.downcast()?;
+//         let x: Box<$source> = x;
+//         Ok(x)
+//       },
+//       cast_mut: |x| {
+//         let x: &mut $target = x.downcast_mut()?;
+//         let x: &mut $source = x;
+//         Some(x)
+//       },
+//       cast_ref: |x| {
+//         let x: &$target = x.downcast_ref()?;
+//         let x: &$source = x;
+//         Some(x)
+//       },
+//       tid: std::any::TypeId::of::<$target>(),
+//       from_name: stringify!($source),
+//       into_name: stringify!($target),
+//     }
+//   };
+// }
+//
+// /// Creates a struct named `$wrapper` which wraps `ImplEntry<dyn $trait>` for
+// /// the given `$trait`. This is useful because it allows implementing traits on
+// /// the `ImplEntry<dyn $trait>` from external modules. This is an
+// /// implementation detail of `traitcast_to_trait!`.
+// #[macro_export]
+// macro_rules! defn_impl_entry_wrapper {
+//     ($type:ty, $vis:vis $wrapper:ident) => {
+//         #[allow(non_camel_case_types)]
+//         $vis struct $wrapper(pub $crate::ImplEntry<$type>);
+//
+//         impl std::convert::From<$crate::ImplEntry<$type>> for $wrapper {
+//             fn from(x: $crate::ImplEntry<$type>) -> Self {
+//                 $wrapper(x)
+//             }
+//         }
+//
+//         impl std::convert::AsRef<$crate::ImplEntry<$type>> for $wrapper {
+//             fn as_ref(&self) -> &$crate::ImplEntry<$type> {
+//                 &self.0
+//             }
+//         }
+//     };
+// }

@@ -2,8 +2,22 @@ use indexmap::IndexMap;
 use snowflake::ProcessUniqueId;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
+use lazy_static::lazy_static;
+
+lazy_static! {
+  static ref EMPTY_UNIQUE_ID : ProcessUniqueId = ProcessUniqueId::new();
+}
 
 pub struct Key<T>(ProcessUniqueId, PhantomData<T>);
+
+impl<T> Key<T> {
+  pub fn empty() -> Key<T> {
+    return Key {
+      0: EMPTY_UNIQUE_ID.clone(),
+      1: PhantomData::default(),
+    };
+  }
+}
 
 impl<T> Clone for Key<T> {
   fn clone(&self) -> Self {
@@ -13,7 +27,8 @@ impl<T> Clone for Key<T> {
     }
   }
 }
-impl<T> Copy for Key<T>{}
+
+impl<T> Copy for Key<T> {}
 
 impl<T> Hash for Key<T> {
   fn hash<H: Hasher>(&self, state: &mut H) {
@@ -44,11 +59,13 @@ impl<T> AleIndexMap<T> {
     key
   }
 
-  pub fn get_mut(&mut self, key : &Key<T>) -> Option<&mut T> {
+  pub fn get_mut(&mut self, key: &Key<T>) -> Option<&mut T> {
     self.inner.get_mut(key)
   }
 
-  pub fn get(&self, key : &Key<T>) -> Option<&T> {
+  pub fn get(&self, key: &Key<T>) -> Option<&T> {
     self.inner.get(key)
   }
 }
+
+pub type AleIndexSet<T> = indexmap::IndexSet<T>;

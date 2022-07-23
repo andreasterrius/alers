@@ -10,7 +10,7 @@ struct Tetris;
 
 impl Genesis for Tetris {
   fn register_components(&self, world: &mut World) {
-    world.enable(&[]);
+    world.register_components(&[]);
   }
 
   fn init(&self, engine: &mut Engine, world: &mut World) -> Result<(), AppError> {

@@ -1,44 +1,52 @@
-pub use traitcast_core::ImplEntry;
-use traitcast_core::{CastIntoTrait, Registry, TraitcastFrom};
+use std::any::TypeId;
+use crate::typecast::registry::{CastIntoTrait, ImplEntry, Registry, TraitcastFrom};
 
 pub trait Traitcast<To: ?Sized> {
   fn cast_mut(&mut self, registry: &Registry) -> Option<&mut To>;
 
-  fn cast_box(&mut self, registry: &Registry) -> Option<Box<To>>;
+  fn cast_ref(&self, registry: &Registry) -> Option<&To>;
 }
 
 impl<From, To> Traitcast<To> for From
-where
-  From: TraitcastFrom + ?Sized,
-  To: ?Sized + 'static,
+  where
+    From: TraitcastFrom + ?Sized,
+    To: ?Sized + 'static,
 {
   fn cast_mut(&mut self, registry: &Registry) -> Option<&mut To> {
-    registry.cast_into::<To>()?.from_mut(self)
+    registry.get::<To>()?.cast_mut(self)
   }
 
-  fn cast_box(&mut self, registry: &Registry) -> Option<Box<To>> {
-    registry.cast_into::<To>()?.from_box(self)
+  fn cast_ref(&self, registry: &Registry) -> Option<&To> {
+    registry.get::<To>()?.cast_ref(self)
   }
 }
 
 pub struct EntryBuilder {
   pub insert: Box<dyn Fn(&mut Registry)>,
+  pub source_impl: TypeId,
+  pub target_trait: TypeId,
 }
 
 impl EntryBuilder {
   pub fn insert<To>(entry: ImplEntry<To>) -> EntryBuilder
-  where
-    To: 'static + ?Sized,
+    where
+      To: 'static + ?Sized,
   {
+    let source_impl = entry.tid.clone();
     EntryBuilder {
       insert: Box::new(move |master| {
-        let table: &mut CastIntoTrait<To> = master
+        let table = master
           .tables
-          .entry::<CastIntoTrait<To>>()
-          .or_insert(CastIntoTrait::new());
+          .entry::<>(TypeId::of::<CastIntoTrait<To>>())
+          .or_insert(Box::new(CastIntoTrait::<To>::new()));
 
-        table.map.insert(entry.tid, entry.clone());
+        match table.downcast_mut::<CastIntoTrait<To>>() {
+          None => { return; }
+          Some(table) => table.map.insert(entry.tid, entry.clone())
+        };
       }),
+      source_impl,
+      target_trait: TypeId::of::<To>(),
     }
   }
 }

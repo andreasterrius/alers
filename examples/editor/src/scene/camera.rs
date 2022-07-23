@@ -17,7 +17,7 @@ pub struct EditorCamera {
 
 impl EditorCamera {
   pub fn register_components(world: &mut World) {
-    world.enable(&[
+    world.register_components(&[
       wire_component!(dyn OnSpawn, EditorCamera),
       wire_component!(dyn Camera, EditorCamera),
     ])
