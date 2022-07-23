@@ -61,6 +61,7 @@ impl App {
       self.render(&mut engine, &mut world);
 
       engine.windows.cleanup();
+      println!("{}", engine.windows.len());
     }
 
     Ok(())
