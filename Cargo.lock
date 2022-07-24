@@ -67,6 +67,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "ale_event"
+version = "0.1.0"
+
+[[package]]
 name = "ale_input"
 version = "0.1.0"
 dependencies = [

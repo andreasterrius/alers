@@ -8,7 +8,6 @@ use ale_data::alevec::AleVec;
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
 
 use crate::components::{Camera, OnSpawn, Renderable, Tick};
-use crate::event::EventQueue;
 use crate::typecast::entry::{EntryBuilder, Traitcast};
 use crate::visitor;
 use crate::visitor::{CameraVisitor, RenderableVisitor, Visitor, VisitorMut};
@@ -32,7 +31,7 @@ pub struct World {
   entities_meta: HashMap<Key<Entity>, EntityMeta>,
 
   // Events
-  event_queue: EventQueue,
+  //event_queue: EventQueue,
 }
 
 impl World {
@@ -40,7 +39,7 @@ impl World {
     World {
       entities: AleIndexMap::new(),
       registry: Registry::new(),
-      event_queue: EventQueue::new(),
+      //event_queue: EventQueue::new(),
       component_to_entity: HashMap::new(),
       component_index: Default::default(),
       entities_meta: Default::default(),

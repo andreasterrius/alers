@@ -1,3 +1,5 @@
+mod tetris;
+
 use ale_app::app::{App, Genesis};
 use ale_app::engine::Engine;
 use ale_app::AppError;
@@ -10,7 +12,7 @@ struct Tetris;
 
 impl Genesis for Tetris {
   fn register_components(&self, world: &mut World) {
-    world.register_components(&[]);
+    tetris::Game::register_components(world);
   }
 
   fn init(&self, engine: &mut Engine, world: &mut World) -> Result<(), AppError> {
@@ -23,9 +25,12 @@ impl Genesis for Tetris {
       is_hidden: false,
     });
 
+    let tetris_game_key = world.spawn(tetris::Game::new());
+
     Ok(())
   }
 }
+
 
 fn main() {
   App::new(Tetris).run();
