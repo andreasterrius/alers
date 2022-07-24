@@ -1,11 +1,12 @@
 use std::collections::HashMap;
-use crate::world::EntityKey;
+use ale_data::indexmap::Key;
+use crate::world::Entity;
 
 // Empty trait
 pub trait Event {}
 
 pub struct EventQueue {
-  targeted: HashMap<EntityKey, Box<dyn Event>>,
+  targeted: HashMap<Key<Entity>, Box<dyn Event>>,
 }
 
 impl EventQueue {

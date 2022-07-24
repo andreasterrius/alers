@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use log::info;
 
 use ale_data::alevec::AleVec;
+use ale_data::indexmap::Key;
 use ale_math::rect::Rect;
 use ale_math::{Vector2, Zero};
 use ale_opengl::renderer::sprite::SpriteRenderer;
@@ -14,7 +15,7 @@ use ale_window::backend;
 use ale_window::backend::Windows;
 use ale_window::display::{DisplaySetting, TargetMonitor};
 use ale_window::window::Window;
-use ale_world::world::EntityKey;
+use ale_world::world::Entity;
 
 use crate::AppError;
 
@@ -28,7 +29,7 @@ pub struct Engine {
   pub windows: Windows,
   pub panels: Panels,
   pub resources: Resources,
-  pub camera_target: HashMap<EntityKey, RenderTarget>,
+  pub camera_target: HashMap<Key<Entity>, RenderTarget>,
 
   pub text_renderer: TextRenderer,
   pub sprite_renderer: SpriteRenderer,

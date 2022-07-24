@@ -21,11 +21,13 @@ impl Genesis for Editor {
 
   fn init(&self, engine: &mut Engine, world: &mut World) -> Result<(), ale_app::AppError> {
 
-    // Spawn entities required by a viewport
+    // Register window and UI panels
+    let viewport = Viewport::new(engine)?;
+
+    // Create entites
     let editor_camera_key = world.spawn(EditorCamera::new());
 
-    // Register viewport and how to render
-    let viewport = Viewport::new(engine, editor_camera_key)?;
+
 
     Ok(())
   }

@@ -3,16 +3,17 @@ use std::rc::Rc;
 use log::info;
 use ale_camera::CameraRenderInfo;
 use ale_camera::flycamera::FlyCamera;
+use ale_data::indexmap::Key;
 use ale_math::rect::Rect;
 use ale_math::{Vector3, Zero};
 use ale_world::components::{Camera, OnSpawn, Tick};
 use ale_world::wire_component;
-use ale_world::world::{EntityKey, World};
+use ale_world::world::{Entity, World};
 use crate::{Editor, Vector2};
 
 #[derive(Debug)]
 pub struct EditorCamera {
-  pub key: EntityKey,
+  pub key: Key<Entity>,
   pub fly_camera: FlyCamera,
 }
 
@@ -35,7 +36,7 @@ impl EditorCamera {
       90.0,
     ));
 
-    EditorCamera { key: EntityKey::empty(), fly_camera }
+    EditorCamera { key: Key::empty(), fly_camera }
   }
 }
 
@@ -45,7 +46,6 @@ impl Tick for EditorCamera {
   }
 
   fn tick(&mut self, delta_time: f32) {
-    info!("test");
   }
 }
 
@@ -56,7 +56,7 @@ impl Camera for EditorCamera {
 }
 
 impl OnSpawn for EditorCamera {
-  fn take_key(&mut self, key: EntityKey) {
+  fn take_key(&mut self, key: Key<Entity>) {
     self.key = key;
   }
 }

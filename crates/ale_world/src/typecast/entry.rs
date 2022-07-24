@@ -1,5 +1,6 @@
 use std::any::TypeId;
-use crate::typecast::registry::{CastIntoTrait, ImplEntry, Registry, TraitcastFrom};
+pub use traitcast_core::ImplEntry;
+use traitcast_core::{CastIntoTrait, Registry, TraitcastFrom};
 
 pub trait Traitcast<To: ?Sized> {
   fn cast_mut(&mut self, registry: &Registry) -> Option<&mut To>;
@@ -7,17 +8,17 @@ pub trait Traitcast<To: ?Sized> {
   fn cast_ref(&self, registry: &Registry) -> Option<&To>;
 }
 
-impl<From, To> Traitcast<To> for From
+impl<From: 'static, To> Traitcast<To> for From
   where
     From: TraitcastFrom + ?Sized,
     To: ?Sized + 'static,
 {
   fn cast_mut(&mut self, registry: &Registry) -> Option<&mut To> {
-    registry.get::<To>()?.cast_mut(self)
+    registry.cast_into::<To>()?.from_mut(self)
   }
 
   fn cast_ref(&self, registry: &Registry) -> Option<&To> {
-    registry.get::<To>()?.cast_ref(self)
+    registry.cast_into::<To>()?.from_ref(self)
   }
 }
 
@@ -35,16 +36,12 @@ impl EntryBuilder {
     let source_impl = entry.tid.clone();
     EntryBuilder {
       insert: Box::new(move |master| {
-        let ctid = TypeId::of::<CastIntoTrait<To>>();
-        let table = master
+        let table: &mut CastIntoTrait<To> = master
           .tables
-          .entry::<>(ctid)
-          .or_insert(Box::new(CastIntoTrait::<To>::new()));
+          .entry::<CastIntoTrait<To>>()
+          .or_insert(CastIntoTrait::new());
 
-        match table.downcast_mut::<CastIntoTrait<To>>() {
-          None => { return; }
-          Some(table) => table.map.insert(entry.tid, entry.clone())
-        };
+        table.map.insert(entry.tid, entry.clone());
       }),
       struct_impl: source_impl,
       dyn_trait: TypeId::of::<To>(),
@@ -55,7 +52,7 @@ impl EntryBuilder {
 #[macro_export]
 macro_rules! wire_component {
   ($source:ty, $target:ty) => {
-    ale_world::typecast::entry::EntryBuilder::insert(ale_world::typecast::registry::ImplEntry::<$source> {
+    $crate::typecast::entry::EntryBuilder::insert($crate::typecast::entry::ImplEntry::<$source> {
       cast_box: |x| {
         let x: Box<$target> = x.downcast()?;
         let x: Box<$source> = x;

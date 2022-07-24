@@ -1,10 +1,10 @@
 use std::any::TypeId;
 use std::collections::HashMap;
+use traitcast_core::TraitcastFrom as Component;
 use ale_camera::CameraRenderInfo;
 use ale_data::indexmap::Key;
 use ale_opengl::renderer;
-use crate::typecast::registry::TraitcastFrom as Component;
-use crate::world::{Entity, EntityKey, World};
+use crate::world::{Entity, World};
 
 pub trait Tick: Component {
   fn fixed_tick(&mut self, delta_time: f32);
@@ -17,7 +17,7 @@ pub trait Inputable: Component {
 }
 
 pub trait OnSpawn: Component {
-  fn take_key(&mut self, key: EntityKey);
+  fn take_key(&mut self, key: Key<Entity>);
 }
 
 pub trait Renderable: Component {

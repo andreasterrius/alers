@@ -5,6 +5,7 @@ use ale_app::AppError;
 use ale_camera::flycamera::FlyCamera;
 use ale_camera::Camera;
 use ale_data::alevec::{AleVec, Key};
+use ale_data::indexmap;
 use ale_math::color::Color;
 use ale_math::rect::Rect;
 use ale_math::{Vector2, Zero};
@@ -17,7 +18,7 @@ use ale_window::display::{DisplaySetting, TargetMonitor};
 use ale_window::window::Window;
 use ale_world::components::{Inputable, OnSpawn, Tick};
 use ale_world::wire_component;
-use ale_world::world::{EntityKey, World};
+use ale_world::world::{Entity, World};
 use element::Panel;
 use LayoutType::TableLayout;
 
@@ -29,7 +30,7 @@ pub struct Viewport {
 }
 
 impl Viewport {
-  pub fn new(engine: &mut Engine, editor_camera_key: EntityKey) -> Result<Viewport, AppError> {
+  pub fn new(engine: &mut Engine) -> Result<Viewport, AppError> {
     let main_window_key = engine.windows.add(DisplaySetting {
       dimension: Rect {
         position: Vector2::zero(),

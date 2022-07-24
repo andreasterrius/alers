@@ -1,6 +1,8 @@
 use std::any::{Any, TypeId};
+use std::borrow::{Borrow, BorrowMut};
 use std::collections::HashMap;
 use std::path::Component;
+use traitcast_core::{Registry, TraitcastFrom};
 
 use ale_data::alevec::AleVec;
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
@@ -8,12 +10,14 @@ use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
 use crate::components::{Camera, OnSpawn, Renderable, Tick};
 use crate::event::EventQueue;
 use crate::typecast::entry::{EntryBuilder, Traitcast};
-use crate::typecast::registry::Registry;
 use crate::visitor;
 use crate::visitor::{CameraVisitor, RenderableVisitor, Visitor, VisitorMut};
 
 pub type Entity = Box<dyn Any>;
-pub type EntityKey = Key<Entity>;
+
+pub struct EntityMeta {
+  impl_type: TypeId,
+}
 
 pub struct World {
   // Owning pointer
@@ -22,7 +26,10 @@ pub struct World {
   // Components
   registry: Registry,
   component_to_entity: HashMap<TypeId, AleIndexSet<Key<Entity>>>,
-  component_index: HashMap<TypeId, Vec<TypeId>>, //impl to traits
+  // components to entity
+  component_index: HashMap<TypeId, Vec<TypeId>>,
+  //impl to components
+  entities_meta: HashMap<Key<Entity>, EntityMeta>,
 
   // Events
   event_queue: EventQueue,
@@ -36,19 +43,24 @@ impl World {
       event_queue: EventQueue::new(),
       component_to_entity: HashMap::new(),
       component_index: Default::default(),
+      entities_meta: Default::default(),
     }
   }
 
-  pub fn spawn<T: 'static>(&mut self, entity: T) -> EntityKey {
+  pub fn spawn<T: 'static>(&mut self, entity: T) -> Key<Entity> {
     // Get ownership of pointer, save it to entities
     let b = Box::new(entity);
     let key = self.entities.insert(b);
+
+    self.entities_meta.insert(key, EntityMeta {
+      impl_type: TypeId::of::<T>(),
+    });
 
     // check what components it has, then save them
     self.save_components::<T>(key);
 
     // trigger on spawn once
-    let entity = self.entities.get_mut(&key).unwrap();
+    let entity: &mut dyn Any = self.entities.get_mut(&key).unwrap().borrow_mut();
     let on_spawn: Option<&mut dyn OnSpawn> = entity.cast_mut(&self.registry);
     match on_spawn {
       None => {}
@@ -56,6 +68,31 @@ impl World {
     }
 
     return key;
+  }
+
+  pub fn remove(&mut self, entity_key: Key<Entity>) -> Option<Entity> {
+
+    // delete all components
+    match self.entities_meta.remove(&entity_key) {
+      None => {}
+      Some(entity_meta) => {
+        match self.component_index.get_mut(&entity_meta.impl_type) {
+          None => {}
+          Some(components) => {
+            for component in components {
+              match self.component_to_entity.get_mut(component){
+                None => {}
+                Some(entities_set) => {
+                  entities_set.remove(&entity_key);
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    return self.entities.remove(&entity_key);
   }
 
   pub fn register_components(&mut self, e: &[EntryBuilder]) {
@@ -68,7 +105,7 @@ impl World {
     }
   }
 
-  fn save_components<T: ?Sized + 'static>(&mut self, entity_key: EntityKey) {
+  fn save_components<T: ?Sized + 'static>(&mut self, entity_key: Key<Entity>) {
     let components = match self.component_index.get(&TypeId::of::<T>()) {
       None => { return; }
       Some(components) => components
@@ -90,10 +127,10 @@ impl World {
     };
 
     for entity_key in entity_keys {
-      let entity = match self.entities.get(entity_key) {
+      let entity: &dyn Any = match self.entities.get(entity_key) {
         None => { continue; }
         Some(entity) => { entity }
-      };
+      }.borrow();
 
       let component: Option<&T> = entity.cast_ref(&self.registry);
       match component {
@@ -113,10 +150,10 @@ impl World {
     };
 
     for entity_key in entity_keys {
-      let entity = match self.entities.get_mut(entity_key) {
+      let entity: &mut dyn Any = match self.entities.get_mut(entity_key) {
         None => { continue; }
         Some(entity) => { entity }
-      };
+      }.borrow_mut();
 
       let component: Option<&mut T> = entity.cast_mut(&self.registry);
       match component {

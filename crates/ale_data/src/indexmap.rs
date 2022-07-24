@@ -67,6 +67,10 @@ impl<T> AleIndexMap<T> {
   pub fn get(&self, key: &Key<T>) -> Option<&T> {
     self.inner.get(key)
   }
+
+  pub fn remove(&mut self, key: &Key<T>) -> Option<T> {
+    self.inner.remove(key)
+  }
 }
 
 pub type AleIndexSet<T> = indexmap::IndexSet<T>;
