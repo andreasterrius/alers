@@ -23,8 +23,8 @@ impl<From, To> Traitcast<To> for From
 
 pub struct EntryBuilder {
   pub insert: Box<dyn Fn(&mut Registry)>,
-  pub source_impl: TypeId,
-  pub target_trait: TypeId,
+  pub struct_impl: TypeId,
+  pub dyn_trait: TypeId,
 }
 
 impl EntryBuilder {
@@ -35,9 +35,10 @@ impl EntryBuilder {
     let source_impl = entry.tid.clone();
     EntryBuilder {
       insert: Box::new(move |master| {
+        let ctid = TypeId::of::<CastIntoTrait<To>>();
         let table = master
           .tables
-          .entry::<>(TypeId::of::<CastIntoTrait<To>>())
+          .entry::<>(ctid)
           .or_insert(Box::new(CastIntoTrait::<To>::new()));
 
         match table.downcast_mut::<CastIntoTrait<To>>() {
@@ -45,8 +46,8 @@ impl EntryBuilder {
           Some(table) => table.map.insert(entry.tid, entry.clone())
         };
       }),
-      source_impl,
-      target_trait: TypeId::of::<To>(),
+      struct_impl: source_impl,
+      dyn_trait: TypeId::of::<To>(),
     }
   }
 }
@@ -54,7 +55,7 @@ impl EntryBuilder {
 #[macro_export]
 macro_rules! wire_component {
   ($source:ty, $target:ty) => {
-    $crate::registry::EntryBuilder::insert($crate::registry::ImplEntry::<$source> {
+    ale_world::typecast::entry::EntryBuilder::insert(ale_world::typecast::registry::ImplEntry::<$source> {
       cast_box: |x| {
         let x: Box<$target> = x.downcast()?;
         let x: Box<$source> = x;

@@ -10,3 +10,4 @@ ale_input = { path = "../ale_input" }
 ale_camera = { path = "../ale_camera" }
 ale_opengl = { path = "../ale_opengl" }
 ale_data = { path = "../ale_data" }
+traitcast_core = "0.2.0"

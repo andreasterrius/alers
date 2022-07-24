@@ -1,19 +1,18 @@
 use std::slice::Windows;
 
-use ale_opengl::old::opengl::SimpleRenderTasks;
 use ale_opengl::{ale_opengl_clear_render, ale_opengl_clear_render_color};
+use ale_opengl::old::opengl::SimpleRenderTasks;
 use ale_resources::resources;
 use ale_resources::resources::Resources;
 use ale_ui::element::{Panel, RenderResources};
 use ale_window::backend;
 use ale_window::window::Window;
 use ale_world::components::Renderable;
-use ale_world::visitor::RenderableVisitor;
 use ale_world::world::World;
 
-use crate::engine::Engine;
-use crate::visitor::{FixedTickVisitor, TickVisitor, WorldVisitor};
 use crate::{AppError, DisplaySetting, FixedStep, init_term, WorldTick};
+use crate::engine::Engine;
+use crate::visitor::{CameraVisitor, FixedTickVisitor, RenderableVisitor, TickVisitor};
 
 pub trait Genesis {
   fn register_components(&self, world: &mut World);
@@ -46,7 +45,7 @@ impl App {
     self.genesis.register_components(&mut world);
     self.genesis.init(&mut engine, &mut world)?;
 
-    while engine.windows.len() > 0 {
+    while engine.windows.len() > 1 {
       engine.windows.poll_inputs();
 
       tick.prepare_tick();
@@ -75,9 +74,11 @@ impl App {
   }
 
   fn render(&mut self, engine: &mut Engine, world: &mut World) {
-    let mut world_visitor = WorldVisitor::new();
-    world.visit_renderables(&mut world_visitor);
-    world.visit_cameras(&mut world_visitor);
+    let mut renderable_vis = RenderableVisitor{ render_task: vec![] };
+    world.visit_mut(&mut renderable_vis);
+
+    let mut camera_vis = CameraVisitor{ camera_render_info: vec![] };
+    world.visit_mut(&mut camera_vis);
 
     for window in &mut engine.windows.iter_mut() {
       if window.is_hidden {

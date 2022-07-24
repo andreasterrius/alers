@@ -8,10 +8,10 @@ pub trait CameraVisitor {
     fn visit(&mut self, camera : &mut dyn components::Camera);
 }
 
-pub trait Visitor<'a, T : ?Sized> {
+pub trait Visitor<T : ?Sized> {
     fn visit(&mut self, component : &T);
 }
 
-pub trait VisitorMut<'a, T: ?Sized + 'a> {
+pub trait VisitorMut<T: ?Sized> {
     fn visit(&mut self, component : &mut T);
 }

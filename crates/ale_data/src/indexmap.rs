@@ -8,6 +8,7 @@ lazy_static! {
   static ref EMPTY_UNIQUE_ID : ProcessUniqueId = ProcessUniqueId::new();
 }
 
+#[derive(Debug)]
 pub struct Key<T>(ProcessUniqueId, PhantomData<T>);
 
 impl<T> Key<T> {

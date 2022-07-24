@@ -6,7 +6,6 @@ use ale_opengl::renderer;
 use crate::typecast::registry::TraitcastFrom as Component;
 use crate::world::{Entity, EntityKey, World};
 
-
 pub trait Tick: Component {
   fn fixed_tick(&mut self, delta_time: f32);
 

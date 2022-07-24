@@ -1,10 +1,11 @@
 use std::path::Components;
 use std::rc::Rc;
+use log::info;
 use ale_camera::CameraRenderInfo;
 use ale_camera::flycamera::FlyCamera;
 use ale_math::rect::Rect;
 use ale_math::{Vector3, Zero};
-use ale_world::components::{Camera, OnSpawn};
+use ale_world::components::{Camera, OnSpawn, Tick};
 use ale_world::wire_component;
 use ale_world::world::{EntityKey, World};
 use crate::{Editor, Vector2};
@@ -20,6 +21,7 @@ impl EditorCamera {
     world.register_components(&[
       wire_component!(dyn OnSpawn, EditorCamera),
       wire_component!(dyn Camera, EditorCamera),
+      wire_component!(dyn Tick, EditorCamera)
     ])
   }
 
@@ -34,6 +36,16 @@ impl EditorCamera {
     ));
 
     EditorCamera { key: EntityKey::empty(), fly_camera }
+  }
+}
+
+impl Tick for EditorCamera {
+  fn fixed_tick(&mut self, delta_time: f32) {
+    //odo!()
+  }
+
+  fn tick(&mut self, delta_time: f32) {
+    info!("test");
   }
 }
 

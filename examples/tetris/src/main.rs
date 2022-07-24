@@ -23,8 +23,6 @@ impl Genesis for Tetris {
       is_hidden: false,
     });
 
-
-
     Ok(())
   }
 }

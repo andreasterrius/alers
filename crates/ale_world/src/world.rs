@@ -12,24 +12,8 @@ use crate::typecast::registry::Registry;
 use crate::visitor;
 use crate::visitor::{CameraVisitor, RenderableVisitor, Visitor, VisitorMut};
 
-pub type EntityKey = Key<Box<dyn Any>>;
-
-macro_rules! visitor_impl {
-  ($component_name: ident, $visitor_name: ident, $field_ident:ident, $fn_name:ident) => {
-    pub fn $fn_name<T: $visitor_name>(&mut self, visitor: &mut T) {
-      for t in &self.$field_ident {
-        unsafe {
-          match (*t).as_mut() {
-            None => {}
-            Some(ent) => visitor.visit(ent),
-          };
-        }
-      }
-    }
-  };
-}
-
 pub type Entity = Box<dyn Any>;
+pub type EntityKey = Key<Entity>;
 
 pub struct World {
   // Owning pointer
@@ -38,7 +22,7 @@ pub struct World {
   // Components
   registry: Registry,
   component_to_entity: HashMap<TypeId, AleIndexSet<Key<Entity>>>,
-  component_index: HashMap<TypeId, Vec<TypeId>>,
+  component_index: HashMap<TypeId, Vec<TypeId>>, //impl to traits
 
   // Events
   event_queue: EventQueue,
@@ -60,6 +44,7 @@ impl World {
     let b = Box::new(entity);
     let key = self.entities.insert(b);
 
+    // check what components it has, then save them
     self.save_components::<T>(key);
 
     // trigger on spawn once
@@ -76,6 +61,10 @@ impl World {
   pub fn register_components(&mut self, e: &[EntryBuilder]) {
     for eb in e {
       (eb.insert)(&mut self.registry);
+      self.component_index
+        .entry(eb.struct_impl)
+        .or_insert(vec!())
+        .push(eb.dyn_trait);
     }
   }
 
