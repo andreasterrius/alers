@@ -22,16 +22,14 @@ pub trait Genesis {
   fn init(&self, engine: &mut Engine, world: &mut World) -> Result<(), AppError>;
 }
 
-pub struct App<Event> {
+pub struct App {
   genesis: Box<dyn Genesis>,
-  event : PhantomData<Event>
 }
 
-impl<Event> App<Event> {
-  pub fn new<T: Genesis + 'static>(init: T) -> App<Event> {
+impl App {
+  pub fn new<T: Genesis + 'static>(init: T) -> App {
     App {
       genesis: Box::new(init),
-      event: Default::default()
     }
   }
 
