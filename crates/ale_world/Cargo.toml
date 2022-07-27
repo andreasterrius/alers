@@ -10,6 +10,7 @@ ale_input = { path = "../ale_input" }
 ale_camera = { path = "../ale_camera" }
 ale_opengl = { path = "../ale_opengl" }
 ale_data = { path = "../ale_data" }
+downcast-rs = "1.2.0"
 
 [dependencies.traitcast_core]
 version = "0.2.0"

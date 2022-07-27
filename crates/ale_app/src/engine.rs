@@ -4,6 +4,7 @@ use log::info;
 
 use ale_data::alevec::AleVec;
 use ale_data::indexmap::Key;
+use ale_data::queue::fast::FastQueue;
 use ale_math::rect::Rect;
 use ale_math::{Vector2, Zero};
 use ale_opengl::renderer::sprite::SpriteRenderer;
@@ -18,6 +19,7 @@ use ale_window::window::Window;
 use ale_world::world::Entity;
 
 use crate::AppError;
+use crate::event::EngineEvent;
 
 pub enum RenderTarget {
   Window(alevec::Key<Window>),
@@ -33,6 +35,8 @@ pub struct Engine {
 
   pub text_renderer: TextRenderer,
   pub sprite_renderer: SpriteRenderer,
+
+  pub event_queue: FastQueue<EngineEvent>,
 }
 
 impl Engine {
@@ -60,6 +64,7 @@ impl Engine {
       camera_target: HashMap::new(),
       text_renderer,
       sprite_renderer,
+      event_queue: FastQueue::new(),
     })
   }
 }

@@ -3,6 +3,7 @@ mod tetris;
 use ale_app::app::{App, Genesis};
 use ale_app::engine::Engine;
 use ale_app::AppError;
+use ale_data::queue::fast::FastQueue;
 use ale_math::rect::Rect;
 use ale_math::Vector2;
 use ale_window::display::{DisplaySetting, TargetMonitor};
@@ -10,7 +11,10 @@ use ale_world::world::World;
 
 struct Tetris;
 
+pub enum TetrisEvent{}
+
 impl Genesis for Tetris {
+
   fn register_components(&self, world: &mut World) {
     tetris::Game::register_components(world);
   }
@@ -31,7 +35,6 @@ impl Genesis for Tetris {
   }
 }
 
-
 fn main() {
-  App::new(Tetris).run();
+  App::<TetrisEvent>::new(Tetris).run();
 }

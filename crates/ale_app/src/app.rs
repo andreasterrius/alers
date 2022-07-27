@@ -1,4 +1,6 @@
+use std::marker::PhantomData;
 use std::slice::Windows;
+use ale_data::queue::fast::FastQueue;
 
 use ale_opengl::{ale_opengl_clear_render, ale_opengl_clear_render_color};
 use ale_opengl::old::opengl::SimpleRenderTasks;
@@ -20,14 +22,16 @@ pub trait Genesis {
   fn init(&self, engine: &mut Engine, world: &mut World) -> Result<(), AppError>;
 }
 
-pub struct App {
+pub struct App<Event> {
   genesis: Box<dyn Genesis>,
+  event : PhantomData<Event>
 }
 
-impl App {
-  pub fn new<T: Genesis + 'static>(init: T) -> App {
+impl<Event> App<Event> {
+  pub fn new<T: Genesis + 'static>(init: T) -> App<Event> {
     App {
       genesis: Box::new(init),
+      event: Default::default()
     }
   }
 
@@ -74,10 +78,10 @@ impl App {
   }
 
   fn render(&mut self, engine: &mut Engine, world: &mut World) {
-    let mut renderable_vis = RenderableVisitor{ render_task: vec![] };
+    let mut renderable_vis = RenderableVisitor { render_task: vec![] };
     world.visit_mut(&mut renderable_vis);
 
-    let mut camera_vis = CameraVisitor{ camera_render_info: vec![] };
+    let mut camera_vis = CameraVisitor { camera_render_info: vec![] };
     world.visit_mut(&mut camera_vis);
 
     for window in &mut engine.windows.iter_mut() {

@@ -1,16 +1,18 @@
 use std::any::{Any, TypeId};
 use std::borrow::{Borrow, BorrowMut};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Component;
+use downcast_rs::Downcast;
 use traitcast_core::{Registry, TraitcastFrom};
 
 use ale_data::alevec::AleVec;
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
+use ale_data::queue::fast::FastQueue;
 
-use crate::components::{Camera, OnSpawn, Renderable, Tick};
+use crate::components::{Camera, EventListener, OnSpawn, Renderable, Tick};
 use crate::typecast::entry::{EntryBuilder, Traitcast};
 use crate::visitor;
-use crate::visitor::{CameraVisitor, RenderableVisitor, Visitor, VisitorMut};
+use crate::visitor::{Visitor, VisitorMut};
 
 pub type Entity = Box<dyn Any>;
 
@@ -31,7 +33,7 @@ pub struct World {
   entities_meta: HashMap<Key<Entity>, EntityMeta>,
 
   // Events
-  //event_queue: EventQueue,
+  event_queue: FastQueue<EntityEvent>,
 }
 
 impl World {
@@ -43,6 +45,7 @@ impl World {
       component_to_entity: HashMap::new(),
       component_index: Default::default(),
       entities_meta: Default::default(),
+      event_queue: FastQueue::new(),
     }
   }
 
@@ -79,7 +82,7 @@ impl World {
           None => {}
           Some(components) => {
             for component in components {
-              match self.component_to_entity.get_mut(component){
+              match self.component_to_entity.get_mut(component) {
                 None => {}
                 Some(entities_set) => {
                   entities_set.remove(&entity_key);
@@ -162,5 +165,53 @@ impl World {
         }
       }
     }
+  }
+
+  pub fn resolve_events(&mut self) {
+    for mut entity_event in self.event_queue.receiver.recv() {
+      match entity_event.target_entity {
+        None => {
+          let mut event_visitor = EventVisitor { entity_event };
+          self.visit_mut(&mut event_visitor);
+        }
+        Some(entity_key) => {
+          let entity: &mut dyn Any = match self.entities.get_mut(&entity_key) {
+            None => { continue; }
+            Some(entity) => { entity }
+          }.borrow_mut();
+
+          let component: Option<&mut dyn EventListener> = entity.cast_mut(&self.registry);
+          match component {
+            None => {}
+            Some(component) => {
+              component.listen_event(&mut entity_event);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+// marker trait
+pub trait Event {}
+
+pub struct EntityEvent {
+  pub(crate) event: Box<dyn Event>,
+
+  pub(crate) event_id: TypeId,
+
+  // none = broadcast
+  pub(crate) target_entity: Option<Key<Entity>>,
+}
+
+pub struct EventVisitor {
+  entity_event: EntityEvent,
+}
+
+impl VisitorMut<dyn EventListener> for EventVisitor {
+  fn visit(&mut self, component: &mut (dyn EventListener + 'static)) {
+    component.listen_event(&self.entity_event)
   }
 }

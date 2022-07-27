@@ -61,14 +61,11 @@ name = "ale_data"
 version = "0.1.0"
 dependencies = [
  "approx 0.5.1",
+ "crossbeam-channel",
  "indexmap",
  "lazy_static",
  "snowflake",
 ]
-
-[[package]]
-name = "ale_event"
-version = "0.1.0"
 
 [[package]]
 name = "ale_input"
@@ -184,6 +181,7 @@ dependencies = [
  "ale_data",
  "ale_input",
  "ale_opengl",
+ "downcast-rs",
  "traitcast_core",
 ]
 
@@ -361,9 +359,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-channel"
-version = "0.5.4"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aaa7bd5fb665c6864b5f963dd9097905c54125909c7aa94c9e18507cdbe6c53"
+checksum = "c2dd04ddaf88237dc3b8d8f9a3c1004b506b54b3313403944054d23c0870c521"
 dependencies = [
  "cfg-if",
  "crossbeam-utils",

@@ -24,6 +24,7 @@ use ale_world::world::World;
 pub mod app;
 pub mod engine;
 pub mod visitor;
+pub mod event;
 
 // TODO: Break this to 1 function per trait
 pub trait App<S> {
