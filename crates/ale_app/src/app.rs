@@ -50,6 +50,8 @@ impl App {
     while engine.windows.len() > 1 {
       engine.windows.poll_inputs();
 
+      world.resolve_events();
+
       tick.prepare_tick();
       let delta_time = tick.delta_time();
 

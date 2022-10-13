@@ -1,3 +1,4 @@
+#![feature(const_type_id)]
 mod tetris;
 
 use ale_app::app::{App, Genesis};
@@ -29,12 +30,13 @@ impl Genesis for Tetris {
       is_hidden: false,
     });
 
-    let tetris_game_key = world.spawn(tetris::Game::new());
+    let tetris = tetris::Game::new(world.get_sender());
+    world.spawn(tetris);
 
     Ok(())
   }
 }
 
 fn main() {
-  App::<TetrisEvent>::new(Tetris).run();
+  App::new(Tetris).run();
 }

@@ -2,12 +2,12 @@ use std::any::{Any, TypeId};
 use std::borrow::{Borrow, BorrowMut};
 use std::collections::{HashMap, HashSet};
 use std::path::Component;
-use downcast_rs::Downcast;
+use downcast_rs::{Downcast, impl_downcast};
 use traitcast_core::{Registry, TraitcastFrom};
 
 use ale_data::alevec::AleVec;
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
-use ale_data::queue::fast::FastQueue;
+use ale_data::queue::fast::{FastQueue, Sender};
 
 use crate::components::{Camera, EventListener, OnSpawn, Renderable, Tick};
 use crate::typecast::entry::{EntryBuilder, Traitcast};
@@ -47,6 +47,10 @@ impl World {
       entities_meta: Default::default(),
       event_queue: FastQueue::new(),
     }
+  }
+
+  pub fn get_sender(&mut self) -> Sender<EntityEvent> {
+    self.event_queue.sender.clone()
   }
 
   pub fn spawn<T: 'static>(&mut self, entity: T) -> Key<Entity> {
@@ -168,7 +172,7 @@ impl World {
   }
 
   pub fn resolve_events(&mut self) {
-    for mut entity_event in self.event_queue.receiver.recv() {
+    for mut entity_event in self.event_queue.receiver.try_recv() {
       match entity_event.target_entity {
         None => {
           let mut event_visitor = EventVisitor { entity_event };
@@ -195,15 +199,37 @@ impl World {
 
 
 // marker trait
-pub trait Event {}
+pub trait Event : Downcast {}
 
 pub struct EntityEvent {
   pub(crate) event: Box<dyn Event>,
 
-  pub(crate) event_id: TypeId,
+  pub event_id: TypeId,
 
   // none = broadcast
   pub(crate) target_entity: Option<Key<Entity>>,
+}
+
+impl EntityEvent {
+  pub fn cast<T: 'static>(&self) -> Option<&T> {
+    return (&*self.event).as_any().downcast_ref();
+  }
+
+  pub fn broadcast<T: Event + 'static>(event: T) -> EntityEvent {
+    return EntityEvent {
+      event: Box::new(event),
+      event_id: TypeId::of::<T>(),
+      target_entity: None,
+    };
+  }
+
+  pub fn target<T: Event + 'static>(target_entity_key: Key<Entity>, event: T) -> EntityEvent {
+    return EntityEvent {
+      event: Box::new(event),
+      event_id: TypeId::of::<T>(),
+      target_entity: Some(target_entity_key),
+    };
+  }
 }
 
 pub struct EventVisitor {
@@ -212,6 +238,6 @@ pub struct EventVisitor {
 
 impl VisitorMut<dyn EventListener> for EventVisitor {
   fn visit(&mut self, component: &mut (dyn EventListener + 'static)) {
-    component.listen_event(&self.entity_event)
+    component.listen_event(&self.entity_event);
   }
 }
