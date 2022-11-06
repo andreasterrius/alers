@@ -34,7 +34,6 @@ impl Game {
     world.register_components(&[
       wire_component!(dyn Tick, Game),
       wire_component!(dyn EventListener, Game),
-      wire_component!(dyn Renderable, Game),
     ]);
   }
 
