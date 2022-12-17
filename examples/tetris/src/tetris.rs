@@ -9,7 +9,7 @@ use ale_world::typecast::entry::Traitcast;
 use ale_world::wire_component;
 use ale_world::world::{EntityEvent, Event, World};
 
-use crate::Tetris;
+use crate::{Tetris, TetrisEvent};
 use crate::tetris::Block::NotFilled;
 
 #[derive(Clone)]
@@ -73,34 +73,10 @@ impl Tick for Game {
   }
 }
 
-struct MoveDownEvent {
-  pub counter: f32,
-}
-
-const MOVE_DOWN_EVENT: TypeId = TypeId::of::<MoveDownEvent>();
-
-impl Event for MoveDownEvent {}
-
-struct AnotherEvent {
-  pub name: String,
-}
-const ANOTHER_EVENT: TypeId = TypeId::of::<AnotherEvent>();
-
-impl Event for AnotherEvent {}
-
 impl EventListener for Game {
   fn listen_event(&mut self, entity_event: &EntityEvent) -> Result<(), Error> {
-    match entity_event.event_id {
-      ANOTHER_EVENT => {
-        let event = entity_event.cast::<AnotherEvent>().unwrap();
-        info!("{}", event.name);
-      }
-      MOVE_DOWN_EVENT => {
-        let event = entity_event.cast::<MoveDownEvent>().unwrap();
-        info!("{}", event.counter);
-      }
-      _ => {}
-    }
+    let tetris_event = entity_event.cast::<TetrisEvent>()?;
+
 
     Ok(())
   }
