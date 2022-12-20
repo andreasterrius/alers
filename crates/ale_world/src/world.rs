@@ -9,7 +9,7 @@ use ale_data::alevec::AleVec;
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
 use ale_data::queue::fast::{FastQueue, Sender};
 
-use crate::components::{Camera, EventListener, OnSpawn, Renderable, Tick};
+use crate::components::{Camera, EventListener, Renderable, Spawnable, Tick};
 use crate::typecast::entry::{EntryBuilder, Traitcast};
 use crate::visitor;
 use crate::visitor::{Visitor, VisitorMut};
@@ -53,7 +53,11 @@ impl World {
     self.event_queue.sender.clone()
   }
 
-  pub fn spawn<T: 'static>(&mut self, entity: T) -> Key<Entity> {
+  pub fn gen_entity_key(&self) -> Key<Entity> {
+    self.entities.gen_key()
+  }
+
+  pub fn spawn<T: 'static + Spawnable>(&mut self, entity: T)  {
     // Get ownership of pointer, save it to entities
     let b = Box::new(entity);
     let key = self.entities.insert(b);
@@ -66,14 +70,14 @@ impl World {
     self.save_components::<T>(key);
 
     // trigger on spawn once
-    let entity: &mut dyn Any = self.entities.get_mut(&key).unwrap().borrow_mut();
-    let on_spawn: Option<&mut dyn OnSpawn> = entity.cast_mut(&self.registry);
-    match on_spawn {
-      None => {}
-      Some(on_spawn) => on_spawn.take_key(key)
-    }
+    //let entity: &mut dyn Any = self.entities.get_mut(&key).unwrap().borrow_mut();
+    // let on_spawn: Option<&mut dyn OnSpawn> = entity.cast_mut(&self.registry);
+    // match on_spawn {
+    //   None => {}
+    //   Some(on_spawn) => on_spawn.take_key(key)
+    // }
 
-    return key;
+    //return key;
   }
 
   pub fn remove(&mut self, entity_key: Key<Entity>) -> Option<Entity> {

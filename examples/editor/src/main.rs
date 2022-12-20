@@ -24,10 +24,9 @@ impl Genesis for Editor {
     // Register window and UI panels
     let viewport = Viewport::new(engine)?;
 
-    // Create entites
-    let editor_camera_key = world.spawn(EditorCamera::new());
-
-
+    // Create entities
+    let editor_camera = EditorCamera::new(world.gen_entity_key());
+    world.spawn(editor_camera);
 
     Ok(())
   }

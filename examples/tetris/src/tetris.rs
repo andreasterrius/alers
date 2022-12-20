@@ -2,12 +2,13 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use log::info;
+use ale_data::indexmap::Key;
 
 use ale_data::queue::fast::Sender;
-use ale_world::components::{Error, EventListener, Renderable, Tick};
+use ale_world::components::{Error, EventListener, Renderable, Spawnable, Tick};
 use ale_world::typecast::entry::Traitcast;
 use ale_world::wire_component;
-use ale_world::world::{EntityEvent, Event, World};
+use ale_world::world::{Entity, EntityEvent, Event, World};
 
 use crate::{Tetris, TetrisEvent};
 use crate::tetris::Block::NotFilled;
@@ -19,6 +20,7 @@ pub enum Block {
 }
 
 pub struct Game {
+  pub key : Key<Entity>,
   pub blocks: Vec<Vec<Block>>,
   pub current: Option<Vec<Vec<Block>>>,
 
@@ -37,13 +39,14 @@ impl Game {
     ]);
   }
 
-  pub fn new(sender: Sender<EntityEvent>) -> Game {
+  pub fn new(key : Key<Entity>, sender: Sender<EntityEvent>) -> Game {
     let width = 10;
     let height = 24;
 
     let blocks = vec![vec![NotFilled; width]; height];
 
     Game {
+      key,
       blocks,
       current: None,
       elapsed_time: 0.0,
@@ -77,5 +80,11 @@ impl EventListener for Game {
   fn listen_event(&mut self, entity_event: &EntityEvent) -> Result<(), Error> {
 
     Ok(())
+  }
+}
+
+impl Spawnable for Game {
+  fn get_key(&self) -> Key<Entity> {
+    self.key
   }
 }

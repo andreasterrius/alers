@@ -1,11 +1,11 @@
 use indexmap::IndexMap;
+use lazy_static::lazy_static;
 use snowflake::ProcessUniqueId;
 use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
-use lazy_static::lazy_static;
 
 lazy_static! {
-  static ref EMPTY_UNIQUE_ID : ProcessUniqueId = ProcessUniqueId::new();
+  static ref EMPTY_UNIQUE_ID: ProcessUniqueId = ProcessUniqueId::new();
 }
 
 #[derive(Debug)]
@@ -58,6 +58,14 @@ impl<T> AleIndexMap<T> {
     let key = Key(ProcessUniqueId::new(), PhantomData::default());
     self.inner.insert(key, item);
     key
+  }
+
+  pub fn gen_key(&self) -> Key<T> {
+    Key(ProcessUniqueId::new(), PhantomData::default())
+  }
+
+  pub fn insert_wkey(&mut self, key: Key<T>, item: T) {
+    self.inner.insert(key, item);
   }
 
   pub fn get_mut(&mut self, key: &Key<T>) -> Option<&mut T> {

@@ -6,7 +6,7 @@ use ale_camera::flycamera::FlyCamera;
 use ale_data::indexmap::Key;
 use ale_math::rect::Rect;
 use ale_math::{Vector3, Zero};
-use ale_world::components::{Camera, OnSpawn, Tick};
+use ale_world::components::{Camera, OnSpawn, Spawnable, Tick};
 use ale_world::wire_component;
 use ale_world::world::{Entity, World};
 use crate::{Editor, Vector2};
@@ -20,13 +20,12 @@ pub struct EditorCamera {
 impl EditorCamera {
   pub fn register_components(world: &mut World) {
     world.register_components(&[
-      wire_component!(dyn OnSpawn, EditorCamera),
       wire_component!(dyn Camera, EditorCamera),
       wire_component!(dyn Tick, EditorCamera)
     ])
   }
 
-  pub fn new() -> EditorCamera {
+  pub fn new(key : Key<Entity>) -> EditorCamera {
     let fly_camera = FlyCamera::new(ale_camera::Camera::new(
       Vector3::new(0.0, 10.0, 0.0),
       Rect {
@@ -36,13 +35,12 @@ impl EditorCamera {
       90.0,
     ));
 
-    EditorCamera { key: Key::empty(), fly_camera }
+    EditorCamera { key, fly_camera }
   }
 }
 
 impl Tick for EditorCamera {
   fn fixed_tick(&mut self, delta_time: f32) {
-    //odo!()
   }
 
   fn tick(&mut self, delta_time: f32) {
@@ -55,8 +53,8 @@ impl Camera for EditorCamera {
   }
 }
 
-impl OnSpawn for EditorCamera {
-  fn take_key(&mut self, key: Key<Entity>) {
-    self.key = key;
+impl Spawnable for EditorCamera {
+  fn get_key(&self) -> Key<Entity> {
+    self.key
   }
 }

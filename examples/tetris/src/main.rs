@@ -32,7 +32,7 @@ impl Genesis for Tetris {
       is_hidden: false,
     });
 
-    let tetris = tetris::Game::new(world.get_sender());
+    let tetris = tetris::Game::new(world.gen_entity_key(), world.get_sender());
     world.spawn(tetris);
 
     Ok(())

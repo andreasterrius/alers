@@ -17,10 +17,6 @@ pub trait Inputable: Component {
   fn input(&mut self, input: ale_input::Input);
 }
 
-pub trait OnSpawn: Component {
-  fn take_key(&mut self, key: Key<Entity>);
-}
-
 pub trait Renderable: Component {
   fn get_render_task(&mut self) -> renderer::task::Task;
 }
@@ -35,4 +31,8 @@ pub trait EventSender: Component {
 
 pub trait EventListener: Component {
   fn listen_event(&mut self, entity_event: &EntityEvent) -> Result<(), Error>;
+}
+
+pub trait Spawnable {
+  fn get_key(&self) -> Key<Entity>;
 }
