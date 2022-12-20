@@ -64,9 +64,9 @@ impl Tick for Game {
     if self.elapsed_time > self.move_down_time {
       // send move down event to all tetris blocks here
       self.elapsed_time = 0.0;
-      self.sender.send(EntityEvent::broadcast(MoveDownEvent {
-        counter: self.elapsed_time
-      })).unwrap();
+      // self.sender.send(EntityEvent::broadcast(MoveDownEvent {
+      //   counter: self.elapsed_time
+      // })).unwrap();
     }
 
     // check if blocks has 1 line, then we remove and add to score
@@ -75,8 +75,6 @@ impl Tick for Game {
 
 impl EventListener for Game {
   fn listen_event(&mut self, entity_event: &EntityEvent) -> Result<(), Error> {
-    let tetris_event = entity_event.cast::<TetrisEvent>()?;
-
 
     Ok(())
   }
