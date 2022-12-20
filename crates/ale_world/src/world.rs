@@ -1,8 +1,10 @@
+use downcast_rs::{impl_downcast, Downcast};
 use std::any::{Any, TypeId};
 use std::borrow::{Borrow, BorrowMut};
 use std::collections::{HashMap, HashSet};
 use std::path::Component;
-use downcast_rs::{Downcast, impl_downcast};
+use std::thread;
+use bus::Bus;
 use traitcast_core::{Registry, TraitcastFrom};
 
 use ale_data::alevec::AleVec;
@@ -57,14 +59,17 @@ impl World {
     self.entities.gen_key()
   }
 
-  pub fn spawn<T: 'static + Spawnable>(&mut self, entity: T)  {
+  pub fn spawn<T: 'static + Spawnable>(&mut self, entity: T) {
     // Get ownership of pointer, save it to entities
     let b = Box::new(entity);
     let key = self.entities.insert(b);
 
-    self.entities_meta.insert(key, EntityMeta {
-      impl_type: TypeId::of::<T>(),
-    });
+    self.entities_meta.insert(
+      key,
+      EntityMeta {
+        impl_type: TypeId::of::<T>(),
+      },
+    );
 
     // check what components it has, then save them
     self.save_components::<T>(key);
@@ -81,25 +86,22 @@ impl World {
   }
 
   pub fn remove(&mut self, entity_key: Key<Entity>) -> Option<Entity> {
-
     // delete all components
     match self.entities_meta.remove(&entity_key) {
       None => {}
-      Some(entity_meta) => {
-        match self.component_index.get_mut(&entity_meta.impl_type) {
-          None => {}
-          Some(components) => {
-            for component in components {
-              match self.component_to_entity.get_mut(component) {
-                None => {}
-                Some(entities_set) => {
-                  entities_set.remove(&entity_key);
-                }
+      Some(entity_meta) => match self.component_index.get_mut(&entity_meta.impl_type) {
+        None => {}
+        Some(components) => {
+          for component in components {
+            match self.component_to_entity.get_mut(component) {
+              None => {}
+              Some(entities_set) => {
+                entities_set.remove(&entity_key);
               }
             }
           }
         }
-      }
+      },
     };
 
     return self.entities.remove(&entity_key);
@@ -108,21 +110,25 @@ impl World {
   pub fn register_components(&mut self, e: &[EntryBuilder]) {
     for eb in e {
       (eb.insert)(&mut self.registry);
-      self.component_index
+      self
+        .component_index
         .entry(eb.struct_impl)
-        .or_insert(vec!())
+        .or_insert(vec![])
         .push(eb.dyn_trait);
     }
   }
 
   fn save_components<T: ?Sized + 'static>(&mut self, entity_key: Key<Entity>) {
     let components = match self.component_index.get(&TypeId::of::<T>()) {
-      None => { return; }
-      Some(components) => components
+      None => {
+        return;
+      }
+      Some(components) => components,
     };
 
     for component_type_id in components {
-      self.component_to_entity
+      self
+        .component_to_entity
         .entry(component_type_id.clone())
         .or_insert(AleIndexSet::new())
         .insert(entity_key);
@@ -132,15 +138,20 @@ impl World {
   pub fn visit<T: 'static>(&self, visitor: &mut dyn Visitor<T>) {
     let type_id = TypeId::of::<T>();
     let entity_keys = match self.component_to_entity.get(&type_id) {
-      None => { return; }
-      Some(entity_keys) => { entity_keys }
+      None => {
+        return;
+      }
+      Some(entity_keys) => entity_keys,
     };
 
     for entity_key in entity_keys {
       let entity: &dyn Any = match self.entities.get(entity_key) {
-        None => { continue; }
-        Some(entity) => { entity }
-      }.borrow();
+        None => {
+          continue;
+        }
+        Some(entity) => entity,
+      }
+      .borrow();
 
       let component: Option<&T> = entity.cast_ref(&self.registry);
       match component {
@@ -155,15 +166,20 @@ impl World {
   pub fn visit_mut<T: ?Sized + 'static>(&mut self, visitor: &mut dyn VisitorMut<T>) {
     let type_id = TypeId::of::<T>();
     let entity_keys = match self.component_to_entity.get(&type_id) {
-      None => { return; }
-      Some(entity_keys) => { entity_keys }
+      None => {
+        return;
+      }
+      Some(entity_keys) => entity_keys,
     };
 
     for entity_key in entity_keys {
       let entity: &mut dyn Any = match self.entities.get_mut(entity_key) {
-        None => { continue; }
-        Some(entity) => { entity }
-      }.borrow_mut();
+        None => {
+          continue;
+        }
+        Some(entity) => entity,
+      }
+      .borrow_mut();
 
       let component: Option<&mut T> = entity.cast_mut(&self.registry);
       match component {
@@ -184,9 +200,12 @@ impl World {
         }
         Some(entity_key) => {
           let entity: &mut dyn Any = match self.entities.get_mut(&entity_key) {
-            None => { continue; }
-            Some(entity) => { entity }
-          }.borrow_mut();
+            None => {
+              continue;
+            }
+            Some(entity) => entity,
+          }
+          .borrow_mut();
 
           let component: Option<&mut dyn EventListener> = entity.cast_mut(&self.registry);
           match component {
@@ -201,9 +220,8 @@ impl World {
   }
 }
 
-
 // marker trait
-pub trait Event : Downcast {}
+pub trait Event: Downcast {}
 
 pub struct EntityEvent {
   pub(crate) event: Box<dyn Event>,
@@ -244,4 +262,28 @@ impl VisitorMut<dyn EventListener> for EventVisitor {
   fn visit(&mut self, component: &mut (dyn EventListener + 'static)) {
     component.listen_event(&self.entity_event);
   }
+}
+
+#[test]
+fn t() {
+  let mut bus = Bus::new(10);
+  let mut rx1 = bus.add_rx();
+  let mut rx2 = bus.add_rx();
+
+  // start a thread that sends 1..100
+  let j = thread::spawn(move || {
+    for i in 1..100 {
+      bus.broadcast(i);
+    }
+  });
+
+  // every value should be received by both receivers
+  for i in 1..100 {
+    // rx1
+    assert_eq!(rx1.recv(), Ok(i));
+    // and rx2
+    assert_eq!(rx2.recv(), Ok(i));
+  }
+
+  j.join().expect("bla");
 }
