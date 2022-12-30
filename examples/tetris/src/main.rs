@@ -8,6 +8,7 @@ use ale_math::rect::Rect;
 use ale_math::Vector2;
 use ale_window::display::{DisplaySetting, TargetMonitor};
 use ale_world::events::Events;
+use ale_world::event::EventBuffer;
 use ale_world::world::{Event, World};
 
 mod tetris;
@@ -15,7 +16,6 @@ mod tetris;
 struct Tetris;
 
 pub enum TetrisEvent{}
-impl Event for TetrisEvent{}
 
 impl Genesis for Tetris {
 
@@ -24,7 +24,7 @@ impl Genesis for Tetris {
   }
 
   fn init(&self, engine: &mut Engine, world: &mut World) -> Result<(), AppError> {
-    let main_window_key = engine.windows.add(DisplaySetting {
+    engine.windows.add(DisplaySetting {
       dimension: Rect {
         position: Vector2::new(0, 0),
         size: Vector2::new(800, 600),
@@ -33,9 +33,10 @@ impl Genesis for Tetris {
       is_hidden: false,
     });
 
-    let events = Events::new();
+    let entity_events: Event<TetrisEvent> = world.get_entity_event_stream(1000);
+    let world_events = world.get_world_event_stream();
 
-    let tetris = tetris::Game::new(world.gen_entity_key(), world.get_sender(), events.clone());
+    let tetris = tetris::Game::new(world.gen_entity_key(), entity_events);
     world.spawn(tetris);
 
     Ok(())

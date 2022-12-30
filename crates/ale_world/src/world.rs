@@ -1,17 +1,20 @@
+use bus::Bus;
 use downcast_rs::{impl_downcast, Downcast};
 use std::any::{Any, TypeId};
 use std::borrow::{Borrow, BorrowMut};
 use std::collections::{HashMap, HashSet};
 use std::path::Component;
+use std::ptr::null_mut;
 use std::thread;
-use bus::Bus;
 use traitcast_core::{Registry, TraitcastFrom};
 
+use crate::command::WorldCommand;
 use ale_data::alevec::AleVec;
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
 use ale_data::queue::fast::{FastQueue, Sender};
 
-use crate::components::{Camera, EventListener, Renderable, Spawnable, Tick};
+use crate::components::{Camera, Renderable, Spawnable, Tick};
+use crate::event::{Event, EventBuffer};
 use crate::typecast::entry::{EntryBuilder, Traitcast};
 use crate::visitor;
 use crate::visitor::{Visitor, VisitorMut};
@@ -34,12 +37,19 @@ pub struct World {
   //impl to components
   entities_meta: HashMap<Key<Entity>, EntityMeta>,
 
-  // Events
-  event_queue: FastQueue<EntityEvent>,
+  world_event_buffer: Box<dyn Any>,
+  world_event: Event<WorldCommand>,
+  world_event_channels :
+
+  // Has to be declared at the bottom, ensure others are dropped first before this
+  event_buffer: Option<Box<dyn Any>>,
 }
 
 impl World {
   pub fn new() -> World {
+    let world_event_buffer = Box::new(EventBuffer::<WorldCommand>::new(1000));
+    let world_event = Event::new(&mut *world_event_buffer);
+
     World {
       entities: AleIndexMap::new(),
       registry: Registry::new(),
@@ -47,12 +57,10 @@ impl World {
       component_to_entity: HashMap::new(),
       component_index: Default::default(),
       entities_meta: Default::default(),
-      event_queue: FastQueue::new(),
+      world_event_buffer,
+      world_event,
+      event_buffer: None,
     }
-  }
-
-  pub fn get_sender(&mut self) -> Sender<EntityEvent> {
-    self.event_queue.sender.clone()
   }
 
   pub fn gen_entity_key(&self) -> Key<Entity> {
@@ -62,8 +70,8 @@ impl World {
   pub fn spawn<T: 'static + Spawnable>(&mut self, entity: T) {
     // Get ownership of pointer, save it to entities
     let b = Box::new(entity);
-    let key = self.entities.insert(b);
-
+    let key = b.get_key();
+    self.entities.insert_wkey(key, b);
     self.entities_meta.insert(
       key,
       EntityMeta {
@@ -73,16 +81,6 @@ impl World {
 
     // check what components it has, then save them
     self.save_components::<T>(key);
-
-    // trigger on spawn once
-    //let entity: &mut dyn Any = self.entities.get_mut(&key).unwrap().borrow_mut();
-    // let on_spawn: Option<&mut dyn OnSpawn> = entity.cast_mut(&self.registry);
-    // match on_spawn {
-    //   None => {}
-    //   Some(on_spawn) => on_spawn.take_key(key)
-    // }
-
-    //return key;
   }
 
   pub fn remove(&mut self, entity_key: Key<Entity>) -> Option<Entity> {
@@ -191,76 +189,17 @@ impl World {
     }
   }
 
-  pub fn resolve_events(&mut self) {
-    for mut entity_event in self.event_queue.receiver.try_recv() {
-      match entity_event.target_entity {
-        None => {
-          let mut event_visitor = EventVisitor { entity_event };
-          self.visit_mut(&mut event_visitor);
-        }
-        Some(entity_key) => {
-          let entity: &mut dyn Any = match self.entities.get_mut(&entity_key) {
-            None => {
-              continue;
-            }
-            Some(entity) => entity,
-          }
-          .borrow_mut();
-
-          let component: Option<&mut dyn EventListener> = entity.cast_mut(&self.registry);
-          match component {
-            None => {}
-            Some(component) => {
-              component.listen_event(&mut entity_event);
-            }
-          }
-        }
-      }
+  pub fn get_entity_event_stream<T: Sync>(&mut self, size: usize) -> Event<T> {
+    let event_buffer = EventBuffer::<T>::new(size);
+    unsafe {
+      let box_event_buffer = Box::new(event_buffer);
+      self.event_buffer = Some(box_event_buffer);
+      return Event::new(&mut *box_event_buffer);
     }
   }
-}
 
-// marker trait
-pub trait Event: Downcast {}
-
-pub struct EntityEvent {
-  pub(crate) event: Box<dyn Event>,
-
-  pub event_id: TypeId,
-
-  // none = broadcast
-  pub(crate) target_entity: Option<Key<Entity>>,
-}
-
-impl EntityEvent {
-  pub fn cast<T: 'static>(&self) -> Option<&T> {
-    return (&*self.event).as_any().downcast_ref();
-  }
-
-  pub fn broadcast<T: Event + 'static>(event: T) -> EntityEvent {
-    return EntityEvent {
-      event: Box::new(event),
-      event_id: TypeId::of::<T>(),
-      target_entity: None,
-    };
-  }
-
-  pub fn target<T: Event + 'static>(target_entity_key: Key<Entity>, event: T) -> EntityEvent {
-    return EntityEvent {
-      event: Box::new(event),
-      event_id: TypeId::of::<T>(),
-      target_entity: Some(target_entity_key),
-    };
-  }
-}
-
-pub struct EventVisitor {
-  entity_event: EntityEvent,
-}
-
-impl VisitorMut<dyn EventListener> for EventVisitor {
-  fn visit(&mut self, component: &mut (dyn EventListener + 'static)) {
-    component.listen_event(&self.entity_event);
+  pub fn get_world_event_stream(&mut self) -> Event<WorldCommand> {
+    return self.world_event;
   }
 }
 

@@ -28,18 +28,16 @@ pub struct Game {
   pub move_down_time: f32,
 
   pub score: i32,
-  pub sender: Sender<EntityEvent>,
 }
 
 impl Game {
   pub fn register_components(world: &mut World) {
     world.register_components(&[
       wire_component!(dyn Tick, Game),
-      wire_component!(dyn EventListener, Game),
     ]);
   }
 
-  pub fn new(key : Key<Entity>, sender: Sender<EntityEvent>) -> Game {
+  pub fn new(key : Key<Entity>) -> Game {
     let width = 10;
     let height = 24;
 
@@ -52,7 +50,6 @@ impl Game {
       elapsed_time: 0.0,
       move_down_time: 1.0,
       score: 0,
-      sender,
     }
   }
 }
@@ -71,20 +68,6 @@ impl Tick for Game {
       //   counter: self.elapsed_time
       // })).unwrap();
     }
-
     // check if blocks has 1 line, then we remove and add to score
-  }
-}
-
-impl EventListener for Game {
-  fn listen_event(&mut self, entity_event: &EntityEvent) -> Result<(), Error> {
-
-    Ok(())
-  }
-}
-
-impl Spawnable for Game {
-  fn get_key(&self) -> Key<Entity> {
-    self.key
   }
 }
