@@ -11,6 +11,7 @@ use ale_world::typecast::entry::Traitcast;
 use ale_world::world::World;
 
 mod tetris;
+mod template;
 
 struct Tetris;
 

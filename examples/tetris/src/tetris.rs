@@ -6,13 +6,14 @@ use ale_world::components::{Spawnable, Tickable};
 use ale_world::event::world::WorldCommand;
 use ale_world::wire_component;
 use ale_world::world::{Entity, World};
+use crate::template::Templates;
 
 use crate::tetris::Block::NotFilled;
 use crate::TetrisEvent;
 
 #[derive(Clone)]
 pub enum Block {
-  Filled,
+  Filled(Key<Entity>),
   NotFilled,
 }
 
@@ -25,6 +26,7 @@ pub struct Game {
   pub move_down_time: f32,
 
   pub score: i32,
+  pub templates : Templates,
 
   pub world_cmd_chan: Sender<WorldCommand>,
   pub block_chans: HashMap<Key<Entity>, Sender<TetrisEvent>>,
@@ -43,6 +45,8 @@ impl Game {
     let height = 24;
 
     let blocks = vec![vec![NotFilled; width]; height];
+    let mut templates = Templates::new();
+    templates.add_all();
 
     Game {
       key,
@@ -51,9 +55,14 @@ impl Game {
       elapsed_time: 0.0,
       move_down_time: 1.0,
       score: 0,
+      templates ,
       world_cmd_chan,
       block_chans: HashMap::new(),
     }
+  }
+
+  pub fn random_new_tetris_blocks(&mut self) {
+
   }
 }
 
