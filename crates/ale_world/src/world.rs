@@ -3,15 +3,16 @@ use std::borrow::{Borrow, BorrowMut};
 use std::collections::HashMap;
 
 use traitcast_core::Registry;
+use ale_data::channel::{Channel, Sender};
 
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
 
 use crate::components::Spawnable;
-use crate::event::world::{KillEvent, SpawnEvent};
+use crate::event::world::{KillCommand, SpawnCommand, WorldCommand};
 use crate::typecast::entry::{EntryBuilder, Traitcast};
 use crate::visitor::{Visitor, VisitorMut};
 
-pub type BoxEntity = Box<dyn Any>;
+pub type Entity = Box<dyn Any>;
 
 pub struct EntityMeta {
   impl_type: TypeId,
@@ -19,16 +20,18 @@ pub struct EntityMeta {
 
 pub struct World {
   // Owning pointer
-  entities: AleIndexMap<BoxEntity>,
+  entities: AleIndexMap<Entity>,
 
   // Components
   registry: Registry,
-  component_to_entity: HashMap<TypeId, AleIndexSet<Key<BoxEntity>>>,
+  component_to_entity: HashMap<TypeId, AleIndexSet<Key<Entity>>>,
   // components to entity
   component_index: HashMap<TypeId, Vec<TypeId>>,
   //impl to components
-  entities_meta: HashMap<Key<BoxEntity>, EntityMeta>,
+  entities_meta: HashMap<Key<Entity>, EntityMeta>,
+
   // Channels
+  channel: Channel<WorldCommand>,
 }
 
 impl World {
@@ -40,43 +43,28 @@ impl World {
       component_to_entity: HashMap::new(),
       component_index: Default::default(),
       entities_meta: Default::default(),
+      channel: Channel::new(),
     }
   }
 
-  pub fn gen_entity_key(&self) -> Key<BoxEntity> {
+  pub fn gen_entity_key(&self) -> Key<Entity> {
     self.entities.gen_key()
   }
 
-  // pub fn spawn<T: 'static + Spawnable>(&mut self, entity: T) {
-  //   // Get ownership of pointer, save it to entities
-  //   let b = Box::new(entity);
-  //   let key = b.get_key();
-  //   self.entities.insert_wkey(key, b);
-  //     self.entities_meta.insert(
-  //     key,
-  //     EntityMeta {
-  //       impl_type: TypeId::of::<T>(),
-  //     },
-  //   );
-  //
-  //   // check what components it has, then save them
-  //   self.save_components(TypeId::of::<T>(), key);
-  // }
-
-  pub fn spawn(&mut self, mut spawn_event: SpawnEvent) {
+  pub fn spawn(&mut self, mut spawn_cmd: SpawnCommand) {
     // Get ownership of pointer, save it to entities
-    let b = spawn_event.entity;
-    let entity_key = spawn_event.entity_key;
+    let b = spawn_cmd.entity;
+    let entity_key = spawn_cmd.entity_key;
     self.entities.insert_wkey(entity_key, b);
     self.entities_meta.insert(
       entity_key,
       EntityMeta {
-        impl_type: spawn_event.type_id,
+        impl_type: spawn_cmd.type_id,
       },
     );
 
     // check what components it has, then save them
-    self.save_components(spawn_event.type_id, entity_key);
+    self.save_components(spawn_cmd.type_id, entity_key);
 
     // trigger on_spawn() once
     match self.entities.get_mut(&entity_key) {
@@ -96,8 +84,8 @@ impl World {
     }
   }
 
-  pub fn remove(&mut self, kill_event: KillEvent) -> Option<BoxEntity> {
-    let entity_key = kill_event.entity_key;
+  pub fn remove(&mut self, kill_cmd: KillCommand) -> Option<Entity> {
+    let entity_key = kill_cmd.entity_key;
     // delete all components
     match self.entities_meta.remove(&entity_key) {
       None => {}
@@ -147,7 +135,7 @@ impl World {
     }
   }
 
-  fn save_components(&mut self, type_id: TypeId, entity_key: Key<BoxEntity>) {
+  fn save_components(&mut self, type_id: TypeId, entity_key: Key<Entity>) {
     let components = match self.component_index.get(&type_id) {
       None => {
         return;
@@ -218,5 +206,21 @@ impl World {
         }
       }
     }
+  }
+
+  pub fn resolve_world_commands(&mut self) {
+    let cmds : Vec<WorldCommand> = self.channel.receiver.try_iter().collect();
+    for cmd in cmds {
+      match cmd {
+        WorldCommand::Spawn(se) => self.spawn(se),
+        WorldCommand::Kill(ke) => {
+          let _ = self.remove(ke);
+        },
+      }
+    }
+  }
+
+  pub fn get_world_command_sender(&self) -> Sender<WorldCommand> {
+    return self.channel.sender.clone();
   }
 }

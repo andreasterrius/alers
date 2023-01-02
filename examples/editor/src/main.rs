@@ -7,7 +7,7 @@ use ale_math::rect::Rect;
 use ale_math::{Vector2, Zero};
 use ale_resources::resources::Resources;
 use ale_window::display::{DisplaySetting, TargetMonitor};
-use ale_world::event::world::SpawnEvent;
+use ale_world::event::world::SpawnCommand;
 use ale_world::stream::EventStreamReader;
 use ale_world::world::World;
 
@@ -29,7 +29,7 @@ impl Genesis for Editor {
     // Create entities
     let editor_camera = EditorCamera::new(world.gen_entity_key());
 
-    world.spawn(SpawnEvent::new(editor_camera));
+    world.spawn(SpawnCommand::new(editor_camera));
 
     Ok(())
   }

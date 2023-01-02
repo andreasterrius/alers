@@ -1,14 +1,13 @@
-use std::marker::PhantomData;
 pub use crossbeam_channel::{Receiver, Sender};
 
-pub struct FastQueue<T> {
+pub struct Channel<T> {
   pub sender: Sender<T>,
   pub receiver: Receiver<T>,
 }
 
-impl<T> FastQueue<T> {
-  pub fn new() -> FastQueue<T> {
+impl<T> Channel<T> {
+  pub fn new() -> Channel<T> {
     let (s, r) = crossbeam_channel::unbounded();
-    FastQueue { sender: s, receiver: r }
+    Channel { sender: s, receiver: r }
   }
 }

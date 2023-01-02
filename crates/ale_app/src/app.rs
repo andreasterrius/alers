@@ -50,6 +50,8 @@ impl App {
         world.visit_mut(&mut fixed_tick_vis);
       }
 
+      world.resolve_world_commands();
+
       //tick
       let mut tick_vis = TickVisitor { delta_time };
       world.visit_mut(&mut tick_vis);

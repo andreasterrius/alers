@@ -1,17 +1,14 @@
-
-use std::any::{Any, TypeId};
+use ale_data::channel::Sender;
 use std::collections::HashMap;
-use log::info;
+
 use ale_data::indexmap::Key;
-
-use ale_data::queue::fast::Sender;
-use ale_world::components::{Error, Renderable, Spawnable, Tickable};
-use ale_world::typecast::entry::Traitcast;
+use ale_world::components::{Spawnable, Tickable};
+use ale_world::event::world::WorldCommand;
 use ale_world::wire_component;
-use ale_world::world::{BoxEntity, World};
+use ale_world::world::{Entity, World};
 
-use crate::{Tetris, TetrisEvent};
 use crate::tetris::Block::NotFilled;
+use crate::TetrisEvent;
 
 #[derive(Clone)]
 pub enum Block {
@@ -20,7 +17,7 @@ pub enum Block {
 }
 
 pub struct Game {
-  pub key : Key<BoxEntity>,
+  pub key: Key<Entity>,
   pub blocks: Vec<Vec<Block>>,
   pub current: Option<Vec<Vec<Block>>>,
 
@@ -28,6 +25,9 @@ pub struct Game {
   pub move_down_time: f32,
 
   pub score: i32,
+
+  pub world_cmd_chan: Sender<WorldCommand>,
+  pub block_chans: HashMap<Key<Entity>, Sender<TetrisEvent>>,
 }
 
 impl Game {
@@ -38,7 +38,7 @@ impl Game {
     ]);
   }
 
-  pub fn new(key : Key<BoxEntity>) -> Game {
+  pub fn new(key: Key<Entity>, world_cmd_chan: Sender<WorldCommand>) -> Game {
     let width = 10;
     let height = 24;
 
@@ -51,6 +51,8 @@ impl Game {
       elapsed_time: 0.0,
       move_down_time: 1.0,
       score: 0,
+      world_cmd_chan,
+      block_chans: HashMap::new(),
     }
   }
 }
@@ -65,24 +67,17 @@ impl Tickable for Game {
     if self.elapsed_time > self.move_down_time {
       // send move down event to all tetris blocks here
       self.elapsed_time = 0.0;
-      // self.sender.send(EntityEvent::broadcast(MoveDownEvent {
-      //   counter: self.elapsed_time
-      // })).unwrap();
     }
     // check if blocks has 1 line, then we remove and add to score
   }
 }
 
 impl Spawnable for Game {
-  fn on_spawn(&mut self) {
-    info!("on spawn called");
-  }
+  fn on_spawn(&mut self) {}
 
-  fn on_kill(&mut self) {
+  fn on_kill(&mut self) {}
 
-  }
-
-  fn get_key(&self) -> Key<BoxEntity> {
+  fn get_key(&self) -> Key<Entity> {
     self.key
   }
 }

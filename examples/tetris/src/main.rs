@@ -3,12 +3,11 @@
 use ale_app::app::{App, Genesis};
 use ale_app::AppError;
 use ale_app::engine::Engine;
-use ale_data::queue::fast::FastQueue;
 use ale_math::rect::Rect;
 use ale_math::Vector2;
 use ale_window::display::{DisplaySetting, TargetMonitor};
-use ale_world::event::stream::EventStream;
-use ale_world::event::world::{SpawnEvent};
+use ale_world::event::world::{SpawnCommand, WorldCommand};
+use ale_world::typecast::entry::Traitcast;
 use ale_world::world::World;
 
 mod tetris;
@@ -33,11 +32,10 @@ impl Genesis for Tetris {
       is_hidden: false,
     });
 
-    // let entity_event: EventStream<TetrisEvent> = world.create_entity_event_stream(1000);
-    // let world_event = world.create_world_event_stream(1000);
+    let world_cmd_chan = world.get_world_command_sender();
 
-    let tetris = tetris::Game::new(world.gen_entity_key());
-    world.spawn(SpawnEvent::new(tetris));
+    let tetris = tetris::Game::new(world.gen_entity_key(), world_cmd_chan.clone());
+    world_cmd_chan.send(WorldCommand::Spawn(SpawnCommand::new(tetris)));
 
     Ok(())
   }

@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use log::info;
 
 use ale_data::alevec::AleVec;
+use ale_data::channel::Channel;
 use ale_data::indexmap::Key;
-use ale_data::queue::fast::FastQueue;
 use ale_math::rect::Rect;
 use ale_math::{Vector2, Zero};
 use ale_opengl::renderer::sprite::SpriteRenderer;
@@ -16,7 +16,7 @@ use ale_window::backend;
 use ale_window::backend::Windows;
 use ale_window::display::{DisplaySetting, TargetMonitor};
 use ale_window::window::Window;
-use ale_world::world::BoxEntity;
+use ale_world::world::Entity;
 
 use crate::AppError;
 use crate::event::EngineEvent;
@@ -31,12 +31,12 @@ pub struct Engine {
   pub windows: Windows,
   pub panels: Panels,
   pub resources: Resources,
-  pub camera_target: HashMap<Key<BoxEntity>, RenderTarget>,
+  pub camera_target: HashMap<Key<Entity>, RenderTarget>,
 
   pub text_renderer: TextRenderer,
   pub sprite_renderer: SpriteRenderer,
 
-  pub event_queue: FastQueue<EngineEvent>,
+  pub event_queue: Channel<EngineEvent>,
 }
 
 impl Engine {
@@ -64,7 +64,7 @@ impl Engine {
       camera_target: HashMap::new(),
       text_renderer,
       sprite_renderer,
-      event_queue: FastQueue::new(),
+      event_queue: Channel::new(),
     })
   }
 }

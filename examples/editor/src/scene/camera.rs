@@ -8,12 +8,12 @@ use ale_math::rect::Rect;
 use ale_math::{Vector3, Zero};
 use ale_world::components::{Camera, OnSpawn, Spawnable, Tickable};
 use ale_world::wire_component;
-use ale_world::world::{BoxEntity, World};
+use ale_world::world::{Entity, World};
 use crate::{Editor, Vector2};
 
 #[derive(Debug)]
 pub struct EditorCamera {
-  pub key: Key<BoxEntity>,
+  pub key: Key<Entity>,
   pub fly_camera: FlyCamera,
 }
 
@@ -25,7 +25,7 @@ impl EditorCamera {
     ])
   }
 
-  pub fn new(key : Key<BoxEntity>) -> EditorCamera {
+  pub fn new(key : Key<Entity>) -> EditorCamera {
     let fly_camera = FlyCamera::new(ale_camera::Camera::new(
       Vector3::new(0.0, 10.0, 0.0),
       Rect {
@@ -62,7 +62,7 @@ impl Spawnable for EditorCamera {
     // do nothing
   }
 
-  fn get_key(&self) -> Key<BoxEntity> {
+  fn get_key(&self) -> Key<Entity> {
     self.key
   }
 }

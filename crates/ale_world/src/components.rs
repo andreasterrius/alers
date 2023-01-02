@@ -5,7 +5,7 @@ use ale_camera::CameraRenderInfo;
 use ale_data::indexmap::Key;
 use ale_opengl::renderer;
 pub use anyhow::Error;
-use crate::world::{BoxEntity, World};
+use crate::world::{Entity, World};
 
 pub trait Tickable: Component {
   fn fixed_tick(&mut self, delta_time: f32);
@@ -30,5 +30,5 @@ pub trait Spawnable {
 
   fn on_kill(&mut self);
 
-  fn get_key(&self) -> Key<BoxEntity>;
+  fn get_key(&self) -> Key<Entity>;
 }
