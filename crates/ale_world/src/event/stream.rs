@@ -6,14 +6,14 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 
 #[derive(Copy, Clone)]
-pub struct Event<T: Sync>(*mut EventBuffer<T>);
+pub struct EventStream<T: Sync>(*mut EventStreamBuffer<T>);
 
-impl<T: Sync> Event<T> {
-  pub fn new(event_buffer: *mut EventBuffer<T>) -> Event<T> {
-    Event { 0: event_buffer }
+impl<T: Sync> EventStream<T> {
+  pub fn new(event_buffer: *mut EventStreamBuffer<T>) -> EventStream<T> {
+    EventStream { 0: event_buffer }
   }
 
-  pub fn stream(&self, reader_entity_id: Key<Entity>) -> EventStream<T> {
+  pub fn stream(&self, reader_entity_id: Key<Entity>) -> EventStreamReader<T> {
     unsafe { (*self.0).stream(reader_entity_id) }
   }
 
@@ -26,7 +26,7 @@ impl<T: Sync> Event<T> {
   }
 }
 
-unsafe impl<T: Sync> Sync for Event<T> {}
+unsafe impl<T: Sync> Sync for EventStream<T> {}
 
 pub struct Holder<T: Sync> {
   data: Option<T>,
@@ -34,20 +34,20 @@ pub struct Holder<T: Sync> {
   target_entity: HashSet<Key<Entity>>,
 }
 
-pub struct EventBuffer<T: Sync> {
+pub struct EventStreamBuffer<T: Sync> {
   pub inner: Vec<Holder<T>>, // this is a circular buffer
   pub head: AtomicUsize,
   pub gen: usize,
   pub size: usize,
 }
 
-unsafe impl<T: Sync> Sync for EventBuffer<T> {}
+unsafe impl<T: Sync> Sync for EventStreamBuffer<T> {}
 
-impl<T: Sync> EventBuffer<T> {
-  pub fn new(size: usize) -> EventBuffer<T> {
+impl<T: Sync> EventStreamBuffer<T> {
+  pub fn new(size: usize) -> EventStreamBuffer<T> {
     let inner = Vec::with_capacity(size);
 
-    EventBuffer {
+    EventStreamBuffer {
       inner,
       head: AtomicUsize::new(0),
       gen: 0,
@@ -76,9 +76,9 @@ impl<T: Sync> EventBuffer<T> {
     self.gen = self.gen.wrapping_add(1);
   }
 
-  fn stream(&self, reader_entity_id: Key<Entity>) -> EventStream<T> {
-    return EventStream::new(
-      self as *const EventBuffer<T>,
+  fn stream(&self, reader_entity_id: Key<Entity>) -> EventStreamReader<T> {
+    return EventStreamReader::new(
+      self as *const EventStreamBuffer<T>,
       self.head.load(Ordering::Relaxed),
       self.gen,
       reader_entity_id,
@@ -86,21 +86,21 @@ impl<T: Sync> EventBuffer<T> {
   }
 }
 
-pub struct EventStream<T: Sync> {
-  event_buffer: *const EventBuffer<T>,
+pub struct EventStreamReader<T: Sync> {
+  event_buffer: *const EventStreamBuffer<T>,
   curr: usize,
   gen: usize,
   reader_entity_id: Key<Entity>,
 }
 
-impl<T: Sync> EventStream<T> {
+impl<T: Sync> EventStreamReader<T> {
   fn new(
-    event_buffer: *const EventBuffer<T>,
+    event_buffer: *const EventStreamBuffer<T>,
     curr: usize,
     gen: usize,
     reader_entity_id: Key<Entity>,
-  ) -> EventStream<T> {
-    EventStream {
+  ) -> EventStreamReader<T> {
+    EventStreamReader {
       event_buffer,
       curr,
       gen,
@@ -113,25 +113,43 @@ impl<T: Sync> EventStream<T> {
       // seek next valid gen
       loop {
         let holder_opt = (*self.event_buffer).inner.get(self.curr);
-        let item = match holder_opt {
+        let item: Option<&T> = match holder_opt {
           None => None,
           Some(holder) => {
             if holder.gen != self.gen {
+              self.gen = (*self.event_buffer).gen;
+              self.curr = 0;
               return None;
             }
             if holder.target_entity.is_empty() {
               // no target (broadcast)
+              self.increment_index();
               return holder.data.as_ref();
             }
             if holder.target_entity.contains(&self.reader_entity_id) {
               // is one of the targets
+              self.increment_index();
               return holder.data.as_ref();
             }
+            self.increment_index();
             return None;
           }
         };
-        // let's go to the next valid index
-        //
+        if item.is_some() {
+          return item;
+        }
+        //if self.gen == (*self.event_buffer).size && self.curr == (*self.event_buffer).head {}
+      }
+    }
+  }
+
+  fn increment_index(&mut self) {
+    unsafe {
+      let size = (*self.event_buffer).size;
+      self.curr += 1;
+      if self.curr >= size {
+        self.curr = 0;
+        self.gen = (*self.event_buffer).gen + 1;
       }
     }
   }
@@ -139,10 +157,10 @@ impl<T: Sync> EventStream<T> {
 
 #[test]
 fn thread_safety_check() {
-  let event_buffer = EventBuffer::<i32>::new(1000);
+  let event_buffer = EventStreamBuffer::<i32>::new(1000);
   let mut event = unsafe {
     let box_event_buffer = Box::new(event_buffer);
-    Event::new(&mut *box_event_buffer)
+    EventStreamReader::new(&mut *box_event_buffer)
   };
 
   for i in 0..1000 {
@@ -152,9 +170,12 @@ fn thread_safety_check() {
   let mut handles = vec![];
   for _ in 0..100 {
     handles.push(thread::spawn(|| {
-      let stream = event.stream(Key::empty());
+      let mut stream = event.stream(Key::empty());
       for i in 0..1000 {
-        match stream.try_read() {}
+        match stream.try_read() {
+          None => {}
+          Some(_) => {}
+        }
       }
     }));
   }

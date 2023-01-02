@@ -26,5 +26,9 @@ pub trait Camera: Component {
 }
 
 pub trait Spawnable {
+  fn on_spawn(&mut self);
+
+  fn on_kill(&mut self);
+
   fn get_key(&self) -> Key<Entity>;
 }

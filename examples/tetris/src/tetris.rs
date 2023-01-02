@@ -5,10 +5,10 @@ use log::info;
 use ale_data::indexmap::Key;
 
 use ale_data::queue::fast::Sender;
-use ale_world::components::{Error, EventListener, Renderable, Spawnable, Tick};
+use ale_world::components::{Error, Renderable, Spawnable, Tick};
 use ale_world::typecast::entry::Traitcast;
 use ale_world::wire_component;
-use ale_world::world::{Entity, EntityEvent, Event, World};
+use ale_world::world::{Entity, World};
 
 use crate::{Tetris, TetrisEvent};
 use crate::tetris::Block::NotFilled;
@@ -69,5 +69,19 @@ impl Tick for Game {
       // })).unwrap();
     }
     // check if blocks has 1 line, then we remove and add to score
+  }
+}
+
+impl Spawnable for Game {
+  fn on_spawn(&mut self) {
+
+  }
+
+  fn on_kill(&mut self) {
+
+  }
+
+  fn get_key(&self) -> Key<Entity> {
+    self.key
   }
 }

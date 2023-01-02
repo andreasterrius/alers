@@ -54,6 +54,14 @@ impl Camera for EditorCamera {
 }
 
 impl Spawnable for EditorCamera {
+  fn on_spawn(&mut self) {
+    // do nothing
+  }
+
+  fn on_kill(&mut self) {
+    // do nothing
+  }
+
   fn get_key(&self) -> Key<Entity> {
     self.key
   }
