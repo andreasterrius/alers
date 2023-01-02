@@ -1,18 +1,7 @@
-use std::marker::PhantomData;
-use std::slice::Windows;
-use ale_data::queue::fast::FastQueue;
-
-use ale_opengl::{ale_opengl_clear_render, ale_opengl_clear_render_color};
-use ale_opengl::old::opengl::SimpleRenderTasks;
-use ale_resources::resources;
-use ale_resources::resources::Resources;
-use ale_ui::element::{Panel, RenderResources};
-use ale_window::backend;
-use ale_window::window::Window;
-use ale_world::components::Renderable;
+use ale_opengl::ale_opengl_clear_render;
 use ale_world::world::World;
 
-use crate::{AppError, DisplaySetting, FixedStep, init_term, WorldTick};
+use crate::{AppError, FixedStep, init_term, WorldTick};
 use crate::engine::Engine;
 use crate::visitor::{CameraVisitor, FixedTickVisitor, RenderableVisitor, TickVisitor};
 

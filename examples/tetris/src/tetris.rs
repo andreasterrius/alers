@@ -5,10 +5,10 @@ use log::info;
 use ale_data::indexmap::Key;
 
 use ale_data::queue::fast::Sender;
-use ale_world::components::{Error, Renderable, Spawnable, Tick};
+use ale_world::components::{Error, Renderable, Spawnable, Tickable};
 use ale_world::typecast::entry::Traitcast;
 use ale_world::wire_component;
-use ale_world::world::{Entity, World};
+use ale_world::world::{BoxEntity, World};
 
 use crate::{Tetris, TetrisEvent};
 use crate::tetris::Block::NotFilled;
@@ -20,7 +20,7 @@ pub enum Block {
 }
 
 pub struct Game {
-  pub key : Key<Entity>,
+  pub key : Key<BoxEntity>,
   pub blocks: Vec<Vec<Block>>,
   pub current: Option<Vec<Vec<Block>>>,
 
@@ -33,11 +33,12 @@ pub struct Game {
 impl Game {
   pub fn register_components(world: &mut World) {
     world.register_components(&[
-      wire_component!(dyn Tick, Game),
+      wire_component!(dyn Spawnable, Game),
+      wire_component!(dyn Tickable, Game),
     ]);
   }
 
-  pub fn new(key : Key<Entity>) -> Game {
+  pub fn new(key : Key<BoxEntity>) -> Game {
     let width = 10;
     let height = 24;
 
@@ -54,7 +55,7 @@ impl Game {
   }
 }
 
-impl Tick for Game {
+impl Tickable for Game {
   fn fixed_tick(&mut self, delta_time: f32) {
     // do nothing
   }
@@ -74,14 +75,14 @@ impl Tick for Game {
 
 impl Spawnable for Game {
   fn on_spawn(&mut self) {
-
+    info!("on spawn called");
   }
 
   fn on_kill(&mut self) {
 
   }
 
-  fn get_key(&self) -> Key<Entity> {
+  fn get_key(&self) -> Key<BoxEntity> {
     self.key
   }
 }

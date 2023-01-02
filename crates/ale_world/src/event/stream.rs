@@ -1,4 +1,4 @@
-use crate::world::Entity;
+use crate::world::BoxEntity;
 use ale_data::indexmap::Key;
 use std::collections::HashSet;
 use std::marker::PhantomData;
@@ -13,7 +13,7 @@ impl<T: Sync> EventStream<T> {
     EventStream { 0: event_buffer }
   }
 
-  pub fn stream(&self, reader_entity_id: Key<Entity>) -> EventStreamReader<T> {
+  pub fn stream(&self, reader_entity_id: Key<BoxEntity>) -> EventStreamReader<T> {
     unsafe { (*self.0).stream(reader_entity_id) }
   }
 
@@ -21,7 +21,7 @@ impl<T: Sync> EventStream<T> {
     unsafe { (*self.0).push(data, HashSet::new()) }
   }
 
-  pub fn send(&mut self, data: T, target: HashSet<Key<Entity>>) {
+  pub fn send(&mut self, data: T, target: HashSet<Key<BoxEntity>>) {
     unsafe { (*self.0).push(data, target) }
   }
 }
@@ -31,7 +31,7 @@ unsafe impl<T: Sync> Sync for EventStream<T> {}
 pub struct Holder<T: Sync> {
   data: Option<T>,
   gen: usize,
-  target_entity: HashSet<Key<Entity>>,
+  target_entity: HashSet<Key<BoxEntity>>,
 }
 
 pub struct EventStreamBuffer<T: Sync> {
@@ -55,7 +55,7 @@ impl<T: Sync> EventStreamBuffer<T> {
     }
   }
 
-  pub fn push(&mut self, data: T, target_entity: HashSet<Key<Entity>>) {
+  pub fn push(&mut self, data: T, target_entity: HashSet<Key<BoxEntity>>) {
     self.inner[self.head.load(Ordering::Acquire)] = Holder {
       data: Some(data),
       gen: self.gen,
@@ -76,7 +76,7 @@ impl<T: Sync> EventStreamBuffer<T> {
     self.gen = self.gen.wrapping_add(1);
   }
 
-  fn stream(&self, reader_entity_id: Key<Entity>) -> EventStreamReader<T> {
+  fn stream(&self, reader_entity_id: Key<BoxEntity>) -> EventStreamReader<T> {
     return EventStreamReader::new(
       self as *const EventStreamBuffer<T>,
       self.head.load(Ordering::Relaxed),
@@ -90,7 +90,7 @@ pub struct EventStreamReader<T: Sync> {
   event_buffer: *const EventStreamBuffer<T>,
   curr: usize,
   gen: usize,
-  reader_entity_id: Key<Entity>,
+  reader_entity_id: Key<BoxEntity>,
 }
 
 impl<T: Sync> EventStreamReader<T> {
@@ -98,7 +98,7 @@ impl<T: Sync> EventStreamReader<T> {
     event_buffer: *const EventStreamBuffer<T>,
     curr: usize,
     gen: usize,
-    reader_entity_id: Key<Entity>,
+    reader_entity_id: Key<BoxEntity>,
   ) -> EventStreamReader<T> {
     EventStreamReader {
       event_buffer,

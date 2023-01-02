@@ -1,6 +1,6 @@
 use ale_camera::CameraRenderInfo;
 use ale_opengl::renderer;
-use ale_world::components::{Camera, Renderable, Tick};
+use ale_world::components::{Camera, Renderable, Tickable};
 use ale_world::visitor;
 use ale_world::visitor::{Visitor, VisitorMut};
 
@@ -29,8 +29,8 @@ pub struct TickVisitor {
   pub delta_time: f32,
 }
 
-impl VisitorMut<dyn Tick> for TickVisitor {
-  fn visit(&mut self, component: &mut (dyn Tick + 'static)) {
+impl VisitorMut<dyn Tickable> for TickVisitor {
+  fn visit(&mut self, component: &mut (dyn Tickable + 'static)) {
     component.tick(self.delta_time)
   }
 }
@@ -39,8 +39,8 @@ pub struct FixedTickVisitor {
   pub delta_time: f32,
 }
 
-impl VisitorMut<dyn Tick> for FixedTickVisitor {
-  fn visit(&mut self, component: &mut (dyn Tick + 'static)) {
+impl VisitorMut<dyn Tickable> for FixedTickVisitor {
+  fn visit(&mut self, component: &mut (dyn Tickable + 'static)) {
     component.fixed_tick(self.delta_time)
   }
 }

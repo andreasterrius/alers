@@ -1,12 +1,12 @@
 use crate::components::Spawnable;
-use crate::world::Entity;
+use crate::world::BoxEntity;
 use ale_data::indexmap::Key;
 use std::any::{Any, TypeId};
 
 pub struct SpawnEvent {
   pub(crate) type_id: TypeId,
   pub(crate) entity: Box<dyn Any>,
-  pub(crate) entity_key: Key<Entity>,
+  pub(crate) entity_key: Key<BoxEntity>,
 }
 
 impl SpawnEvent {
@@ -21,11 +21,11 @@ impl SpawnEvent {
 }
 
 pub struct KillEvent {
-  pub(crate) entity_key: Key<Entity>,
+  pub(crate) entity_key: Key<BoxEntity>,
 }
 
 impl KillEvent {
-  pub fn new(entity_key: Key<Entity>) -> KillEvent {
+  pub fn new(entity_key: Key<BoxEntity>) -> KillEvent {
     return KillEvent { entity_key };
   }
 }

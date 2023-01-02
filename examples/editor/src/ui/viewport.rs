@@ -16,9 +16,9 @@ use ale_ui::empty::Empty;
 use ale_ui::layout::{Layout, LayoutType, TableLayoutType};
 use ale_window::display::{DisplaySetting, TargetMonitor};
 use ale_window::window::Window;
-use ale_world::components::{Inputable, OnSpawn, Tick};
+use ale_world::components::{Inputable, OnSpawn, Tickable};
 use ale_world::wire_component;
-use ale_world::world::{Entity, World};
+use ale_world::world::{BoxEntity, World};
 use element::Panel;
 use LayoutType::TableLayout;
 

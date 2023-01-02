@@ -16,7 +16,7 @@ use ale_window::backend;
 use ale_window::backend::Windows;
 use ale_window::display::{DisplaySetting, TargetMonitor};
 use ale_window::window::Window;
-use ale_world::world::Entity;
+use ale_world::world::BoxEntity;
 
 use crate::AppError;
 use crate::event::EngineEvent;
@@ -31,7 +31,7 @@ pub struct Engine {
   pub windows: Windows,
   pub panels: Panels,
   pub resources: Resources,
-  pub camera_target: HashMap<Key<Entity>, RenderTarget>,
+  pub camera_target: HashMap<Key<BoxEntity>, RenderTarget>,
 
   pub text_renderer: TextRenderer,
   pub sprite_renderer: SpriteRenderer,

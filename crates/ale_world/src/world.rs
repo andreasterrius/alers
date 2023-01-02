@@ -1,26 +1,17 @@
-use bus::Bus;
-use downcast_rs::{impl_downcast, Downcast};
 use std::any::{Any, TypeId};
 use std::borrow::{Borrow, BorrowMut};
-use std::collections::{HashMap, HashSet};
-use std::path::Component;
-use std::ptr::null_mut;
-use std::thread;
-use std::thread::spawn;
-use traitcast_core::{Registry, TraitcastFrom};
+use std::collections::HashMap;
 
-use ale_data::alevec::AleVec;
+use traitcast_core::Registry;
+
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
-use ale_data::queue::fast::{FastQueue, Sender};
 
-use crate::components::{Camera, Renderable, Spawnable, Tick};
-use crate::event::stream::{EventStream, EventStreamBuffer, EventStreamReader};
+use crate::components::Spawnable;
 use crate::event::world::{KillEvent, SpawnEvent};
 use crate::typecast::entry::{EntryBuilder, Traitcast};
-use crate::visitor;
 use crate::visitor::{Visitor, VisitorMut};
 
-pub type Entity = Box<dyn Any>;
+pub type BoxEntity = Box<dyn Any>;
 
 pub struct EntityMeta {
   impl_type: TypeId,
@@ -28,20 +19,16 @@ pub struct EntityMeta {
 
 pub struct World {
   // Owning pointer
-  entities: AleIndexMap<Entity>,
+  entities: AleIndexMap<BoxEntity>,
 
   // Components
   registry: Registry,
-  component_to_entity: HashMap<TypeId, AleIndexSet<Key<Entity>>>,
+  component_to_entity: HashMap<TypeId, AleIndexSet<Key<BoxEntity>>>,
   // components to entity
   component_index: HashMap<TypeId, Vec<TypeId>>,
   //impl to components
-  entities_meta: HashMap<Key<Entity>, EntityMeta>,
-  // world_event_buffer: Option<Box<dyn Any>>,
-  // world_event_stream_reader: Option<EventStreamReader<WorldEvent>>,
-
-  // Has to be declared at the bottom, ensure others are dropped first before this
-  // entity_event_buffer: Option<Box<dyn Any>>,
+  entities_meta: HashMap<Key<BoxEntity>, EntityMeta>,
+  // Channels
 }
 
 impl World {
@@ -53,13 +40,10 @@ impl World {
       component_to_entity: HashMap::new(),
       component_index: Default::default(),
       entities_meta: Default::default(),
-      // world_event_buffer: None,
-      // world_event_stream_reader: None,
-      // entity_event_buffer: None,
     }
   }
 
-  pub fn gen_entity_key(&self) -> Key<Entity> {
+  pub fn gen_entity_key(&self) -> Key<BoxEntity> {
     self.entities.gen_key()
   }
 
@@ -94,13 +78,16 @@ impl World {
     // check what components it has, then save them
     self.save_components(spawn_event.type_id, entity_key);
 
-    let entity = self.entities.get_mut(&entity_key);
-    match entity {
+    // trigger on_spawn() once
+    match self.entities.get_mut(&entity_key) {
       None => {}
-      Some(ent) => {
-        let component: Option<&mut dyn Spawnable> = ent.cast_mut(&self.registry);
+      Some(box_entity) => {
+        let entity : &mut dyn Any = box_entity.borrow_mut();
+        let component: Option<&mut dyn Spawnable> = entity.cast_mut(&self.registry);
         match component {
-          None => {}
+          None => {
+            panic!("Spawnable is not wired")
+          }
           Some(component) => {
             component.on_spawn();
           }
@@ -109,7 +96,7 @@ impl World {
     }
   }
 
-  pub fn remove(&mut self, kill_event: KillEvent) -> Option<Entity> {
+  pub fn remove(&mut self, kill_event: KillEvent) -> Option<BoxEntity> {
     let entity_key = kill_event.entity_key;
     // delete all components
     match self.entities_meta.remove(&entity_key) {
@@ -129,13 +116,16 @@ impl World {
       },
     };
 
-    let entity = self.entities.get_mut(&entity_key);
-    match entity {
+    // trigger on_kill() once
+    match self.entities.get_mut(&entity_key) {
       None => {}
-      Some(ent) => {
-        let component: Option<&mut dyn Spawnable> = ent.cast_mut(&self.registry);
+      Some(box_entity) => {
+        let entity : &mut dyn Any = box_entity.borrow_mut();
+        let component: Option<&mut dyn Spawnable> = entity.cast_mut(&self.registry);
         match component {
-          None => {}
+          None => {
+            panic!("Spawnable is not wired")
+          }
           Some(component) => {
             component.on_kill();
           }
@@ -157,7 +147,7 @@ impl World {
     }
   }
 
-  fn save_components(&mut self, type_id: TypeId, entity_key: Key<Entity>) {
+  fn save_components(&mut self, type_id: TypeId, entity_key: Key<BoxEntity>) {
     let components = match self.component_index.get(&type_id) {
       None => {
         return;
@@ -229,47 +219,4 @@ impl World {
       }
     }
   }
-
-  // pub fn create_entity_event_stream<T: Sync>(&mut self, size: usize) -> EventStream<T> {
-  //   let event_buffer = EventStreamBuffer::<T>::new(size);
-  //   unsafe {
-  //     let box_event_buffer = Box::new(event_buffer);
-  //     self.entity_event_buffer = Some(box_event_buffer);
-  //     return EventStream::new(&mut *box_event_buffer);
-  //   }
-  // }
-  //
-  // pub fn create_world_event_stream(&mut self, size: usize) -> EventStream<WorldEvent> {
-  //   let world_event_buffer = Box::new(EventStreamBuffer::<WorldEvent>::new(size));
-  //   let world_event_stream = unsafe { EventStream::new(&mut *world_event_buffer) };
-  //
-  //   self.world_event_buffer = Some(world_event_buffer);
-  //   self.world_event_stream_reader = Some(world_event_stream.stream(Key::empty()));
-  //
-  //   return world_event_stream
-  // }
 }
-//
-// #[test]
-// fn t() {
-//   let mut bus = Bus::new(10);
-//   let mut rx1 = bus.add_rx();
-//   let mut rx2 = bus.add_rx();
-//
-//   // start a thread that sends 1..100
-//   let j = thread::spawn(move || {
-//     for i in 1..100 {
-//       bus.broadcast(i);
-//     }
-//   });
-//
-//   // every value should be received by both receivers
-//   for i in 1..100 {
-//     // rx1
-//     assert_eq!(rx1.recv(), Ok(i));
-//     // and rx2
-//     assert_eq!(rx2.recv(), Ok(i));
-//   }
-//
-//   j.join().expect("bla");
-// }
