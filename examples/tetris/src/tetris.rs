@@ -61,9 +61,6 @@ impl Game {
     }
   }
 
-  pub fn random_new_tetris_blocks(&mut self) {
-
-  }
 }
 
 impl Tickable for Game {
