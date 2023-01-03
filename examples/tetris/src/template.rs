@@ -1,6 +1,10 @@
 use std::collections::HashMap;
+use rand::Rng;
+use crate::piece::Piece;
+use enumn::N;
 
-#[derive(Eq, PartialEq, Hash)]
+#[derive(Eq, PartialEq, Hash, N)]
+#[repr(usize)]
 pub enum BlockTypeId {
   ZLeft = 0,
   ZRight = 1,
@@ -59,5 +63,15 @@ impl Templates {
         ],
       ],
     );
+  }
+
+  pub fn get_one_random(&self) -> Piece {
+    let mut rand = rand::thread_rng();
+    let block_type = BlockTypeId::n(rand.gen_range(0..self.blocks.len())).unwrap();
+
+    let blocks_template = self.blocks.get(&block_type).unwrap();
+    let rotation_type = rand.gen_range(0..blocks_template.len());
+
+    Piece::new(block_type, rotation_type)
   }
 }

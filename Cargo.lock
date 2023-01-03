@@ -468,6 +468,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
+name = "enumn"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e88bcb3a067a6555d577aba299e75eff9942da276e6506fc6274327daa026132"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "exr"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1460,8 +1471,10 @@ dependencies = [
  "ale_ui",
  "ale_window",
  "ale_world",
+ "enumn",
  "lazy_static",
  "log",
+ "rand 0.8.5",
 ]
 
 [[package]]

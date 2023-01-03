@@ -12,6 +12,7 @@ use ale_world::world::World;
 
 mod tetris;
 mod template;
+mod piece;
 
 struct Tetris;
 
@@ -33,10 +34,10 @@ impl Genesis for Tetris {
       is_hidden: false,
     });
 
-    let world_cmd_chan = world.get_world_command_sender();
+    let wc_sender = world.get_world_command_sender();
 
-    let tetris = tetris::Game::new(world.gen_entity_key(), world_cmd_chan.clone());
-    world_cmd_chan.send(WorldCommand::Spawn(SpawnCommand::new(tetris)));
+    let tetris = tetris::Game::new(wc_sender.clone());
+    wc_sender.send(WorldCommand::Spawn(SpawnCommand::new(tetris)));
 
     Ok(())
   }

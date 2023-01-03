@@ -9,44 +9,51 @@ lazy_static! {
 }
 
 #[derive(Debug)]
-pub struct Key<T>(ProcessUniqueId, PhantomData<T>);
+pub struct Id<T>(ProcessUniqueId, PhantomData<T>);
 
-impl<T> Key<T> {
-  pub fn empty() -> Key<T> {
-    return Key {
+impl<T> Id<T> {
+  pub fn empty() -> Id<T> {
+    return Id {
       0: EMPTY_UNIQUE_ID.clone(),
       1: PhantomData::default(),
     };
   }
+
+  pub fn new() -> Id<T> {
+    return Id {
+      0: ProcessUniqueId::new(),
+      1: PhantomData::default(),
+    }
+  }
 }
 
-impl<T> Clone for Key<T> {
+impl<T> Clone for Id<T> {
   fn clone(&self) -> Self {
-    Key {
+    Id {
       0: self.0,
       1: Default::default(),
     }
   }
 }
 
-impl<T> Copy for Key<T> {}
+impl<T> Copy for Id<T> {}
 
-impl<T> Hash for Key<T> {
+impl<T> Hash for Id<T> {
   fn hash<H: Hasher>(&self, state: &mut H) {
     self.0.hash(state);
   }
 }
 
-impl<T> PartialEq<Self> for Key<T> {
+impl<T> PartialEq<Self> for Id<T> {
   fn eq(&self, other: &Self) -> bool {
     self.0 == other.0
   }
 }
 
-impl<T> Eq for Key<T> {}
+impl<T> Eq for Id<T> {}
 
 pub struct AleIndexMap<T> {
-  inner: IndexMap<Key<T>, T>,
+  inner: IndexMap<Id<T>, T>,
 }
 
 impl<T> AleIndexMap<T> {
@@ -54,29 +61,29 @@ impl<T> AleIndexMap<T> {
     AleIndexMap { inner: IndexMap::new() }
   }
 
-  pub fn insert(&mut self, item: T) -> Key<T> {
-    let key = Key(ProcessUniqueId::new(), PhantomData::default());
+  pub fn insert(&mut self, item: T) -> Id<T> {
+    let key = Id(ProcessUniqueId::new(), PhantomData::default());
     self.inner.insert(key, item);
     key
   }
 
-  pub fn gen_key(&self) -> Key<T> {
-    Key(ProcessUniqueId::new(), PhantomData::default())
+  pub fn gen_key(&self) -> Id<T> {
+    Id(ProcessUniqueId::new(), PhantomData::default())
   }
 
-  pub fn insert_wkey(&mut self, key: Key<T>, item: T) {
+  pub fn insert_wkey(&mut self, key: Id<T>, item: T) {
     self.inner.insert(key, item);
   }
 
-  pub fn get_mut(&mut self, key: &Key<T>) -> Option<&mut T> {
+  pub fn get_mut(&mut self, key: &Id<T>) -> Option<&mut T> {
     self.inner.get_mut(key)
   }
 
-  pub fn get(&self, key: &Key<T>) -> Option<&T> {
+  pub fn get(&self, key: &Id<T>) -> Option<&T> {
     self.inner.get(key)
   }
 
-  pub fn remove(&mut self, key: &Key<T>) -> Option<T> {
+  pub fn remove(&mut self, key: &Id<T>) -> Option<T> {
     self.inner.remove(key)
   }
 }

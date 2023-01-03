@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use traitcast_core::Registry;
 use ale_data::channel::{Channel, Sender};
 
-use ale_data::indexmap::{AleIndexMap, AleIndexSet, Key};
+use ale_data::indexmap::{AleIndexMap, AleIndexSet, Id};
 
 use crate::components::Spawnable;
 use crate::event::world::{KillCommand, SpawnCommand, WorldCommand};
@@ -24,11 +24,11 @@ pub struct World {
 
   // Components
   registry: Registry,
-  component_to_entity: HashMap<TypeId, AleIndexSet<Key<Entity>>>,
+  component_to_entity: HashMap<TypeId, AleIndexSet<Id<Entity>>>,
   // components to entity
   component_index: HashMap<TypeId, Vec<TypeId>>,
   //impl to components
-  entities_meta: HashMap<Key<Entity>, EntityMeta>,
+  entities_meta: HashMap<Id<Entity>, EntityMeta>,
 
   // Channels
   channel: Channel<WorldCommand>,
@@ -47,7 +47,7 @@ impl World {
     }
   }
 
-  pub fn gen_entity_key(&self) -> Key<Entity> {
+  pub fn gen_entity_key(&self) -> Id<Entity> {
     self.entities.gen_key()
   }
 
@@ -135,7 +135,7 @@ impl World {
     }
   }
 
-  fn save_components(&mut self, type_id: TypeId, entity_key: Key<Entity>) {
+  fn save_components(&mut self, type_id: TypeId, entity_key: Id<Entity>) {
     let components = match self.component_index.get(&type_id) {
       None => {
         return;

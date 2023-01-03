@@ -2,7 +2,7 @@ use std::any::TypeId;
 use std::collections::HashMap;
 use traitcast_core::TraitcastFrom as Component;
 use ale_camera::CameraRenderInfo;
-use ale_data::indexmap::Key;
+use ale_data::indexmap::Id;
 use ale_opengl::renderer;
 pub use anyhow::Error;
 use crate::world::{Entity, World};
@@ -30,5 +30,5 @@ pub trait Spawnable {
 
   fn on_kill(&mut self);
 
-  fn get_key(&self) -> Key<Entity>;
+  fn id(&self) -> Id<Entity>;
 }

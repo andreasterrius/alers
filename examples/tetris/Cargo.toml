@@ -18,3 +18,5 @@ ale_window = { path = "../../crates/ale_window" }
 ale_data = { path = "../../crates/ale_data" }
 lazy_static = "1.4.0"
 log = "0.4.17"
+rand = "0.8.5"
+enumn = "0.1.5"

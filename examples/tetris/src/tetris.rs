@@ -1,29 +1,38 @@
 use ale_data::channel::Sender;
 use std::collections::HashMap;
 
-use ale_data::indexmap::Key;
+use ale_data::indexmap::Id;
+use ale_data::timer::{Recurrence, Timer};
+use ale_math::{Vector2, Vector3, Zero};
 use ale_world::components::{Spawnable, Tickable};
 use ale_world::event::world::WorldCommand;
 use ale_world::wire_component;
 use ale_world::world::{Entity, World};
-use crate::template::Templates;
+use crate::piece::Piece;
+use crate::template::{BlockTypeId, Templates};
 
 use crate::tetris::Block::NotFilled;
 use crate::TetrisEvent;
 
 #[derive(Clone)]
 pub enum Block {
-  Filled(Key<Entity>),
+  Filled(Id<Entity>),
   NotFilled,
 }
 
 pub struct Game {
-  pub key: Key<Entity>,
+  pub id: Id<Entity>,
+  pub piece_templates: Templates,
+  pub wc_sender: Sender<WorldCommand>,
 
-  pub templates : Templates,
+  // Arena state
+  pub arena : Vec<Vec<Block>>,
 
-  pub world_cmd_chan: Sender<WorldCommand>,
-  pub block_chans: HashMap<Key<Entity>, Sender<TetrisEvent>>,
+  // Current selection
+  pub curr_selection : Option<Piece>,
+  pub curr_selection_location : Vector2<i32>,
+
+  pub tetris_timer : Timer,
 }
 
 impl Game {
@@ -34,22 +43,34 @@ impl Game {
     ]);
   }
 
-  pub fn new(key: Key<Entity>, world_cmd_chan: Sender<WorldCommand>) -> Game {
+  pub fn new(wc_sender: Sender<WorldCommand>) -> Game {
     let width = 10;
     let height = 24;
 
-    let blocks = vec![vec![NotFilled; width]; height];
+    let arena = vec![vec![NotFilled; width]; height];
     let mut templates = Templates::new();
     templates.add_all();
 
     Game {
-      key,
-      templates ,
-      world_cmd_chan,
-      block_chans: HashMap::new(),
+      id: Id::new(),
+      piece_templates: templates,
+      wc_sender,
+      arena,
+      curr_selection: None,
+      curr_selection_location: Vector2::zero(),
+      tetris_timer: Timer::new(0.2, Recurrence::Forever),
     }
   }
 
+  pub fn try_select_random(&mut self) {
+    if self.curr_selection.is_none() {
+      let piece = self.piece_templates.get_one_random();
+    }
+  }
+
+  pub fn move_pieces_down(&mut self) {
+
+  }
 }
 
 impl Tickable for Game {
@@ -58,16 +79,23 @@ impl Tickable for Game {
   }
 
   fn tick(&mut self, delta_time: f32) {
-    // do nothing
+    if self.curr_selection.is_none() {
+      self.try_select_random();
+    }
+
+    if self.tetris_timer.tick_and_check(delta_time) {
+      self.move_pieces_down();
+    }
   }
 }
 
 impl Spawnable for Game {
-  fn on_spawn(&mut self) {}
+  fn on_spawn(&mut self) {
+  }
 
   fn on_kill(&mut self) {}
 
-  fn get_key(&self) -> Key<Entity> {
-    self.key
+  fn id(&self) -> Id<Entity> {
+    self.id
   }
 }
