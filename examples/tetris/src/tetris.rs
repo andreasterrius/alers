@@ -19,13 +19,7 @@ pub enum Block {
 
 pub struct Game {
   pub key: Key<Entity>,
-  pub blocks: Vec<Vec<Block>>,
-  pub current: Option<Vec<Vec<Block>>>,
 
-  pub elapsed_time: f32,
-  pub move_down_time: f32,
-
-  pub score: i32,
   pub templates : Templates,
 
   pub world_cmd_chan: Sender<WorldCommand>,
@@ -50,11 +44,6 @@ impl Game {
 
     Game {
       key,
-      blocks,
-      current: None,
-      elapsed_time: 0.0,
-      move_down_time: 1.0,
-      score: 0,
       templates ,
       world_cmd_chan,
       block_chans: HashMap::new(),
@@ -69,12 +58,7 @@ impl Tickable for Game {
   }
 
   fn tick(&mut self, delta_time: f32) {
-    self.elapsed_time += delta_time;
-    if self.elapsed_time > self.move_down_time {
-      // send move down event to all tetris blocks here
-      self.elapsed_time = 0.0;
-    }
-    // check if blocks has 1 line, then we remove and add to score
+    // do nothing
   }
 }
 
