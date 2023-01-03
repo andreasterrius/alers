@@ -9,6 +9,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: Update
+      run: sudo apt-get update
     - name: Setup
       run: sudo apt-get install libasound2-dev libglfw3-dev xorg-dev
     - name: Build
