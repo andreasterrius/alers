@@ -8,10 +8,11 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-rust@v1
+    - uses: actions/checkout@v2
+    - name: Install latest nightly
+      uses: actions-rs/toolchain@v1
       with:
-        rust-version: nightly
+        toolchain: nightly
     - name: Update
       run: sudo apt-get update
     - name: Setup
