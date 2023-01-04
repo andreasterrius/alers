@@ -10,8 +10,8 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-rust@v1
-        with:
-          rust-version: nightly
+      with:
+        rust-version: nightly
     - name: Update
       run: sudo apt-get update
     - name: Setup
