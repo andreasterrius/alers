@@ -8,7 +8,6 @@ use ale_math::{Vector2, Zero};
 use ale_resources::resources::Resources;
 use ale_window::display::{DisplaySetting, TargetMonitor};
 use ale_world::event::world::SpawnCommand;
-use ale_world::stream::EventStreamReader;
 use ale_world::world::World;
 
 mod scene;

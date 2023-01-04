@@ -6,7 +6,7 @@ use ale_camera::flycamera::FlyCamera;
 use ale_data::indexmap::Id;
 use ale_math::rect::Rect;
 use ale_math::{Vector3, Zero};
-use ale_world::components::{Camera, OnSpawn, Spawnable, Tickable};
+use ale_world::components::{Camera, Spawnable, Tickable};
 use ale_world::wire_component;
 use ale_world::world::{Entity, World};
 use crate::{Editor, Vector2};
