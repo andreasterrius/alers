@@ -1,5 +1,3 @@
-#![feature(const_type_id)]
-
 use ale_app::app::{App, Genesis};
 use ale_app::AppError;
 use ale_app::engine::Engine;
