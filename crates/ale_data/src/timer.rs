@@ -60,6 +60,10 @@ impl Timer {
   pub fn set_target_recurrence(&mut self, recurrence: Recurrence) {
     self.target_recurrence = recurrence;
   }
+  
+  pub fn reset_current_time(&mut self){
+    self.elapsed_time = 0.0;
+  }
 
   pub fn reset_current_recurrence(&mut self) {
     self.recurred_time = 0;
@@ -71,5 +75,10 @@ impl Timer {
 
   pub fn set_target_time(&mut self, target_time: f32) {
     self.target_time = target_time
+  }
+  
+  pub fn reset_all(&mut self) {
+    self.reset_current_time();
+    self.reset_current_recurrence();
   }
 }

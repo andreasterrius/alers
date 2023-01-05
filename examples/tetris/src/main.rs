@@ -11,6 +11,7 @@ use ale_world::world::World;
 mod tetris;
 mod template;
 mod piece;
+mod block;
 
 struct Tetris;
 

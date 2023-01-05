@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use rand::Rng;
 use crate::piece::Piece;
 use enumn::N;
+use ale_data::channel::Sender;
+use ale_world::event::world::WorldCommand;
 
 #[derive(Eq, PartialEq, Hash, N)]
 #[repr(usize)]
@@ -65,13 +67,13 @@ impl Templates {
     );
   }
 
-  pub fn get_one_random(&self) -> Piece {
+  pub fn random_one_piece(&self) -> Piece {
     let mut rand = rand::thread_rng();
     let block_type = BlockTypeId::n(rand.gen_range(0..self.blocks.len())).unwrap();
 
     let blocks_template = self.blocks.get(&block_type).unwrap();
     let rotation_type = rand.gen_range(0..blocks_template.len());
 
-    Piece::new(block_type, rotation_type)
+    Piece::new(block_type, rotation_type, blocks_template.clone())
   }
 }

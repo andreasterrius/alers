@@ -5,7 +5,7 @@ use ale_data::indexmap::Id;
 use ale_data::timer::{Recurrence, Timer};
 use ale_math::{Vector2, Vector3, Zero};
 use ale_world::components::{Spawnable, Tickable};
-use ale_world::event::world::WorldCommand;
+use ale_world::event::world::{SpawnCommand, WorldCommand};
 use ale_world::wire_component;
 use ale_world::world::{Entity, World};
 use crate::piece::Piece;
@@ -64,8 +64,15 @@ impl Game {
 
   pub fn try_select_random(&mut self) {
     if self.curr_selection.is_none() {
-      let piece = self.piece_templates.get_one_random();
+      let pieces = self.piece_templates.random_one_piece(self.wc_sender.clone());
+
+      WorldCommand::Spawn(SpawnCommand::new(block));
+      self.curr_selection = Some(pieces);
+
     }
+  }
+  
+  pub fn spawn_blocks(&mut self) {
   }
 
   pub fn move_pieces_down(&mut self) {
@@ -79,6 +86,18 @@ impl Tickable for Game {
   }
 
   fn tick(&mut self, delta_time: f32) {
+    match &mut self.curr_selection {
+      None => {
+        self.tetris_timer.reset_current_time();
+        self.try_select_random();
+      }
+      Some(selected_piece) => {
+        if self.tetris_timer.tick_and_check(delta_time){
+          selected_piece.move_down(); 
+        }
+      }
+    }
+    
     if self.curr_selection.is_none() {
       self.try_select_random();
     }
