@@ -52,7 +52,7 @@ impl EntryBuilder {
 #[macro_export]
 macro_rules! wire_component {
   ($source:ty, $target:ty) => {
-    $crate::typecast::entry::EntryBuilder::insert($crate::typecast::entry::ImplEntry::<$source> {
+    $crate::entity::entry::EntryBuilder::insert($crate::entity::entry::ImplEntry::<$source> {
       cast_box: |x| {
         let x: Box<$target> = x.downcast()?;
         let x: Box<$source> = x;

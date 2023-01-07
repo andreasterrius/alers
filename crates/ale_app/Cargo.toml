@@ -14,6 +14,7 @@ ale_world = { path = "../ale_world" }
 ale_resources = { path = "../ale_resources" }
 ale_window = { path = "../ale_window" }
 ale_camera = { path = "../ale_camera" }
+ale_render = { path = "../ale_render" }
 simplelog = "0.12.0"
 log = "0.4.8"
 thiserror = "1.0"

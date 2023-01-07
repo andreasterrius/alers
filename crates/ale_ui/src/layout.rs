@@ -90,6 +90,8 @@ impl TableLayoutType {
         child.size.y = ((row / row_percentage_total) * parent.size.y as f32) as u32;
         child.global_size = child.size;
 
+        println!("{:?}", child.global_position);
+
         upper_left_pos.x += child.size.x as i32;
         child_index += 1;
       }

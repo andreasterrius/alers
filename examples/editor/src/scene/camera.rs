@@ -2,13 +2,15 @@ use std::path::Components;
 use std::rc::Rc;
 use log::info;
 use ale_camera::CameraRenderInfo;
+use ale_camera::component::Camera;
 use ale_camera::flycamera::FlyCamera;
+use ale_data::entity::Entity;
 use ale_data::indexmap::Id;
+use ale_data::wire_component;
 use ale_math::rect::Rect;
 use ale_math::{Vector3, Zero};
-use ale_world::components::{Camera, Spawnable, Tickable};
-use ale_world::wire_component;
-use ale_world::world::{Entity, World};
+use ale_world::components::{ Spawnable, Tickable};
+use ale_world::world::{World};
 use crate::{Editor, Vector2};
 
 #[derive(Debug)]
@@ -48,8 +50,8 @@ impl Tickable for EditorCamera {
 }
 
 impl Camera for EditorCamera {
-  fn get_camera_info(&mut self) -> CameraRenderInfo {
-    self.fly_camera.get_camera_render_info()
+  fn get_camera_info(&mut self) -> (Id<Entity>, CameraRenderInfo) {
+    todo!()
   }
 }
 

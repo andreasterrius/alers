@@ -1,7 +1,7 @@
 use crate::components::Spawnable;
-use crate::world::Entity;
 use ale_data::indexmap::Id;
 use std::any::{Any, TypeId};
+use ale_data::entity::Entity;
 
 pub enum WorldCommand {
   Spawn(SpawnCommand),

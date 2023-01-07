@@ -451,11 +451,15 @@ pub unsafe fn create_cubemap(w: u32, h: u32) -> u32 {
   return cubemap;
 }
 
-pub unsafe fn print_error(id: &str) {
-  let error = gl::GetError();
-  if error != gl::NO_ERROR {
-    println!("{}: {}", id, error);
-  } else {
-    println!("{}: ok", id);
+pub fn print_error(id: &str) {
+  unsafe {
+    let mut i = 0;
+    let mut error = gl::GetError();
+    while error != gl::NO_ERROR {
+      println!("{} {}-ith: {}", id, i, error);
+      error = gl::GetError();
+      i = i + 1;
+    }
+    println!("{} {}-ith: ok", id, i);
   }
 }

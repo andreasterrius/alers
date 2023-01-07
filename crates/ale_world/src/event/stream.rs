@@ -1,4 +1,4 @@
-use crate::world::Entity;
+use ale_data::entity::Entity;
 use ale_data::indexmap::Id;
 use std::collections::HashSet;
 use std::marker::PhantomData;
@@ -153,31 +153,4 @@ impl<T: Sync> EventStreamReader<T> {
       }
     }
   }
-}
-
-#[test]
-fn thread_safety_check() {
-  let event_buffer = EventStreamBuffer::<i32>::new(1000);
-  let mut event = unsafe {
-    let box_event_buffer = Box::new(event_buffer);
-    EventStreamReader::new(&mut *box_event_buffer)
-  };
-
-  for i in 0..1000 {
-    event.broadcast(i);
-  }
-
-  let mut handles = vec![];
-  for _ in 0..100 {
-    handles.push(thread::spawn(|| {
-      let mut stream = event.stream(Id::empty());
-      for i in 0..1000 {
-        match stream.try_read() {
-          None => {}
-          Some(_) => {}
-        }
-      }
-    }));
-  }
-  // create 100 threads, each streaming from the event pipeline
 }

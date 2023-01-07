@@ -29,6 +29,7 @@ dependencies = [
  "ale_input",
  "ale_math",
  "ale_opengl",
+ "ale_render",
  "ale_resources",
  "ale_ui",
  "ale_window",
@@ -43,6 +44,7 @@ dependencies = [
 name = "ale_camera"
 version = "0.1.0"
 dependencies = [
+ "ale_data",
  "ale_input",
  "ale_math",
 ]
@@ -65,6 +67,7 @@ dependencies = [
  "indexmap",
  "lazy_static",
  "snowflake",
+ "traitcast_core",
 ]
 
 [[package]]
@@ -125,6 +128,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ale_render"
+version = "0.1.0"
+dependencies = [
+ "ale_data",
+ "ale_math",
+ "ale_opengl",
+ "ale_resources",
+ "ale_ui",
+ "ale_window",
+]
+
+[[package]]
 name = "ale_resources"
 version = "0.1.0"
 dependencies = [
@@ -181,9 +196,6 @@ dependencies = [
  "ale_data",
  "ale_input",
  "ale_opengl",
- "anyhow",
- "downcast-rs",
- "traitcast_core",
 ]
 
 [[package]]
@@ -1467,6 +1479,7 @@ dependencies = [
  "ale_input",
  "ale_math",
  "ale_opengl",
+ "ale_render",
  "ale_resources",
  "ale_ui",
  "ale_window",

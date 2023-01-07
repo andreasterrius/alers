@@ -8,9 +8,10 @@ use ale_resources::resources::Resources;
 use ale_resources::shader;
 use ale_resources::shader::Shader;
 use ale_variable::Variable;
-use ale_variable::Variable::F32_4_4;
 
 use crate::mesh::{OpenGLMesh, OpenGLMeshError};
+use crate::raw;
+use crate::raw::print_error;
 use crate::shader::{OpenGLShader, OpenGLShaderError};
 
 pub struct SpriteRenderer {
@@ -22,6 +23,7 @@ impl SpriteRenderer {
   pub fn new_with_resource(resources: &mut Resources) -> Result<SpriteRenderer, SpriteRendererError> {
     let plane_mesh_key = resources.meshes.register(Mesh::new_plane());
     let flat_shader_key = resources.shaders.stash.load("shaders/ui")?.remove(0);
+
 
     SpriteRenderer::new(
       resources.meshes.get(plane_mesh_key).unwrap(),
@@ -41,6 +43,7 @@ impl SpriteRenderer {
 
   pub fn render_flat_box(&self, position: Vector2<f32>, size: Vector2<f32>, color: Color, ortho: Matrix4<f32>) {
     self.plane_mesh.activate();
+    raw::print_error("test");
     self.flat_shader.activate(&vec![
       Variable::F32_4(
         POSITION_SIZE.to_owned(),

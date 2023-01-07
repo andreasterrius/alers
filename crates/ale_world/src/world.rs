@@ -2,17 +2,15 @@ use std::any::{Any, TypeId};
 use std::borrow::{Borrow, BorrowMut};
 use std::collections::HashMap;
 
-use traitcast_core::Registry;
 use ale_data::channel::{Channel, Sender};
+use ale_data::entity::{Entity, Registry};
+use ale_data::entity::entry::{EntryBuilder, Traitcast};
 
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Id};
 
 use crate::components::Spawnable;
 use crate::event::world::{KillCommand, SpawnCommand, WorldCommand};
-use crate::typecast::entry::{EntryBuilder, Traitcast};
 use crate::visitor::{Visitor, VisitorMut};
-
-pub type Entity = Box<dyn Any>;
 
 pub struct EntityMeta {
   impl_type: TypeId,

@@ -5,6 +5,7 @@ use ale_math::{ale_quaternion_look_at, ortho, perspective, Deg, Matrix4, Point3,
 use std::sync::Arc;
 
 pub mod flycamera;
+pub mod component;
 
 #[derive(Debug)]
 pub struct Camera {

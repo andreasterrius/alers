@@ -12,7 +12,7 @@ use ale_data::alevec;
 use ale_math::rect::Rect;
 
 pub struct Window {
-  glfw_window: glfw::Window,
+  pub glfw_window: glfw::Window,
   glfw_events: Receiver<(f64, WindowEvent)>,
 
   pub is_hidden : bool, // hidden window, for context

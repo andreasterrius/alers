@@ -4,6 +4,7 @@ use crate::piece::Piece;
 use enumn::N;
 use ale_data::channel::Sender;
 use ale_world::event::world::WorldCommand;
+use crate::tetris::GameEvent;
 
 #[derive(Eq, PartialEq, Hash, N)]
 #[repr(usize)]
@@ -11,6 +12,12 @@ pub enum BlockTypeId {
   ZLeft = 0,
   ZRight = 1,
   I = 2,
+}
+
+pub struct RandomTetrisInfo {
+  pub block_type: BlockTypeId,
+  pub rotation_type: usize,
+  pub blocks_template: Vec<Vec<Vec<i8>>>,
 }
 
 pub struct Templates {
@@ -67,13 +74,17 @@ impl Templates {
     );
   }
 
-  pub fn random_one_piece(&self) -> Piece {
+  pub fn random_one_piece(&self) -> RandomTetrisInfo {
     let mut rand = rand::thread_rng();
     let block_type = BlockTypeId::n(rand.gen_range(0..self.blocks.len())).unwrap();
 
-    let blocks_template = self.blocks.get(&block_type).unwrap();
+    let blocks_template = self.blocks.get(&block_type).unwrap().clone();
     let rotation_type = rand.gen_range(0..blocks_template.len());
 
-    Piece::new(block_type, rotation_type, blocks_template.clone())
+    RandomTetrisInfo {
+      blocks_template,
+      rotation_type,
+      block_type
+    }
   }
 }

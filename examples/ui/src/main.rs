@@ -117,37 +117,45 @@ impl App<UIState> for UIApp {
     ale_opengl_clear_render_color(Color::light_blue());
 
     // Render UI
-    {
-      let mut render_resources = RenderResources::new(
-        &mut s.text_renderer,
-        &mut s.sprite_renderer,
-        &mut s.resources,
-        s.camera.camera_render_info(),
-      );
-      s.ui_elements.render_with(&mut render_resources);
-    }
+    // {
+    //   let mut render_resources = RenderResources::new(
+    //     &mut s.text_renderer,
+    //     &mut s.sprite_renderer,
+    //     &mut s.resources,
+    //     s.camera.camera_render_info(),
+    //   );
+    //   s.ui_elements.render_with(&mut render_resources);
+    // }
+
+    s.sprite_renderer.render_flat_box(
+      Vector2::new(0.0, 0.0),
+      Vector2::new(1000.0, 1000.0),
+      Color::from_rgba(1.0, 1.0, 0.4, 1.0),
+      s.camera.camera_render_info().orthographic
+    );
+
 
     // Render Game Window
-    {
-      let empty = s.ui_elements.get_empty_layouts()["game_render"];
-      //println!("{:?}", empty.layout);
-      unsafe {
-        raw::set_viewport(
-          empty.layout.position.x,
-          600 - empty.layout.position.y - empty.layout.size.y as i32,
-          empty.layout.size.x,
-          empty.layout.size.y,
-        );
-      }
-      s.camera.set_viewport(empty.layout.position, empty.layout.size);
-      let bakso = s.resources.meshes.get(s.bakso).unwrap();
-      s.mesh_wire_renderer
-        .render_bounding_box(vec![(&mut AleTransform::new(), bakso)], &s.camera.camera_render_info());
-
-      unsafe {
-        raw::set_viewport(0, 0, 800, 600);
-      }
-      s.camera.set_viewport(Vector2::new(0, 0), Vector2::new(800, 600));
-    }
+    // {
+    //   let empty = s.ui_elements.get_empty_layouts()["game_render"];
+    //   //println!("{:?}", empty.layout);
+    //   unsafe {
+    //     raw::set_viewport(
+    //       empty.layout.position.x,
+    //       600 - empty.layout.position.y - empty.layout.size.y as i32,
+    //       empty.layout.size.x,
+    //       empty.layout.size.y,
+    //     );
+    //   }
+    //   s.camera.set_viewport(empty.layout.position, empty.layout.size);
+    //   let bakso = s.resources.meshes.get(s.bakso).unwrap();
+    //   s.mesh_wire_renderer
+    //     .render_bounding_box(vec![(&mut AleTransform::new(), bakso)], &s.camera.camera_render_info());
+    //
+    //   unsafe {
+    //     raw::set_viewport(0, 0, 800, 600);
+    //   }
+    //   s.camera.set_viewport(Vector2::new(0, 0), Vector2::new(800, 600));
+    // }
   }
 }
