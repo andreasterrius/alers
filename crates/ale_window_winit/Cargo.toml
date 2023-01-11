@@ -1,0 +1,13 @@
+[package]
+name = "ale_window_winit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ale_math = { path = "../ale_math" }
+ale_input = { path = "../ale_input" }
+ale_opengl = { path = "../ale_opengl" }
+ale_ui = { path = "../ale_ui" }
+ale_data = { path = "../ale_data" }
+log = "0.4.8"
+winit = "0.27.5"

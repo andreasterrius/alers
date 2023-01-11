@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use ale_data::channel::{Channel, Sender};
 use ale_data::entity::{Entity, Registry};
-use ale_data::entity::entry::{EntryBuilder, Traitcast};
+use ale_data::entity::entry::{ComponentEntry, Traitcast};
 
 use ale_data::indexmap::{AleIndexMap, AleIndexSet, Id};
 
@@ -122,7 +122,7 @@ impl World {
     return self.entities.remove(&entity_key);
   }
 
-  pub fn register_components(&mut self, e: &[EntryBuilder]) {
+  pub fn register_components(&mut self, e: &[ComponentEntry]) {
     for eb in e {
       (eb.insert)(&mut self.registry);
       self
@@ -206,7 +206,7 @@ impl World {
     }
   }
 
-  pub fn resolve_world_commands(&mut self) {
+  pub fn resolve_commands(&mut self) {
     let cmds : Vec<WorldCommand> = self.channel.receiver.try_iter().collect();
     for cmd in cmds {
       match cmd {
@@ -214,6 +214,9 @@ impl World {
         WorldCommand::Kill(ke) => {
           let _ = self.remove(ke);
         },
+        WorldCommand::RegisterComponent(rc) => {
+          self.register_components(&rc.component_entries)
+        }
       }
     }
   }

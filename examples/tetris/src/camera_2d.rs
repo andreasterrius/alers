@@ -1,6 +1,7 @@
 use ale_camera::CameraRenderInfo;
 use ale_camera::component::Camera;
 use ale_data::entity::Entity;
+use ale_data::entity::entry::ComponentEntry;
 use ale_data::indexmap::Id;
 use ale_data::wire_component;
 use ale_math::rect::Rect;
@@ -14,11 +15,11 @@ pub struct Camera2D {
 }
 
 impl Camera2D {
-  pub fn register_components(world : &mut World) {
-    world.register_components(&[
+  pub fn components() -> Vec<ComponentEntry> {
+    vec![
       wire_component!(dyn Camera, Camera2D),
       wire_component!(dyn Spawnable, Camera2D)
-    ])
+    ]
   }
 
   pub fn new(position : Vector3<f32>, rect : Rect ) -> Camera2D {

@@ -9,6 +9,7 @@ ale_math = { path = "../ale_math" }
 ale_input = { path = "../ale_input" }
 ale_data = { path = "../ale_data" }
 ale_opengl = { path = "../ale_opengl" }
+ale_window_winit = { path = "../ale_window_winit" }
 ale_ui = { path = "../ale_ui" }
 ale_world = { path = "../ale_world" }
 ale_resources = { path = "../ale_resources" }

@@ -3,6 +3,7 @@ use log::info;
 use ale_data::alevec::Key;
 use ale_data::channel::{Channel, Sender};
 use ale_data::entity::Entity;
+use ale_data::entity::entry::ComponentEntry;
 use ale_data::indexmap::Id;
 use ale_data::wire_component;
 use ale_math::color::Color;
@@ -31,11 +32,11 @@ pub struct Piece {
 }
 
 impl Piece {
-  pub fn register_components(world: &mut World) {
-    world.register_components(&[
+  pub fn components() -> Vec<ComponentEntry> {
+    vec![
       wire_component!(dyn Spawnable, Piece),
       wire_component!(dyn Renderable, Piece),
-    ]);
+    ]
   }
 
   pub fn new(

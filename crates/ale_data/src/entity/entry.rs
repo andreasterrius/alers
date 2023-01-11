@@ -22,19 +22,19 @@ impl<From: 'static, To> Traitcast<To> for From
   }
 }
 
-pub struct EntryBuilder {
+pub struct ComponentEntry {
   pub insert: Box<dyn Fn(&mut Registry)>,
   pub struct_impl: TypeId,
   pub dyn_trait: TypeId,
 }
 
-impl EntryBuilder {
-  pub fn insert<To>(entry: ImplEntry<To>) -> EntryBuilder
+impl ComponentEntry {
+  pub fn insert<To>(entry: ImplEntry<To>) -> ComponentEntry
     where
       To: 'static + ?Sized,
   {
     let source_impl = entry.tid.clone();
-    EntryBuilder {
+    ComponentEntry {
       insert: Box::new(move |master| {
         let table: &mut CastIntoTrait<To> = master
           .tables
@@ -52,7 +52,7 @@ impl EntryBuilder {
 #[macro_export]
 macro_rules! wire_component {
   ($source:ty, $target:ty) => {
-    $crate::entity::entry::EntryBuilder::insert($crate::entity::entry::ImplEntry::<$source> {
+    $crate::entity::entry::ComponentEntry::insert($crate::entity::entry::ImplEntry::<$source> {
       cast_box: |x| {
         let x: Box<$target> = x.downcast()?;
         let x: Box<$source> = x;

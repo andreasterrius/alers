@@ -1,11 +1,14 @@
 use crate::components::Spawnable;
+use ale_data::entity::entry::ComponentEntry;
+use ale_data::entity::Entity;
 use ale_data::indexmap::Id;
 use std::any::{Any, TypeId};
-use ale_data::entity::Entity;
 
 pub enum WorldCommand {
   Spawn(SpawnCommand),
   Kill(KillCommand),
+
+  RegisterComponent(RegisterComponentCommand),
 }
 
 pub struct SpawnCommand {
@@ -20,7 +23,7 @@ impl SpawnCommand {
     return SpawnCommand {
       type_id: TypeId::of::<T>(),
       entity: Box::new(entity),
-      entity_key
+      entity_key,
     };
   }
 }
@@ -32,5 +35,15 @@ pub struct KillCommand {
 impl KillCommand {
   pub fn new(entity_key: Id<Entity>) -> KillCommand {
     return KillCommand { entity_key };
+  }
+}
+
+pub struct RegisterComponentCommand {
+  pub(crate) component_entries: Vec<ComponentEntry>,
+}
+
+impl RegisterComponentCommand {
+  pub fn new(component_entries: Vec<ComponentEntry>) -> RegisterComponentCommand {
+    RegisterComponentCommand { component_entries }
   }
 }
