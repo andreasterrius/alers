@@ -93,9 +93,22 @@ impl Windows {
     // ---------------------------------------
     ale_opengl::raw::load_with(|symbol| glfw_window.get_proc_address(symbol) as *const _);
 
+    self.make_primary_context_current();
+
     self
       .windows
       .push(Window::new(glfw_window, glfw_events, display_setting, false))
+  }
+
+  pub fn make_primary_context_current(&mut self) {
+    match self.context_window_key {
+      None => {}
+      Some(shared_key) => {
+        let mut shared_window = self.windows.get_mut(shared_key).
+          expect("primary context missing");
+        shared_window.glfw_window.make_current();
+      }
+    };
   }
 
   pub fn poll_inputs(&mut self) {

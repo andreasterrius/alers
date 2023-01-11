@@ -1,4 +1,3 @@
-use ale_data::alevec;
 use ale_data::alevec::{AleVec, Key};
 use ale_data::entity::Entity;
 use ale_data::indexmap::Id;
