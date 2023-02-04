@@ -5,7 +5,7 @@ use ale_data::alevec::AleVec;
 use crate::{font, mesh, texture};
 use crate::font::Font;
 use crate::mesh::Mesh;
-use crate::shader::{Shader, ShaderStash};
+use crate::shader::{GLSLShader, ShaderStash};
 use crate::stash::Stash;
 use crate::texture::Texture;
 

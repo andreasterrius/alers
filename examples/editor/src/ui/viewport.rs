@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ale_app::engine::Engine;
+use ale_app::engine::Render;
 use ale_app::AppError;
 use ale_camera::flycamera::FlyCamera;
 use ale_camera::Camera;
@@ -30,7 +30,7 @@ pub struct Viewport {
 }
 
 impl Viewport {
-  pub fn new(engine: &mut Engine) -> Result<Viewport, AppError> {
+  pub fn new(engine: &mut Render) -> Result<Viewport, AppError> {
     let main_window_key = engine.windows.add(DisplaySetting {
       dimension: Rect {
         position: Vector2::zero(),

@@ -1,0 +1,17 @@
+[package]
+name = "ale_wgpu"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ale_data = { path = "../ale_data" }
+ale_math = { path = "../ale_math" }
+ale_resources = { path = "../ale_resources" }
+ale_variable = { path = "../ale_variable" }
+wgpu = "0.14.2"
+thiserror = "1.0"
+raw-window-handle = "0.5.0"
+futures = "0.3.25"
+log = "0.4.17"

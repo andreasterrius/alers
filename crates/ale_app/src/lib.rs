@@ -22,9 +22,8 @@ use ale_world::world;
 use ale_world::world::World;
 
 pub mod app;
-pub mod engine;
 pub mod visitor;
-pub mod event;
+pub mod command;
 
 // TODO: Break this to 1 function per trait
 pub trait App<S> {
@@ -113,7 +112,7 @@ pub fn init() {
 }
 
 pub fn init_term() {
-  TermLogger::init(LevelFilter::Debug,
+  TermLogger::init(LevelFilter::Info,
                    Config::default(),
                    TerminalMode::Mixed,
                    ColorChoice::Auto).unwrap();

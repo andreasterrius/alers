@@ -11,3 +11,4 @@ ale_ui = { path = "../ale_ui" }
 ale_data = { path = "../ale_data" }
 log = "0.4.8"
 winit = "0.27.5"
+raw-window-handle = "0.5.0"

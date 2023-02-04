@@ -1,24 +1,34 @@
-use ale_data::channel::Sender;
+use std::collections::HashMap;
+
+use log::info;
+
+use ale_data::channel::{Channel, Receiver, Sender};
 use ale_math::color::Color;
-use ale_math::Vector2;
-use ale_opengl::renderer::task::RenderTask;
+use ale_math::rect::Rect;
+use ale_math::{Vector2, Zero};
 use ale_opengl::{
   ale_opengl_blend_enable, ale_opengl_clear_render, ale_opengl_clear_render_color, ale_opengl_depth_test_enable, raw,
 };
+use ale_opengl::renderer::task::RenderTask;
 use ale_render::target::RenderTargetType;
+use ale_resources::resources::Resources;
+use ale_wgpu::backend::Graphics;
+use ale_wgpu::sprite_renderer::SpriteRenderPipeline;
+use ale_window_winit::backend::{EventLoopWindowTarget, Windows};
+use ale_window_winit::event_loop::EventLoop;
+use ale_window_winit::window::Window;
 use ale_world::event::world::WorldCommand;
 use ale_world::world::World;
-use log::info;
-use std::collections::HashMap;
-use ale_window_winit::event_loop::EventLoop;
 
-use crate::engine::Engine;
-use crate::event::EngineCommand;
+use crate::{AppError, FixedStep, init_term, WorldTick};
+use crate::command::AppCommand;
 use crate::visitor::{CameraVisitor, FixedTickVisitor, RenderableVisitor, TickVisitor};
-use crate::{init_term, AppError, FixedStep, WorldTick};
 
 pub trait Genesis {
-  fn init(&self, engine: Sender<EngineCommand>, world: Sender<WorldCommand>) -> Result<(), AppError>;
+  fn init(&self,
+          app_commands: Sender<AppCommand>,
+          world_commands: Sender<WorldCommand>,
+  ) -> Result<(), AppError>;
 }
 
 pub struct App {
@@ -26,14 +36,9 @@ pub struct App {
 }
 
 impl App {
-  pub fn new<T: Genesis + 'static>(init: T) -> App {
-    App {
-      genesis: Box::new(init),
-    }
-  }
-
-  pub fn run(mut self) {
-    self.run_app_loop().unwrap();
+  pub fn run<T: Genesis + 'static>(init: T) {
+    let app = App { genesis: Box::new(init) };
+    app.run_app_loop().unwrap();
   }
 
   fn run_app_loop(mut self) -> anyhow::Result<()> {
@@ -41,15 +46,24 @@ impl App {
 
     let mut tick = WorldTick::FixedStep(FixedStep::new(0.01f32));
     let mut world = World::new();
-    let mut engine = Engine::new()?;
+    let mut resources = Resources::new();
+    let mut graphics = Graphics::new();
     let mut event_loop = EventLoop::new();
+    let mut windows = ale_window_winit::backend::Windows::new();
+    let mut app_channel = Channel::<AppCommand>::new();
 
     let world_commands = world.get_world_command_sender();
-    let engine_commands = engine.get_engine_command_sender();
+    let app_commands = app_channel.sender;
+    let mut app_commands_receiver = app_channel.receiver.clone();
 
-    self.genesis.init(engine_commands.clone(), world_commands.clone())?;
+    self.genesis.init(app_commands.clone(), world_commands.clone())?;
 
-    event_loop.run(move |window_target|{
+    self.resolve_commands(&mut windows, &mut graphics, &mut app_commands_receiver, &event_loop.0);
+
+    // Renderers
+    let mut sprite_renderer = SpriteRenderPipeline::new(&mut graphics, &mut resources)?;
+
+    event_loop.run(move |window_target| {
       tick.prepare_tick();
       let delta_time = tick.delta_time();
 
@@ -63,7 +77,7 @@ impl App {
         world.visit_mut(&mut fixed_tick_vis);
       }
 
-      engine.resolve_commands(window_target);
+      self.resolve_commands(&mut windows, &mut graphics, &mut app_commands_receiver, window_target);
       world.resolve_commands();
 
       //tick
@@ -71,23 +85,51 @@ impl App {
       world.visit_mut(&mut tick_vis);
 
       // render
-      self.render(&mut engine, &mut world);
+      self.render(&mut graphics, &mut world, &mut sprite_renderer);
     });
 
     Ok(())
   }
 
-  fn render(&mut self, engine: &mut Engine, world: &mut World) {
-    // let mut renderable_vis = RenderableVisitor {
-    //   render_tasks: HashMap::new(),
-    // };
-    // world.visit_mut(&mut renderable_vis);
-    //
-    // let mut camera_vis = CameraVisitor {
-    //   camera_render_info: HashMap::new(),
-    // };
-    // world.visit_mut(&mut camera_vis);
-    //
+  fn resolve_commands(&mut self,
+                      windows: &mut Windows,
+                      graphics: &mut Graphics,
+                      app_commands: &mut Receiver<AppCommand>,
+                      event_loop_target: &EventLoopWindowTarget<()>) {
+    let cmds: Vec<AppCommand> = app_commands.try_iter().collect();
+    for cmd in cmds {
+      match cmd {
+        AppCommand::CreateWindow(cwc) => {
+          windows.add(cwc.id, cwc.display_setting.clone(), event_loop_target);
+          let w = windows.get(cwc.id).unwrap();
+          let inner_size = w.winit_window.inner_size();
+          let s = graphics.create_surface(w, Rect{
+            position: Vector2::zero(),
+            size: Vector2::new(inner_size.width, inner_size.height)
+          });
+        }
+      }
+    }
+  }
+
+  fn render(&mut self,
+            graphics: &mut Graphics,
+            world: &mut World,
+            sprite_renderer: &mut SpriteRenderPipeline) {
+    let mut renderable_vis = RenderableVisitor {
+      render_tasks: HashMap::new(),
+    };
+    world.visit_mut(&mut renderable_vis);
+
+    let mut camera_vis = CameraVisitor {
+      camera_render_info: HashMap::new(),
+    };
+    world.visit_mut(&mut camera_vis);
+
+    graphics.execute(|view, encoder| {
+      sprite_renderer.render(view, encoder);
+    });
+
     // // TODO: Group by render target in here instead
     // for (render_target_key, renderables) in renderable_vis.render_tasks {
     //   let render_target = engine.render_targets.get(render_target_key);

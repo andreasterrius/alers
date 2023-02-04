@@ -4,7 +4,7 @@ use ale_camera::CameraRenderInfo;
 use ale_math::{Deg, EuclideanSpace, Matrix, Matrix4, perspective, Point3, Vector3};
 use ale_math::rect::Rect;
 use ale_resources::mesh::{Mesh, MeshId};
-use ale_resources::shader::{Shader, ShaderId};
+use ale_resources::shader::{GLSLShader, ShaderId};
 use ale_resources::texture::{Texture, TextureId};
 use ale_variable::Variable;
 
@@ -44,7 +44,7 @@ impl RenderResources {
     Ok(())
   }
 
-  pub fn shader(&mut self, shader: &Shader) -> Result<(), OpenGLShaderError> {
+  pub fn shader(&mut self, shader: &GLSLShader) -> Result<(), OpenGLShaderError> {
     self.shaders.insert(shader.uid(), OpenGLShader::new(shader)?);
     Ok(())
   }

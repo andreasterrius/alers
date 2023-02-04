@@ -1,7 +1,7 @@
 use crate::raw;
 use crate::raw::{create_shader, CreateShaderError};
 use ale_math::Matrix;
-use ale_resources::shader::Shader;
+use ale_resources::shader::GLSLShader;
 use ale_variable::Variable;
 use thiserror::Error;
 
@@ -12,7 +12,7 @@ pub struct OpenGLShader {
 }
 
 impl OpenGLShader {
-  pub fn new(shader: &Shader) -> Result<OpenGLShader, OpenGLShaderError> {
+  pub fn new(shader: &GLSLShader) -> Result<OpenGLShader, OpenGLShaderError> {
     let shader = unsafe {
       create_shader(
         &shader.vertex_shader,

@@ -1,6 +1,6 @@
 use ale_app::app::{App, Genesis};
-use ale_app::event::EngineCommand::CreateWindow;
-use ale_app::event::{CreateWindowCommand, EngineCommand};
+use ale_app::command::AppCommand::CreateWindow;
+use ale_app::command::{CreateWindowCommand, AppCommand};
 use ale_app::AppError;
 use ale_data::channel::Sender;
 use ale_math::rect::Rect;
@@ -25,7 +25,7 @@ struct Tetris;
 pub enum TetrisEvent {}
 
 impl Genesis for Tetris {
-  fn init(&self, engine_commands: Sender<EngineCommand>, world_commands: Sender<WorldCommand>) -> Result<(), AppError> {
+  fn init(&self, engine_commands: Sender<AppCommand>, world_commands: Sender<WorldCommand>) -> Result<(), AppError> {
     // register components
     world_commands.send(RegisterComponent(RegisterComponentCommand::new(Camera2D::components())));
     world_commands.send(RegisterComponent(RegisterComponentCommand::new(Game::components())));
@@ -65,5 +65,5 @@ impl Genesis for Tetris {
 }
 
 fn main() {
-  App::new(Tetris).run();
+  App::run(Tetris);
 }

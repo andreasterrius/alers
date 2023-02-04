@@ -6,7 +6,7 @@ use ale_math::{Array, Matrix4, Vector2, Vector4};
 use ale_resources::mesh::Mesh;
 use ale_resources::resources::Resources;
 use ale_resources::shader;
-use ale_resources::shader::Shader;
+use ale_resources::shader::GLSLShader;
 use ale_variable::Variable;
 
 use crate::mesh::{OpenGLMesh, OpenGLMeshError};
@@ -22,16 +22,16 @@ pub struct SpriteRenderer {
 impl SpriteRenderer {
   pub fn new_with_resource(resources: &mut Resources) -> Result<SpriteRenderer, SpriteRendererError> {
     let plane_mesh_key = resources.meshes.register(Mesh::new_plane());
-    let flat_shader_key = resources.shaders.stash.load("shaders/ui")?.remove(0);
+    let flat_shader_key = resources.shaders.glsl_stash.load("shaders/ui")?.remove(0);
 
 
     SpriteRenderer::new(
       resources.meshes.get(plane_mesh_key).unwrap(),
-      resources.shaders.stash.get(flat_shader_key).unwrap(),
+      resources.shaders.glsl_stash.get(flat_shader_key).unwrap(),
     )
   }
 
-  pub fn new(plane_mesh: &Mesh, flat_shader: &Shader) -> Result<SpriteRenderer, SpriteRendererError> {
+  pub fn new(plane_mesh: &Mesh, flat_shader: &GLSLShader) -> Result<SpriteRenderer, SpriteRendererError> {
     let plane_mesh = OpenGLMesh::new(plane_mesh)?;
     let flat_shader = OpenGLShader::new(flat_shader)?;
 

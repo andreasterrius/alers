@@ -1,7 +1,7 @@
 use winit::event::Event;
 use winit::event_loop::EventLoopWindowTarget;
 
-pub struct EventLoop(winit::event_loop::EventLoop<()>);
+pub struct EventLoop(pub winit::event_loop::EventLoop<()>);
 
 impl EventLoop {
   pub fn new() -> EventLoop {

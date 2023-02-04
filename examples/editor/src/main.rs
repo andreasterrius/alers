@@ -2,7 +2,7 @@ use log::info;
 use crate::scene::camera::EditorCamera;
 use crate::ui::viewport::Viewport;
 use ale_app::app::{App, Genesis};
-use ale_app::engine::Engine;
+use ale_app::engine::Render;
 use ale_math::rect::Rect;
 use ale_math::{Vector2, Zero};
 use ale_resources::resources::Resources;

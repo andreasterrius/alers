@@ -9,7 +9,7 @@ use ale_resources::font::{Font, FontLayout, FontTextureKey};
 use ale_resources::mesh::Mesh;
 use ale_resources::resources::Resources;
 use ale_resources::shader;
-use ale_resources::shader::Shader;
+use ale_resources::shader::GLSLShader;
 
 use crate::mesh::OpenGLMesh;
 use crate::raw;
@@ -24,16 +24,16 @@ pub struct TextRenderer {
 
 impl TextRenderer {
   pub fn new_with_resources(resources: &mut Resources) -> Result<TextRenderer, TextRendererError> {
-    let text_shader_key = resources.shaders.stash.load("shaders/text_2d")?.remove(0);
+    let text_shader_key = resources.shaders.glsl_stash.load("shaders/text_2d")?.remove(0);
     let plane_mesh_key = resources.meshes.register(Mesh::new_plane());
 
     TextRenderer::new(
-      resources.shaders.stash.get(text_shader_key).unwrap(),
+      resources.shaders.glsl_stash.get(text_shader_key).unwrap(),
       resources.meshes.get(plane_mesh_key).unwrap(),
     )
   }
 
-  pub fn new(text_shader: &Shader, plane_mesh: &Mesh) -> Result<TextRenderer, TextRendererError> {
+  pub fn new(text_shader: &GLSLShader, plane_mesh: &Mesh) -> Result<TextRenderer, TextRendererError> {
     let text_shader = OpenGLShader::new(text_shader)?;
     let plane_mesh = OpenGLMesh::new(plane_mesh)?;
 

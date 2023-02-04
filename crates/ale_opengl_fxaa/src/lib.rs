@@ -2,7 +2,7 @@ use ale_console::{ale_console_variable_event_handle, ale_console_variable_regist
 use ale_opengl::ale_opengl_clear_render;
 use ale_opengl::render_frame::{ale_opengl_render_frame_render, OpenGLRenderFrameContext};
 use ale_opengl::shader::OpenGLShader;
-use ale_resources::shader::Shader;
+use ale_resources::shader::GLSLShader;
 use ale_variable::{to_variable, ToVariable};
 
 pub struct OpenGLFXAAContext {
@@ -17,7 +17,7 @@ pub struct OpenGLFXAAContext {
 }
 
 pub fn ale_opengl_fxaa_context_new() -> OpenGLFXAAContext {
-  let fxaa_shader = OpenGLShader::new(&Shader::new(
+  let fxaa_shader = OpenGLShader::new(&GLSLShader::new(
     include_str!("../resources/fxaa.vert").to_owned(),
     include_str!("../resources/fxaa.frag").to_owned(),
   ))

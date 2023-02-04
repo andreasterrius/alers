@@ -5,7 +5,7 @@ use ale_math::{Array, Matrix, Transform};
 use ale_resources::mesh::Mesh;
 use ale_resources::resources::Resources;
 use ale_resources::shader;
-use ale_resources::shader::Shader;
+use ale_resources::shader::GLSLShader;
 use ale_variable::{to_variable, ToVariable};
 use thiserror::Error;
 
@@ -25,11 +25,11 @@ pub struct MeshWireRenderer {
 
 impl MeshWireRenderer {
   pub fn new_with_resource(resources: &mut Resources) -> Result<MeshWireRenderer, MeshWireRendererError> {
-    let wire = resources.shaders.stash.load("shaders/wire")?.remove(0);
-    MeshWireRenderer::new(resources.shaders.stash.get(wire).unwrap())
+    let wire = resources.shaders.glsl_stash.load("shaders/wire")?.remove(0);
+    MeshWireRenderer::new(resources.shaders.glsl_stash.get(wire).unwrap())
   }
 
-  pub fn new(wire_shader: &Shader) -> Result<MeshWireRenderer, MeshWireRendererError> {
+  pub fn new(wire_shader: &GLSLShader) -> Result<MeshWireRenderer, MeshWireRendererError> {
     Ok(MeshWireRenderer {
       bounding_box_mesh: OpenGLMesh::new(&Mesh::new_bounding_box())?,
       bounding_box_shader: OpenGLShader::new(&wire_shader)?,

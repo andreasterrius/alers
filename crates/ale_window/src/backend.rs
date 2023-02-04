@@ -49,7 +49,7 @@ impl Windows {
       self.glfw.window_hint(glfw::WindowHint::Visible(true));
     }
     #[cfg(target_os = "macos")]
-    glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
+    self.glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
     // glfw window creation
     // --------------------
 

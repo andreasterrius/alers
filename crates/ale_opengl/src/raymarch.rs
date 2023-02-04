@@ -1,5 +1,5 @@
 use ale_resources::mesh::Mesh;
-use ale_resources::shader::Shader;
+use ale_resources::shader::GLSLShader;
 use crate::mesh::{OpenGLMesh};
 use crate::shader::{OpenGLShader};
 
@@ -10,7 +10,7 @@ pub struct OpenGLRaymarchContext {
 }
 
 pub fn ale_opengl_raymarch_context_new() -> OpenGLRaymarchContext {
-  let raymarch_shader = OpenGLShader::new(&Shader::new(
+  let raymarch_shader = OpenGLShader::new(&GLSLShader::new(
     include_str!("../../../resources/shaders/raymarch.vert").to_owned(),
     include_str!("../../../resources/shaders/raymarch.frag").to_owned(),
   ))

@@ -2,7 +2,7 @@ use ale_data::indexmap::Id;
 use ale_window_winit::display::DisplaySetting;
 use ale_window_winit::window::Window;
 
-pub enum EngineCommand {
+pub enum AppCommand {
   CreateWindow(CreateWindowCommand)
 }
 

@@ -1,5 +1,8 @@
 use ale_data::alevec;
 use ale_ui::element::Panel;
+use raw_window_handle::{
+  HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle,
+};
 
 use crate::display::DisplaySetting;
 
@@ -18,5 +21,17 @@ impl Window {
       mouse_position: None,
       panel_key: None,
     }
+  }
+}
+
+unsafe impl HasRawWindowHandle for Window {
+  fn raw_window_handle(&self) -> RawWindowHandle {
+    self.winit_window.raw_window_handle()
+  }
+}
+
+unsafe impl HasRawDisplayHandle for Window {
+  fn raw_display_handle(&self) -> RawDisplayHandle {
+    self.winit_window.raw_display_handle()
   }
 }

@@ -1,4 +1,4 @@
-use indexmap::IndexMap;
+pub use indexmap::IndexMap;
 use lazy_static::lazy_static;
 use snowflake::ProcessUniqueId;
 use std::hash::{Hash, Hasher};
@@ -53,7 +53,7 @@ impl<T> PartialEq<Self> for Id<T> {
 impl<T> Eq for Id<T> {}
 
 pub struct AleIndexMap<T> {
-  inner: IndexMap<Id<T>, T>,
+  pub inner: IndexMap<Id<T>, T>,
 }
 
 impl<T> AleIndexMap<T> {
