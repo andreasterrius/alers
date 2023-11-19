@@ -22,7 +22,7 @@ impl Windows {
       windows: AleVec::new(),
       context_window_key: None,
     };
-    windows.create_shared_context();
+    //windows.create_shared_context();
     windows
   }
 
@@ -113,11 +113,6 @@ impl Windows {
 
   pub fn poll_inputs(&mut self) {
     self.glfw.poll_events();
-
-    for window in self.windows.iter_mut() {
-      window.make_current();
-      window.input();
-    }
   }
 
   pub fn cleanup(&mut self) {

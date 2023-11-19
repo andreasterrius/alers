@@ -5,9 +5,7 @@ pub struct Viewport {
 }
 
 impl Viewport {
-  pub fn new() -> Viewport {
 
-  }
 }
 
 pub struct RenderFrame {
