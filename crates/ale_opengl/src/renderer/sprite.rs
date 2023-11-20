@@ -24,7 +24,6 @@ impl SpriteRenderer {
     let plane_mesh_key = resources.meshes.register(Mesh::new_plane());
     let flat_shader_key = resources.shaders.stash.load("shaders/ui")?.remove(0);
 
-
     SpriteRenderer::new(
       resources.meshes.get(plane_mesh_key).unwrap(),
       resources.shaders.stash.get(flat_shader_key).unwrap(),
@@ -43,7 +42,6 @@ impl SpriteRenderer {
 
   pub fn render_flat_box(&self, position: Vector2<f32>, size: Vector2<f32>, color: Color, ortho: Matrix4<f32>) {
     self.plane_mesh.activate();
-    raw::print_error("test");
     self.flat_shader.activate(&vec![
       Variable::F32_4(
         POSITION_SIZE.to_owned(),

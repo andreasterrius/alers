@@ -29,7 +29,7 @@ pub unsafe fn set_viewport(x: i32, y: i32, w: u32, h: u32) {
   gl::Viewport(x, y, w as i32, h as i32);
 }
 
-pub unsafe fn set_viewport_i32(x: i32, y:i32, w:i32, h:i32) {
+pub unsafe fn set_viewport_i32(x: i32, y: i32, w: i32, h: i32) {
   gl::Viewport(x, y, w, h);
 }
 
@@ -460,6 +460,6 @@ pub fn print_error(id: &str) {
       error = gl::GetError();
       i = i + 1;
     }
-    println!("{} {}-ith: ok", id, i);
+    //println!("{} {}-ith: ok", id, i);
   }
 }

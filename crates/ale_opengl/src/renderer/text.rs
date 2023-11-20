@@ -44,7 +44,7 @@ impl TextRenderer {
     })
   }
 
-  pub fn  render(
+  pub fn render(
     &mut self,
     camera_render_info: &CameraRenderInfo,
     font: &mut Font,

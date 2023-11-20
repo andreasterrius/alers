@@ -4,6 +4,7 @@ use ale_data::alevec::Key;
 use ale_data::entity::Entity;
 use ale_data::indexmap::Id;
 use ale_opengl::renderer;
+use ale_opengl::renderer::task::RenderTask;
 use ale_render::component::Renderable;
 use ale_render::target::RenderTarget;
 use ale_world::components::Tickable;
@@ -22,15 +23,12 @@ impl VisitorMut<dyn Camera> for CameraVisitor {
 }
 
 pub struct RenderableVisitor {
-  pub render_tasks: HashMap<Key<RenderTarget>, Vec<renderer::task::RenderTask>>,
+  pub render_tasks: Vec<RenderTask>,
 }
 
 impl VisitorMut<dyn Renderable> for RenderableVisitor {
   fn visit(&mut self, component: &mut (dyn Renderable + 'static)) {
-    for (render_target_key, renderables) in component.get_render_task() {
-      let v = self.render_tasks.entry(render_target_key).or_default();
-      v.extend(renderables);
-    }
+    self.render_tasks.extend(component.get_render_tasks())
   }
 }
 
