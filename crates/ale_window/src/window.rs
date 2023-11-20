@@ -2,20 +2,20 @@ use crate::display::{DisplaySetting, TargetMonitor};
 use crate::input_translator::{
   translate_action, translate_key, translate_modifier, translate_mousebutton, translate_scancode,
 };
+use ale_data::alevec;
 use ale_input::Input;
+use ale_math::rect::Rect;
 use ale_math::{Vector2, Zero};
 use ale_ui::element::Panel;
-use glfw::{Action, Context, CursorMode, Key, WindowEvent};
+use glfw::{Action, Context, CursorMode, Key, SwapInterval, WindowEvent};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, RwLock};
-use ale_data::alevec;
-use ale_math::rect::Rect;
 
 pub struct Window {
   pub glfw_window: glfw::Window,
   glfw_events: Receiver<(f64, WindowEvent)>,
 
-  pub is_hidden : bool, // hidden window, for context
+  pub is_hidden: bool, // hidden window, for context
   pub display_setting: DisplaySetting,
 
   mouse_position: Option<(f64, f64)>,
@@ -35,7 +35,7 @@ impl Window {
       is_hidden,
       display_setting,
       mouse_position: None,
-      panel_key: None
+      panel_key: None,
     }
   }
 
@@ -53,6 +53,7 @@ impl Window {
 
   pub fn make_current(&mut self) {
     self.glfw_window.make_current();
+    self.glfw_window.glfw.set_swap_interval(SwapInterval::None);
   }
 
   pub fn input(&mut self) -> Vec<Input> {
@@ -121,7 +122,7 @@ impl Window {
     )
   }
 
-  pub fn attach_panel(&mut self, panel : alevec::Key<Panel>) {
+  pub fn attach_panel(&mut self, panel: alevec::Key<Panel>) {
     self.panel_key = Some(panel);
   }
 
