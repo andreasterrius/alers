@@ -9,11 +9,9 @@ use ale_world::event::world::{SpawnCommand, WorldCommand};
 use ale_world::world::World;
 
 use crate::camera_2d::Camera2D;
-use crate::piece::Piece;
 use crate::tetris::GameCoordinator;
 
 mod camera_2d;
-mod piece;
 mod template;
 mod tetris;
 
@@ -25,7 +23,6 @@ impl Genesis for TetrisGame {
   fn register_components(&self, world: &mut World) {
     Camera2D::register_components(world);
     GameCoordinator::register_components(world);
-    Piece::register_components(world);
   }
 
   fn window(&self) -> DisplaySetting {

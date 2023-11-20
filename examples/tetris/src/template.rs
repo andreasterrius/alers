@@ -1,10 +1,7 @@
 use std::collections::HashMap;
-use rand::Rng;
-use crate::piece::Piece;
+
 use enumn::N;
-use ale_data::channel::Sender;
-use ale_world::event::world::WorldCommand;
-use crate::tetris::GameEvent;
+use rand::Rng;
 
 #[derive(Eq, PartialEq, Hash, N)]
 #[repr(usize)]
@@ -17,11 +14,10 @@ pub enum BlockTypeId {
 pub struct RandomTetrisInfo {
   pub block_type: BlockTypeId,
   pub rotation_type: usize,
-  pub blocks_template: Vec<Vec<Vec<i8>>>,
 }
 
 pub struct Templates {
-  blocks: HashMap<BlockTypeId, Vec<Vec<Vec<i8>>>>,
+  pub blocks: HashMap<BlockTypeId, Vec<Vec<Vec<i8>>>>,
 }
 
 impl Templates {
@@ -77,14 +73,12 @@ impl Templates {
   pub fn random_one_piece(&self) -> RandomTetrisInfo {
     let mut rand = rand::thread_rng();
     let block_type = BlockTypeId::n(rand.gen_range(0..self.blocks.len())).unwrap();
-
     let blocks_template = self.blocks.get(&block_type).unwrap().clone();
     let rotation_type = rand.gen_range(0..blocks_template.len());
 
     RandomTetrisInfo {
-      blocks_template,
       rotation_type,
-      block_type
+      block_type,
     }
   }
 }

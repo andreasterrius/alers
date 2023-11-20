@@ -1,6 +1,4 @@
-use log::info;
-
-use ale_data::channel::{Channel, Sender};
+use ale_data::channel::Sender;
 use ale_data::entity::Entity;
 use ale_data::indexmap::Id;
 use ale_data::timer::{Recurrence, Timer};
@@ -13,19 +11,17 @@ use ale_math::Vector2;
 use ale_opengl::renderer::task::{RenderTask, Sprite};
 use ale_render::component::Renderable;
 use ale_world::components::{Inputable, Spawnable, Tickable};
-use ale_world::event::world::{SpawnCommand, WorldCommand};
+use ale_world::event::world::WorldCommand;
 use ale_world::world::World;
 
-use crate::piece::{Piece, PieceEvent};
-use crate::template::Templates;
+use crate::template::{BlockTypeId, Templates};
 use crate::tetris::Block::NotFilled;
 
-const TICK_TIME: f32 = 0.2;
-const ROW_GRID_SIZE: usize = 20;
+const TICK_TIME: f32 = 2.0;
+const HIDDEN_ROW_GRID_SIZE: usize = 4;
+const ROW_GRID_SIZE: usize = 28;
 const COLUMN_GRID_SIZE: usize = 10;
-const BLOCK_SIZE: Vector2<usize> = Vector2::new(5, 5);
-
-pub enum GameEvent {}
+const BLOCK_SIZE: Vector2<usize> = Vector2::new(10, 10);
 
 #[derive(Clone)]
 pub enum Block {
@@ -33,19 +29,22 @@ pub enum Block {
   NotFilled,
 }
 
+pub struct TetrisInfo {
+  pub block_type: BlockTypeId,
+  pub rotation_type: usize,
+  pub position: Vector2<usize>,
+}
+
 pub struct GameCoordinator {
   pub id: Id<Entity>,
-  pub piece_templates: Templates,
+  pub templates: Templates,
   pub wc_sender: Sender<WorldCommand>,
 
   // Arena state
   pub arena: Vec<Vec<Block>>,
-
-  // Current selection
-  pub curr_piece_event: Option<Sender<PieceEvent>>,
+  pub selected: Option<TetrisInfo>,
 
   pub tetris_timer: Timer,
-  pub game_events: Channel<GameEvent>,
 }
 
 impl GameCoordinator {
@@ -59,42 +58,19 @@ impl GameCoordinator {
   }
 
   pub fn new(wc_sender: Sender<WorldCommand>) -> GameCoordinator {
-    let width = 10;
-    let height = 24;
-
-    let arena = vec![vec![NotFilled; COLUMN_GRID_SIZE]; ROW_GRID_SIZE];
+    let arena = vec![vec![NotFilled; COLUMN_GRID_SIZE]; ROW_GRID_SIZE + HIDDEN_ROW_GRID_SIZE];
     let mut templates = Templates::new();
     templates.add_all();
 
     GameCoordinator {
       id: Id::new(),
-      piece_templates: templates,
+      templates,
       wc_sender,
       arena,
-      curr_piece_event: None,
+      selected: None,
       tetris_timer: Timer::new(TICK_TIME, Recurrence::Forever),
-      game_events: Channel::new(),
     }
   }
-
-  pub fn try_select_random(&mut self) {
-    if self.curr_piece_event.is_none() {
-      let random_tetris_info = self.piece_templates.random_one_piece();
-      let piece = Piece::new(
-        random_tetris_info.block_type,
-        random_tetris_info.rotation_type,
-        random_tetris_info.blocks_template,
-        self.game_events.sender.clone(),
-      );
-
-      self.curr_piece_event = Some(piece.piece_events.sender.clone());
-      self.wc_sender.send(WorldCommand::Spawn(SpawnCommand::new(piece)));
-    }
-  }
-
-  pub fn spawn_blocks(&mut self) {}
-
-  pub fn move_pieces_down(&mut self) {}
 }
 
 impl Tickable for GameCoordinator {
@@ -103,34 +79,69 @@ impl Tickable for GameCoordinator {
   }
 
   fn tick(&mut self, delta_time: f32) {
-    match &mut self.curr_piece_event {
-      None => {
-        self.tetris_timer.reset_current_time();
-        self.try_select_random();
-      }
-      Some(selected_piece) => {
-        if self.tetris_timer.tick_and_check(delta_time) {
-          //selected_piece.move_down();
-        }
-      }
+    //
+    if self.selected.is_none() {
+      let random = self.templates.random_one_piece();
+      self.selected = Some(TetrisInfo {
+        block_type: random.block_type,
+        rotation_type: random.rotation_type,
+        position: Vector2::new(COLUMN_GRID_SIZE / 2, 0),
+      });
     }
 
-    if self.curr_piece_event.is_none() {}
-
     if self.tetris_timer.tick_and_check(delta_time) {
-      self.move_pieces_down();
+      match &mut self.selected {
+        None => {}
+        Some(tetris_info) => {
+          let blocks = self
+            .templates
+            .blocks
+            .get(&tetris_info.block_type)
+            .expect("unexpected block type id")
+            .get(tetris_info.rotation_type)
+            .expect("unexpected rotation type");
+
+          // check lowest block
+          let mut lowest = tetris_info.position.y;
+          for row in 0..blocks.len() {
+            for column in 0..blocks[row].len() {
+              // clean up the old blocks
+              self.arena[tetris_info.position.y + column][tetris_info.position.x + row] = Block::NotFilled;
+
+              if blocks[row][column] == 0 {
+                continue;
+              }
+              lowest = usize::max(lowest, tetris_info.position.y + column);
+            }
+          }
+
+          // place
+          if (lowest + 1 < ROW_GRID_SIZE) {
+            tetris_info.position.y += 1;
+
+            // set new block as 1
+          } else {
+            // need to place block
+          }
+
+          for row in 0..blocks.len() {
+            for column in 0..blocks[row].len() {
+              if blocks[column][row] == 0 {
+                continue;
+              }
+              self.arena[tetris_info.position.y + column][tetris_info.position.x + row] = Block::Filled(Color::red());
+            }
+          }
+
+          // destroy lines
+        }
+      }
     }
   }
 }
 
 impl Spawnable for GameCoordinator {
-  fn on_spawn(&mut self) {
-    info!("on spawn enter");
-    self.try_select_random();
-
-    // just test
-    self.arena[5][5] = Block::Filled(Color::green());
-  }
+  fn on_spawn(&mut self) {}
 
   fn on_kill(&mut self) {}
 
@@ -164,20 +175,13 @@ impl Renderable for GameCoordinator {
               texture_sprite: None,
               color: *color,
               position: Vector2::new((columnIndex * BLOCK_SIZE.x) as f32, (rowIndex * BLOCK_SIZE.y) as f32),
-              size: Vector2::new(400 as f32, 400 as f32),
+              size: Vector2::new(BLOCK_SIZE.x as f32, BLOCK_SIZE.y as f32),
             }));
           }
           NotFilled => {} //just skip
         }
       }
     }
-
-    renderables.push(RenderTask::Sprite(Sprite {
-      texture_sprite: None,
-      color: Color::red(),
-      position: Vector2::new(0.0, 0.0),
-      size: Vector2::new(400 as f32, 400 as f32),
-    }));
 
     renderables
   }
