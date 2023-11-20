@@ -17,11 +17,11 @@ use ale_world::world::World;
 use crate::template::{BlockTypeId, Templates};
 use crate::tetris::Block::NotFilled;
 
-const TICK_TIME: f32 = 2.0;
+const TICK_TIME: f32 = 0.2;
 const HIDDEN_ROW_GRID_SIZE: usize = 4;
 const ROW_GRID_SIZE: usize = 28;
 const COLUMN_GRID_SIZE: usize = 10;
-const BLOCK_SIZE: Vector2<usize> = Vector2::new(10, 10);
+const BLOCK_SIZE: Vector2<usize> = Vector2::new(20, 20);
 
 #[derive(Clone)]
 pub enum Block {

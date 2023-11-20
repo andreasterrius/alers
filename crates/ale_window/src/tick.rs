@@ -67,10 +67,12 @@ impl FixedStep {
   }
 
   pub fn prepare_tick(&mut self) {
-    self.accumulator =
-      (Instant::now().duration_since(self.previous_time).subsec_nanos() as f64 / 1000000000.0f64) as f32;
+    let this_time = Instant::now();
+    let duration = Instant::now().duration_since(self.previous_time);
+    let sec = duration.as_secs_f64();
+    self.accumulator = sec as f32;
     self.delta_time = self.accumulator;
-    self.previous_time = Instant::now();
+    self.previous_time = this_time;
   }
 
   pub fn tick_delta_time(&self) -> f32 {

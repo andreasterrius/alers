@@ -49,7 +49,7 @@ impl Timer {
     }
 
     self.elapsed_time += delta_time;
-    if self.elapsed_time > -self.target_time {
+    if self.elapsed_time > self.target_time {
       self.elapsed_time = self.target_time - self.elapsed_time;
       self.recurred_time += 1;
       return true;
@@ -60,8 +60,8 @@ impl Timer {
   pub fn set_target_recurrence(&mut self, recurrence: Recurrence) {
     self.target_recurrence = recurrence;
   }
-  
-  pub fn reset_current_time(&mut self){
+
+  pub fn reset_current_time(&mut self) {
     self.elapsed_time = 0.0;
   }
 
@@ -76,7 +76,7 @@ impl Timer {
   pub fn set_target_time(&mut self, target_time: f32) {
     self.target_time = target_time
   }
-  
+
   pub fn reset_all(&mut self) {
     self.reset_current_time();
     self.reset_current_recurrence();
