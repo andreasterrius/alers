@@ -59,7 +59,6 @@ impl App {
 
       tick.prepare_tick();
       let delta_time = tick.delta_time();
-      println!("{}", delta_time);
 
       while tick.should_tick() {
         tick.tick();
