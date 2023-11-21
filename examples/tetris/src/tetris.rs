@@ -10,12 +10,14 @@ use ale_math::color::Color;
 use ale_math::Vector2;
 use ale_opengl::renderer::task::{RenderTask, Sprite};
 use ale_render::component::Renderable;
+use ale_resources::texture::LoadError::FileNotFound;
 use ale_world::components::{Inputable, Spawnable, Tickable};
 use ale_world::event::world::WorldCommand;
 use ale_world::world::World;
+use Block::Placed;
 
 use crate::template::{BlockTypeId, Templates};
-use crate::tetris::Block::NotFilled;
+use crate::tetris::Block::{NotFilled, Ongoing};
 
 const TICK_TIME: f32 = 0.2;
 const HIDDEN_ROW_GRID_SIZE: usize = 4;
@@ -25,14 +27,16 @@ const BLOCK_SIZE: Vector2<usize> = Vector2::new(20, 20);
 
 #[derive(Clone)]
 pub enum Block {
-  Filled(Color),
+  Ongoing(Color),
   NotFilled,
+  Placed(Color),
 }
 
 pub struct TetrisInfo {
   pub block_type: BlockTypeId,
   pub rotation_type: usize,
   pub position: Vector2<usize>,
+  pub color: Color,
 }
 
 pub struct GameCoordinator {
@@ -86,10 +90,12 @@ impl Tickable for GameCoordinator {
         block_type: random.block_type,
         rotation_type: random.rotation_type,
         position: Vector2::new(COLUMN_GRID_SIZE / 2, 0),
+        color: random.color,
       });
     }
 
     if self.tetris_timer.tick_and_check(delta_time) {
+      let mut should_place = false;
       match &mut self.selected {
         None => {}
         Some(tetris_info) => {
@@ -101,40 +107,61 @@ impl Tickable for GameCoordinator {
             .get(tetris_info.rotation_type)
             .expect("unexpected rotation type");
 
-          // check lowest block
-          let mut lowest = tetris_info.position.y;
+          // de-paint the grid
+          // check whether block should be placed or not
           for row in 0..blocks.len() {
             for column in 0..blocks[row].len() {
-              // clean up the old blocks
-              self.arena[tetris_info.position.y + column][tetris_info.position.x + row] = Block::NotFilled;
+              // de-paint old grid
+              let x = tetris_info.position.x + row;
+              let y = tetris_info.position.y + column;
+              match self.arena[y][x] {
+                Ongoing(_) => self.arena[y][x] = NotFilled,
+                _ => {}
+              };
 
-              if blocks[row][column] == 0 {
+              // check block below this
+              if blocks[column][row] == 0 {
                 continue;
               }
-              lowest = usize::max(lowest, tetris_info.position.y + column);
+              if y + 1 >= ROW_GRID_SIZE {
+                should_place = true;
+                continue;
+              }
+              match self.arena[y + 1][x] {
+                Placed(_) => should_place = true,
+                _ => {}
+              }
             }
           }
 
           // place
-          if (lowest + 1 < ROW_GRID_SIZE) {
+          if (!should_place) {
             tetris_info.position.y += 1;
-
-            // set new block as 1
-          } else {
-            // need to place block
           }
 
+          //re-paint the grid
           for row in 0..blocks.len() {
             for column in 0..blocks[row].len() {
               if blocks[column][row] == 0 {
                 continue;
               }
-              self.arena[tetris_info.position.y + column][tetris_info.position.x + row] = Block::Filled(Color::red());
+              let x = tetris_info.position.x + row;
+              let y = tetris_info.position.y + column;
+              if should_place {
+                self.arena[y][x] = Placed(tetris_info.color);
+              } else {
+                self.arena[y][x] = Ongoing(tetris_info.color);
+              }
             }
           }
 
           // destroy lines
         }
+      }
+
+      if should_place {
+        // this has been placed before
+        self.selected = None;
       }
     }
   }
@@ -170,7 +197,7 @@ impl Renderable for GameCoordinator {
     for (rowIndex, row) in self.arena.iter().enumerate() {
       for (columnIndex, block) in row.iter().enumerate() {
         match block {
-          Block::Filled(color) => {
+          Ongoing(color) | Placed(color) => {
             renderables.push(RenderTask::Sprite(Sprite {
               texture_sprite: None,
               color: *color,

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use ale_math::color::Color;
 use enumn::N;
 use rand::Rng;
 
@@ -14,6 +15,7 @@ pub enum BlockTypeId {
 pub struct RandomTetrisInfo {
   pub block_type: BlockTypeId,
   pub rotation_type: usize,
+  pub color: Color,
 }
 
 pub struct Templates {
@@ -28,6 +30,7 @@ impl Templates {
   pub fn add_all(&mut self) {
     self.add_zleft();
     self.add_zright();
+    self.add_I();
   }
 
   pub fn add_zleft(&mut self) {
@@ -70,6 +73,26 @@ impl Templates {
     );
   }
 
+  pub fn add_I(&mut self) {
+    self.blocks.insert(
+      BlockTypeId::ZRight,
+      vec![
+        vec![
+          vec![0, 1, 0, 0], //
+          vec![0, 1, 0, 0], //
+          vec![0, 1, 0, 0],
+          vec![0, 1, 0, 0],
+        ],
+        vec![
+          vec![0, 0, 0, 0], //
+          vec![1, 1, 1, 1], //
+          vec![0, 0, 0, 0],
+          vec![0, 0, 0, 0],
+        ],
+      ],
+    );
+  }
+
   pub fn random_one_piece(&self) -> RandomTetrisInfo {
     let mut rand = rand::thread_rng();
     let block_type = BlockTypeId::n(rand.gen_range(0..self.blocks.len())).unwrap();
@@ -79,6 +102,7 @@ impl Templates {
     RandomTetrisInfo {
       rotation_type,
       block_type,
+      color: Color::red(),
     }
   }
 }
