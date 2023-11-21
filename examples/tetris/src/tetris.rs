@@ -3,9 +3,9 @@ use ale_data::entity::Entity;
 use ale_data::indexmap::Id;
 use ale_data::timer::{Recurrence, Timer};
 use ale_data::wire_component;
-use ale_input::Action::Press;
+use ale_input::Action::{Press, Release};
 use ale_input::Input;
-use ale_input::Key::{Left, Right};
+use ale_input::Key::{Down, Left, Right, Space};
 use ale_math::color::Color;
 use ale_math::Vector2;
 use ale_opengl::renderer::task::{RenderTask, Sprite};
@@ -48,6 +48,12 @@ pub struct GameCoordinator {
   pub arena: Vec<Vec<Block>>,
   pub selected: Option<TetrisInfo>,
 
+  // Input states
+  pub left_is_pressed: bool,
+  pub right_is_pressed: bool,
+  pub rotate_is_pressed: bool,
+  pub speed_is_pressed: bool,
+
   pub tetris_timer: Timer,
 }
 
@@ -73,6 +79,10 @@ impl GameCoordinator {
       arena,
       selected: None,
       tetris_timer: Timer::new(TICK_TIME, Recurrence::Forever),
+      left_is_pressed: false,
+      right_is_pressed: false,
+      rotate_is_pressed: false,
+      speed_is_pressed: false,
     }
   }
 }
@@ -181,10 +191,28 @@ impl Inputable for GameCoordinator {
   fn input(&mut self, input: Input) {
     match input {
       Input::Key(Left, _, Press, _) => {
-        println!("left is pressed");
+        self.left_is_pressed = true;
       }
       Input::Key(Right, _, Press, _) => {
-        println!("right is pressed");
+        self.right_is_pressed = true;
+      }
+      Input::Key(Space, _, Press, _) => {
+        self.rotate_is_pressed = true;
+      }
+      Input::Key(Down, _, Press, _) => {
+        self.speed_is_pressed = true;
+      }
+      Input::Key(Left, _, Release, _) => {
+        self.left_is_pressed = false;
+      }
+      Input::Key(Right, _, Release, _) => {
+        self.right_is_pressed = false;
+      }
+      Input::Key(Space, _, Release, _) => {
+        self.rotate_is_pressed = false;
+      }
+      Input::Key(Down, _, Release, _) => {
+        self.speed_is_pressed = false;
       }
       _ => {}
     }
