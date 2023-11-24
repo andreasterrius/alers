@@ -25,6 +25,16 @@ impl Timer {
     }
   }
 
+  pub fn new_paused(target_time: f32, recurrence: Recurrence) -> Timer {
+    Timer {
+      elapsed_time: 0.0,
+      recurred_time: 0,
+      is_paused: true,
+      target_time,
+      target_recurrence: recurrence,
+    }
+  }
+
   pub fn tick(&mut self, delta_time: f32) {
     let _ = self.tick_and_check(delta_time);
   }
@@ -75,6 +85,10 @@ impl Timer {
 
   pub fn set_target_time(&mut self, target_time: f32) {
     self.target_time = target_time
+  }
+
+  pub fn force_one_tick(&mut self) {
+    self.elapsed_time = self.target_time + 0.01; //force 1 tick
   }
 
   pub fn reset_all(&mut self) {

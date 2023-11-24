@@ -13,7 +13,7 @@ use ale_window::window::Window;
 use ale_world::world::World;
 
 use crate::engine::Engine;
-use crate::visitor::{CameraVisitor, FixedTickVisitor, RenderableVisitor, TickVisitor};
+use crate::visitor::{CameraVisitor, FixedTickVisitor, InputVisitor, RenderableVisitor, TickVisitor};
 use crate::{init_term, AppError, FixedStep, WorldTick};
 
 pub trait Genesis {
@@ -56,6 +56,17 @@ impl App {
 
     while engine.windows.len() >= 1 {
       engine.windows.poll_inputs();
+
+      {
+        // handle input only for the first window
+        match engine.windows.iter_mut().next() {
+          None => {}
+          Some(w) => {
+            let mut input_vis = InputVisitor { input: w.input() };
+            world.visit_mut(&mut input_vis);
+          }
+        };
+      }
 
       tick.prepare_tick();
       let delta_time = tick.delta_time();

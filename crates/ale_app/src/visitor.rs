@@ -1,15 +1,13 @@
 use ale_camera::component::Camera;
 use ale_camera::CameraRenderInfo;
-use ale_data::alevec::Key;
 use ale_data::entity::Entity;
 use ale_data::indexmap::Id;
-use ale_opengl::renderer;
 use ale_opengl::renderer::task::RenderTask;
 use ale_render::component::Renderable;
-use ale_render::target::RenderTarget;
-use ale_world::components::Tickable;
+use ale_world::components::{Inputable, Tickable};
 use ale_world::visitor::VisitorMut;
 use std::collections::HashMap;
+use ale_input::Input;
 
 pub struct CameraVisitor {
   pub camera_render_info: HashMap<Id<Entity>, CameraRenderInfo>,
@@ -49,5 +47,15 @@ pub struct FixedTickVisitor {
 impl VisitorMut<dyn Tickable> for FixedTickVisitor {
   fn visit(&mut self, component: &mut (dyn Tickable + 'static)) {
     component.fixed_tick(self.delta_time)
+  }
+}
+
+pub struct InputVisitor {
+  pub input : Vec<Input>,
+}
+
+impl VisitorMut<dyn Inputable> for InputVisitor {
+  fn visit(&mut self, component: &mut (dyn Inputable + 'static)) {
+    component.input(&self.input)
   }
 }
