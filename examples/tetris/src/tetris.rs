@@ -19,11 +19,14 @@ use crate::template::{BlockTypeId, Templates};
 use crate::tetris::Block::{NotFilled, Ongoing};
 
 const TICK_TIME: f32 = 0.5;
+const FAST_TICK_TIME: f32 = 0.05;
 const HIDDEN_ROW_GRID_SIZE: usize = 4;
 const ROW_GRID_SIZE: usize = 28;
 const COLUMN_GRID_SIZE: usize = 10;
 const BLOCK_SIZE: Vector2<usize> = Vector2::new(20, 20);
-const INPUT_STICKY_TIME: f32 = 0.1;
+const INPUT_DELAY_BEFORE_RECURRENCE: f32 = 0.3;
+const INPUT_RECURRENCE: f32 = 0.15;
+
 
 #[derive(Clone)]
 pub enum Block {
@@ -49,10 +52,11 @@ pub struct GameCoordinator {
   pub selected: Option<TetrisInfo>,
 
   // Input states
-  pub move_left_timer: Timer,
-  pub right_is_pressed: bool,
+  pub held_move_timer: Timer,
+  pub first_move_timer: Timer,
+  pub is_right_pressed: bool,
+  pub is_left_pressed: bool,
   pub rotate_is_pressed: bool,
-  pub speed_is_pressed: bool,
 
   pub move_down_timer: Timer,
 }
@@ -79,40 +83,152 @@ impl GameCoordinator {
       arena,
       selected: None,
       move_down_timer: Timer::new(TICK_TIME, Recurrence::Forever),
-      move_left_timer: Timer::new_paused(INPUT_STICKY_TIME, Recurrence::Forever),
-      right_is_pressed: false,
+      held_move_timer: Timer::new_paused(INPUT_RECURRENCE, Recurrence::Forever),
+      first_move_timer: Timer::new(INPUT_DELAY_BEFORE_RECURRENCE, Recurrence::Once),
+      is_right_pressed: false,
+      is_left_pressed: false,
       rotate_is_pressed: false,
-      speed_is_pressed: false,
+    }
+  }
+
+  pub fn try_move_down(&mut self, delta_time: f32) {
+    // try to move down + place accordingly
+    let mut should_place = false;
+    if self.move_down_timer.tick_and_check(delta_time) {
+      match &mut self.selected {
+        None => {}
+        Some(tetris_info) => {
+          let mut selected = Selected {
+            tetris_info,
+            templates: &mut self.templates,
+            arena: &mut self.arena,
+          };
+          selected.run(vec![Selected::depaint]);
+          selected.run(vec![|x: usize,
+                             y: usize,
+                             is_filled: i8,
+                             arena: &mut Vec<Vec<Block>>,
+                             tetris_info: &mut TetrisInfo| {
+            if is_filled == 0 || should_place {
+              return;
+            }
+            if y + 1 >= ROW_GRID_SIZE {
+              //hit the bottom
+              should_place = true;
+              return;
+            } else {
+              match arena[y + 1][x] {
+                // otherwise check other pieces
+                Placed(color) => should_place = true,
+                _ => {}
+              }
+            }
+          }]);
+          if should_place {
+            selected.run(vec![Selected::place]);
+          } else {
+            selected.tetris_info.position.y += 1;
+            selected.run(vec![Selected::paint]);
+          }
+        }
+      }
+    }
+    if should_place {
+      // was placed before
+      self.selected = None;
+    }
+  }
+
+  pub fn try_move_left_right(&mut self, delta_time: f32) {
+
+    let should_move_once = !self.first_move_timer.is_paused() &&
+        self.first_move_timer.is_elapsed_time_zero();
+    if self.first_move_timer.tick_and_check(delta_time) {
+      self.held_move_timer.reset_all();
+      self.held_move_timer.set_paused(false);
+    }
+
+    // try to move left/right accordingly
+    if should_move_once || self.held_move_timer.tick_and_check(delta_time) {
+      let move_left = if self.is_left_pressed == true { -1 } else { 0 };
+      let move_right = if self.is_right_pressed == true { 1 } else { 0 };
+      match &mut self.selected {
+        None => {}
+        Some(tetris_info) => {
+          let mut valid_move = true;
+          let mut selected = Selected {
+            tetris_info,
+            templates: &mut self.templates,
+            arena: &mut self.arena,
+          };
+          selected.run(vec![|x: usize,
+                             y: usize,
+                             is_filled: i8,
+                             arena: &mut Vec<Vec<Block>>,
+                             tetris_info: &mut TetrisInfo| {
+            if self.is_left_pressed {
+              if is_filled == 0 || !valid_move {
+                return;
+              }
+              if x == 0 {
+                valid_move = false;
+              } else {
+                match arena[y][x - 1] {
+                  Placed(color) => valid_move = false,
+                  _ => {}
+                }
+              }
+            }
+            if self.is_right_pressed {
+              if x == COLUMN_GRID_SIZE - 1 {
+                valid_move = false
+              } else {
+                match arena[y][x + 1] {
+                  Placed(color) => valid_move = false,
+                  _ => {}
+                }
+              }
+            }
+          }]);
+          if valid_move {
+            selected.run(vec![Selected::depaint]);
+            selected.tetris_info.position.x += move_left + move_right;
+            selected.run(vec![Selected::paint]);
+          }
+        }
+      }
     }
   }
 }
 
-struct Selected;
+struct Selected<'a> {
+  tetris_info: &'a mut TetrisInfo,
+  templates: &'a mut Templates,
+  arena: &'a mut Vec<Vec<Block>>,
+}
 
-impl Selected {
-  pub fn run(
-    tetris_info: &mut TetrisInfo,
-    templates: &mut Templates,
-    arena: &mut Vec<Vec<Block>>,
-    mut f: Vec<impl FnMut(usize, usize, i8, &mut Vec<Vec<Block>>, &mut TetrisInfo)>,
-  ) {
-    let blocks = templates
+impl<'a> Selected<'a> {
+  pub fn run(&mut self, mut f: Vec<impl FnMut(usize, usize, i8, &mut Vec<Vec<Block>>, &mut TetrisInfo)>) {
+    let blocks = self
+      .templates
       .blocks
-      .get(&tetris_info.block_type)
+      .get(&self.tetris_info.block_type)
       .expect("unexpected block type id")
-      .get(tetris_info.rotation_type)
+      .get(self.tetris_info.rotation_type)
       .expect("unexpected rotation type");
 
     for row in 0..blocks.len() {
       for column in 0..blocks[row].len() {
         // de-paint old grid
-        let x = tetris_info.position.x + row as isize;
-        let y = tetris_info.position.y + column as isize;
+        let x = self.tetris_info.position.x + row as isize;
+        let y = self.tetris_info.position.y + column as isize;
         let is_filled = blocks[column][row];
 
         for func in &mut f {
-          if x < 0 || y < 0 { return; }
-          func(x as usize, y as usize, is_filled, arena, tetris_info);
+          if x < 0 || y < 0 {
+            continue;
+          }
+          func(x as usize, y as usize, is_filled, self.arena, self.tetris_info);
         }
       }
     }
@@ -156,94 +272,9 @@ impl Tickable for GameCoordinator {
       });
     }
 
-    // try to move down + place accordingly
-    let mut should_place = false;
-    if self.move_down_timer.tick_and_check(delta_time) {
-      match &mut self.selected {
-        None => {}
-        Some(tetris_info) => {
-          Selected::run(
-            tetris_info,
-            &mut self.templates,
-            &mut self.arena,
-            vec![Selected::depaint],
-          );
-          Selected::run(
-            tetris_info,
-            &mut self.templates,
-            &mut self.arena,
-            vec![
-              |x: usize, y: usize, is_filled: i8, arena: &mut Vec<Vec<Block>>, tetris_info: &mut TetrisInfo| {
-                if is_filled == 0 || should_place {
-                  return;
-                }
-                if y + 1 >= ROW_GRID_SIZE {
-                  //hit the bottom
-                  should_place = true;
-                  return;
-                } else {
-                  match arena[y + 1][x] {
-                    // otherwise check other pieces
-                    Placed(color) => should_place = true,
-                    _ => {}
-                  }
-                }
-              },
-            ],
-          );
-          if should_place {
-            Selected::run(tetris_info, &mut self.templates, &mut self.arena, vec![Selected::place]);
-          } else {
-            tetris_info.position.y += 1;
-            Selected::run(tetris_info, &mut self.templates, &mut self.arena, vec![Selected::paint]);
-          }
-        }
-      }
-    }
-    if should_place {
-      // was placed before
-      self.selected = None;
-    }
+    self.try_move_down(delta_time);
+    self.try_move_left_right(delta_time);
 
-    // try to move left/right accordingly
-    if self.move_left_timer.tick_and_check(delta_time) {
-      match &mut self.selected {
-        None => {}
-        Some(tetris_info) => {
-          let mut valid_move = true;
-          Selected::run(
-            tetris_info,
-            &mut self.templates,
-            &mut self.arena,
-            vec![
-              |x: usize, y: usize, is_filled: i8, arena: &mut Vec<Vec<Block>>, tetris_info: &mut TetrisInfo| {
-                if is_filled == 0 || !valid_move {
-                  return;
-                }
-                if x == 0 {
-                  valid_move = false;
-                } else {
-                  match arena[y][x - 1] {
-                    Placed(color) => valid_move = false,
-                    _ => {}
-                  }
-                }
-              },
-            ],
-          );
-          if(valid_move) {
-            Selected::run(
-              tetris_info,
-              &mut self.templates,
-              &mut self.arena,
-              vec![Selected::depaint]
-            );
-            tetris_info.position.x -= 1;
-            Selected::run(tetris_info, &mut self.templates, &mut self.arena, vec![Selected::paint]);
-          }
-        }
-      }
-    }
   }
 }
 
@@ -262,31 +293,45 @@ impl Inputable for GameCoordinator {
     for input in inputs {
       match input {
         Input::Key(Left, _, Press, _) => {
-          self.move_left_timer.reset_all();
-          self.move_left_timer.set_paused(false);
-          self.move_left_timer.force_one_tick();
+          if !self.is_right_pressed && !self.is_left_pressed {
+            self.first_move_timer.reset_all();
+            self.first_move_timer.set_paused(false);
+          }
+          self.is_left_pressed = true;
         }
         Input::Key(Right, _, Press, _) => {
-          self.right_is_pressed = true;
+          if !self.is_right_pressed && !self.is_left_pressed {
+            self.first_move_timer.reset_all();
+            self.first_move_timer.set_paused(false);
+          }
+          self.is_right_pressed = true;
+        }
+        Input::Key(Down, _, Press, _) => {
+          self.move_down_timer.set_target_time(FAST_TICK_TIME);
+          self.move_down_timer.force_one_tick();
         }
         Input::Key(Space, _, Press, _) => {
           self.rotate_is_pressed = true;
         }
-        Input::Key(Down, _, Press, _) => {
-          self.speed_is_pressed = true;
-        }
         Input::Key(Left, _, Release, _) => {
-          self.move_left_timer.reset_all();
-          self.move_left_timer.set_paused(true);
+          self.is_left_pressed = false;
+          if !self.is_right_pressed && !self.is_left_pressed {
+            self.held_move_timer.reset_all();
+            self.held_move_timer.set_paused(true);
+          }
         }
         Input::Key(Right, _, Release, _) => {
-          self.right_is_pressed = false;
+          self.is_right_pressed = false;
+          if !self.is_right_pressed && !self.is_left_pressed {
+            self.held_move_timer.reset_all();
+            self.held_move_timer.set_paused(true);
+          }
         }
         Input::Key(Space, _, Release, _) => {
           self.rotate_is_pressed = false;
         }
         Input::Key(Down, _, Release, _) => {
-          self.speed_is_pressed = false;
+          self.move_down_timer.set_target_time(TICK_TIME);
         }
         _ => {}
       }

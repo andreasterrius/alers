@@ -83,6 +83,14 @@ impl Timer {
     self.is_paused = is_paused;
   }
 
+  pub fn is_paused(&self) -> bool {
+    return self.is_paused;
+  }
+
+  pub fn is_elapsed_time_zero(&self) -> bool {
+    return self.elapsed_time == 0.0;
+  }
+
   pub fn set_target_time(&mut self, target_time: f32) {
     self.target_time = target_time
   }
